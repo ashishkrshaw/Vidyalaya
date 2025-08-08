@@ -17,7 +17,8 @@ import LockIcon from '@mui/icons-material/Lock';
 import { addAdmission, getAdmissionsByClassSection, getNextStudentSeq } from './db';
 
 const drawerWidth = 240;
-const SCHOOL_NAME = 'School'; // You can change this to your actual school name
+
+ // You can change this to your actual school name
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
   const firstLetter = schoolName[0].toUpperCase();
@@ -32,6 +33,7 @@ function App() {
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [schoolName, setSchoolName] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -51,7 +53,8 @@ function App() {
     const year = new Date().getFullYear();
     const rollNo = await getNextRollNo(data.class, data.section);
     const seq = await getNextStudentSeq();
-    const studentId = generateStudentId(SCHOOL_NAME, year, rollNo, seq);
+    const studentId = generateStudentId(schoolName, year, rollNo, seq);
+
     setPreviewData({ ...data, rollNo, studentId });
     setConfirmOpen(true);
   };
@@ -65,7 +68,8 @@ function App() {
   };
 
   const handleLogin = () => {
-    if (loginPassword === '825419') {
+    if (loginPassword === '825419' && schoolName.trim() !== '') {
+
       setLoggedIn(true);
       setLoginPassword('');
       setLoginError('');
@@ -82,6 +86,15 @@ function App() {
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LockIcon /> Login Required</DialogTitle>
         <DialogContent>
           <Typography sx={{ mb: 2 }}>Enter profile password to access the app.</Typography>
+          <TextField
+            label="School Name"
+            value={schoolName}
+            onChange={e => setSchoolName(e.target.value)}
+            fullWidth
+            autoFocus
+            sx={{ mb: 2 }}
+          />
+
           <TextField
             label="Password"
             type="password"
@@ -108,7 +121,8 @@ function App() {
             <Toolbar>
               <SchoolIcon sx={{ mr: 2 }} />
               <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: 2 }}>
-                {SCHOOL_NAME} Student Management
+                {schoolName} 
+
               </Typography>
             </Toolbar>
           </AppBar>
@@ -131,7 +145,8 @@ function App() {
               <Avatar sx={{ bgcolor: '#fff', color: '#1976d2', width: 64, height: 64, mb: 1 }}>
                 <SchoolIcon fontSize="large" />
               </Avatar>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff', mb: 2 }}>{SCHOOL_NAME}</Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#fff', mb: 2 }}>{schoolName}</Typography>
+
             </Box>
             <List>
               <ListItem sx={{ borderRadius: 2, mx: 1, my: 0.5, cursor: 'pointer', '&:hover': { background: 'rgba(255,255,255,0.08)' }, background: menu === 'student' ? 'rgba(255,255,255,0.16)' : 'none' }} onClick={() => setMenu('student')}>
