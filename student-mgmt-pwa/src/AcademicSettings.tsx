@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Card, TextField, Button, MenuItem, FormControl, InputLabel, Select, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-   import Grid from '@mui/material/Grid';
+import Grid from '@mui/material/Grid';
 import { saveFeeMap, loadFeeMap, savePromotionDate, loadPromotionDate, savePrincipalSignature, loadPrincipalSignature, getDb } from './db';
 import { useEffect } from 'react';
 import LockIcon from '@mui/icons-material/Lock';
@@ -245,6 +245,42 @@ const AcademicSettings: React.FC = () => {
     setSyncWarning('');
     setSyncPending(null);
   }
+async function backupToDrive() {
+  try {
+    // Collect all app data (same as backupData)
+    const [admissions, history, feeMap, promotionDate, principalSignature] = await Promise.all([
+      (await import('./db')).getAdmissions(),
+      (await import('./db')).getHistory(),
+      (await import('./db')).loadFeeMap(),
+      (await import('./db')).loadPromotionDate(),
+      (await import('./db')).loadPrincipalSignature(),
+    ]);
+
+    const files = [
+      { name: 'admissions.json', data: admissions },
+      { name: 'history.json', data: history },
+      { name: 'feeMap.json', data: feeMap },
+      { name: 'promotionDate.json', data: promotionDate },
+      { name: 'principalSignature', data: principalSignature },
+    ];
+
+    for (const f of files) {
+      if (f.data === undefined) continue;
+      await fetch("http://localhost:5000/upload-drive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: f.name, content: f.data })
+      });
+    }
+
+    setBackupMsg("Backup uploaded to Google Drive!");
+    setTimeout(() => setBackupMsg(""), 3000);
+  } catch (e) {
+    setBackupMsg("Drive backup failed: " + (e as any).message);
+  }
+}
+
+
 
   return (
     <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', mt: 4 }}>
@@ -275,6 +311,19 @@ const AcademicSettings: React.FC = () => {
           {syncMsg && <Alert severity="success">{syncMsg}</Alert>}
         </Box>
       )}
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button variant="contained" color="primary" onClick={backupData}>
+          Backup to Local
+        </Button>
+        <Button variant="contained" color="secondary" onClick={syncData}>
+          Sync from Local
+        </Button>
+        <Button variant="contained" color="success" onClick={backupToDrive}>
+          Backup to Google Drive
+        </Button>
+      </Box>
+
+
       {syncWarning && (
         <Alert severity="warning" action={
           <Box>
