@@ -4,9 +4,27 @@
   max-width: none;   /* remove the fixed 1280px limit */
   margin: 0;
   padding: 0;        /* optional: adjust padding if you don't want outer space */
-  text-align: left;  /* optional: keep normal alignment */
+  text-align: left;  /* normal alignment */
+  box-sizing: border-box;
 }
 
+.main-content {
+  width: 100%;       /* full width */
+  max-width: none;   /* no restriction */
+  margin: 0;
+  padding: 1rem;     /* inner spacing */
+  box-sizing: border-box;
+}
+
+.card {
+  width: 100%;       /* stretch full width */
+  max-width: none;
+  padding: 2em;
+  margin-bottom: 1rem;  /* gap between cards */
+  box-sizing: border-box;
+}
+
+/* ---- existing logo + extras remain same ---- */
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -33,10 +51,6 @@
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;
   }
-}
-
-.card {
-  padding: 2em;
 }
 
 .read-the-docs {

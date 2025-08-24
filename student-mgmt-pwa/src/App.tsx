@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'; // top me
+import { useState, useEffect } from 'react';
 import schools, { type School } from "./Schools";
-import { Box, CssBaseline, Drawer, Toolbar, AppBar, Typography, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, Card, Avatar, ListItemIcon, TextField, Fade, Slide } from '@mui/material';
+import { Box, CssBaseline, Drawer, Toolbar, AppBar, Typography, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, Card, Avatar, ListItemIcon, TextField, Fade } from '@mui/material';
 import SchoolIcon from '@mui/icons-material/School';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
@@ -18,8 +18,150 @@ import LockIcon from '@mui/icons-material/Lock';
 import { addAdmission, getAdmissionsByClassSection, getNextStudentSeq } from './db';
 
 const drawerWidth = 260;
+const API_BASE_URL = "https://gdrive-backend-1.onrender.com";
 
-// You can change this to your actual school name
+// Custom styles object for better compatibility
+const styles = {
+  
+  mainContainer: {
+    display: 'flex',
+    minHeight: '100vh',
+    background: '#1a237e',
+    backgroundImage: 'linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #3f51b5 75%, #5c6bc0 100%)',
+  },
+  appBar: {
+    backgroundColor: 'rgba(25, 118, 210, 0.9)',
+    backdropFilter: 'blur(10px)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  },
+  drawerPaper: {
+    width: drawerWidth,
+    backgroundColor: 'rgba(63, 81, 181, 0.95)',
+    backdropFilter: 'blur(10px)',
+    borderRight: '1px solid rgba(255,255,255,0.1)',
+  },
+  loginDialog: {
+    '& .MuiDialog-paper': {
+      backgroundColor: 'rgba(63, 81, 181, 0.95)',
+      backdropFilter: 'blur(15px)',
+      borderRadius: '16px',
+      border: '1px solid rgba(255,255,255,0.1)',
+      minWidth: '400px',
+    }
+  },
+  loginTextField: {
+    '& .MuiOutlinedInput-root': {
+      backgroundColor: 'rgba(255,255,255,0.1)',
+      borderRadius: '12px',
+      '& fieldset': {
+        borderColor: 'rgba(255,255,255,0.3)',
+      },
+      '&:hover fieldset': {
+        borderColor: 'rgba(255,255,255,0.5)',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#ffffff',
+      }
+    },
+    '& .MuiInputLabel-root': {
+      color: 'rgba(255,255,255,0.7)',
+    },
+    '& .MuiInputBase-input': {
+      color: '#ffffff',
+    },
+    '& .MuiFormHelperText-root': {
+      color: '#ff5252',
+    }
+  },
+  captchaBox: {
+    padding: '12px 24px',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: '8px',
+    fontWeight: 'bold',
+    letterSpacing: '2px',
+    color: '#ffffff',
+    fontSize: '1.2rem',
+    fontFamily: 'monospace',
+    border: '1px solid rgba(255,255,255,0.2)',
+  },
+  loginButton: {
+    background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
+    borderRadius: '24px',
+    padding: '12px 32px',
+    fontSize: '1.1rem',
+    fontWeight: '600',
+    textTransform: 'none',
+    color: '#ffffff',
+    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
+    '&:hover': {
+      background: 'linear-gradient(45deg, #1976d2 30%, #1cb5e0 90%)',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
+    },
+    transition: 'all 0.3s ease'
+  },
+  sidebarAvatar: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 64,
+    height: 64,
+    border: '2px solid rgba(255,255,255,0.2)',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+  },
+  menuItem: {
+    borderRadius: '12px',
+    margin: '4px 8px',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    '&:hover': {
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      transform: 'translateX(4px)',
+    },
+    transition: 'all 0.2s ease',
+  },
+  activeMenuItem: {
+    borderRadius: '12px',
+    margin: '4px 8px',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+  },
+  mainCard: {
+    maxWidth: '650px',
+    width: '100%',
+    padding: '32px',
+    marginTop: '32px',
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '20px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255,255,255,0.2)',
+  },
+  dialogPaper: {
+    backgroundColor: 'rgba(63, 81, 181, 0.95)',
+    backdropFilter: 'blur(15px)',
+    borderRadius: '16px',
+    border: '1px solid rgba(255,255,255,0.1)',
+  },
+  previewContent: {
+    color: '#ffffff',
+    fontSize: '0.9rem',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: '16px',
+    borderRadius: '8px',
+    border: '1px solid rgba(255,255,255,0.2)',
+    fontFamily: 'monospace',
+    whiteSpace: 'pre-wrap',
+  },
+  successMessage: {
+    marginTop: '24px',
+    padding: '20px',
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    borderRadius: '12px',
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: '16px',
+    textAlign: 'center',
+    boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+  }
+};
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
   const firstLetter = schoolName[0].toUpperCase();
@@ -28,6 +170,7 @@ function generateStudentId(schoolName: string, year: number, rollNo: number, seq
   const last4 = seq.toString().padStart(4, '0');
   return `${firstLetter}${yr}-${rno}-${last4}`;
 }
+
 // Random alphanumeric captcha
 function generateCaptcha(length: number = 6) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -38,63 +181,303 @@ function generateCaptcha(length: number = 6) {
   return captcha;
 }
 
+// User Data Management Class
+class UserDataManager {
+  private static currentUsername: string | null = null;
+  private static userData: any = {
+    admissions: [],
+    students: [],
+    history: [],
+    academicSettings: {},
+    feeManagement: [],
+    profile: {}
+  };
+
+  static setCurrentUser(username: string) {
+    this.currentUsername = username;
+  }
+
+  static getCurrentUsername() {
+    return this.currentUsername;
+  }
+
+  static setUserData(data: any) {
+    this.userData = {
+      admissions: data.admissions || [],
+      students: data.students || [],
+      history: data.history || [],
+      academicSettings: data.academicSettings || {},
+      feeManagement: data.feeManagement || [],
+      profile: data.profile || {},
+      ...data
+    };
+  }
+
+  static getUserData() {
+    return this.userData;
+  }
+
+  static async loadUserData() {
+    if (!this.currentUsername) {
+      console.error('❌ No current username set');
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/get-data/${this.currentUsername}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          this.setUserData(result.data || {});
+          console.log('✅ User data loaded from MongoDB for:', this.currentUsername);
+          return true;
+        }
+      }
+      
+      // If no data found, create new user file
+      console.log('ℹ️ No existing data found, creating new user file for:', this.currentUsername);
+      await this.createNewUserFile();
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
+      return false;
+    }
+  }
+
+  static async createNewUserFile() {
+    if (!this.currentUsername) return false;
+
+    const initialData = {
+      username: this.currentUsername,
+      admissions: [],
+      students: [],
+      history: [],
+      academicSettings: {
+        currentSession: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+        classes: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'],
+        sections: ['A', 'B', 'C']
+      },
+      feeManagement: [],
+      profile: {
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString()
+      }
+    };
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/save-data`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ 
+          username: this.currentUsername, 
+          data: initialData 
+        })
+      });
+
+      if (response.ok) {
+        this.setUserData(initialData);
+        console.log('✅ New user file created in MongoDB for:', this.currentUsername);
+        return true;
+      }
+    } catch (error) {
+      console.error('❌ Error creating new user file:', error);
+    }
+    
+    return false;
+  }
+
+  static async saveUserData(sectionName: string, sectionData: any) {
+    if (!this.currentUsername) {
+      console.error('❌ No username set for saving data');
+      return false;
+    }
+
+    try {
+      // Update local data
+      this.userData[sectionName] = sectionData;
+      this.userData.profile.lastUpdated = new Date().toISOString();
+
+      // Save to MongoDB
+      const response = await fetch(`${API_BASE_URL}/save-data`, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ 
+          username: this.currentUsername, 
+          data: this.userData 
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ ${sectionName} data saved to MongoDB for user:`, this.currentUsername);
+        
+        // Optional: Backup to Google Drive
+        try {
+          await fetch(`${API_BASE_URL}/upload-drive`, {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              username: this.currentUsername,
+              name: `${this.currentUsername}_backup.json`,
+              content: this.userData
+            })
+          });
+          console.log('✅ Data backed up to Google Drive');
+        } catch (driveError) {
+          console.warn('⚠️ Google Drive backup failed:', driveError);
+        }
+        
+        return true;
+      }
+    } catch (error) {
+      console.error(`❌ Error saving ${sectionName} data:`, error);
+    }
+    
+    return false;
+  }
+
+  static getSectionData(sectionName: string) {
+    return this.userData[sectionName] || [];
+  }
+
+  static addToSection(sectionName: string, newData: any) {
+    if (!this.userData[sectionName]) {
+      this.userData[sectionName] = [];
+    }
+    
+    if (Array.isArray(this.userData[sectionName])) {
+      this.userData[sectionName].push(newData);
+    } else {
+      this.userData[sectionName] = { ...this.userData[sectionName], ...newData };
+    }
+    
+    return this.saveUserData(sectionName, this.userData[sectionName]);
+  }
+
+  static updateSectionItem(sectionName: string, itemId: string, updatedData: any) {
+    if (Array.isArray(this.userData[sectionName])) {
+      const index = this.userData[sectionName].findIndex((item: any) => item.id === itemId || item.studentId === itemId);
+      if (index !== -1) {
+        this.userData[sectionName][index] = { ...this.userData[sectionName][index], ...updatedData };
+        return this.saveUserData(sectionName, this.userData[sectionName]);
+      }
+    }
+    return false;
+  }
+
+  static deleteSectionItem(sectionName: string, itemId: string) {
+    if (Array.isArray(this.userData[sectionName])) {
+      this.userData[sectionName] = this.userData[sectionName].filter((item: any) => 
+        item.id !== itemId && item.studentId !== itemId
+      );
+      return this.saveUserData(sectionName, this.userData[sectionName]);
+    }
+    return false;
+  }
+}
 
 function App() {
-  // --- replace the state block inside App() with this ---
   const [menu, setMenu] = useState<'student' | 'show' | 'history' | 'updateDelete' | 'settings' | 'fee'>('student');
   const [captcha, setCaptcha] = useState(generateCaptcha());
   const [captchaInput, setCaptchaInput] = useState('');
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [username, setUsername] = useState('');      // <-- NEW: username for login input
-  const [schoolName, setSchoolName] = useState('');  // displayed across the app (AppBar, sidebar)
+  const [username, setUsername] = useState('');
+  const [schoolName, setSchoolName] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [dataLoading, setDataLoading] = useState(false);
 
-
-  // Get next available roll number for class-section from IndexedDB
+  // Get next available roll number for class-section
   const getNextRollNo = async (cls: string, section: string): Promise<number> => {
-    const admissions = await getAdmissionsByClassSection(cls, section);
-    const used = admissions.map((a: any) => Number(a.rollNo));
-    for (let i = 1; i <= 50; i++) {
-      if (!used.includes(i)) return i;
+    try {
+      const admissions = UserDataManager.getSectionData('admissions');
+      const classAdmissions = admissions.filter((a: any) => a.class === cls && a.section === section);
+      const used = classAdmissions.map((a: any) => Number(a.rollNo));
+      
+      for (let i = 1; i <= 50; i++) {
+        if (!used.includes(i)) return i;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error getting next roll number:', error);
+      return 1;
     }
-    return 0;
   };
 
-
-  // inside App()
   useEffect(() => {
     const timer = setInterval(() => {
       setCaptcha(generateCaptcha());
-    }, 30000); // 20 seconds
+    }, 30000);
     return () => clearInterval(timer);
   }, []);
 
-
   // Preview handler: get next student sequence and generate studentId
   const handlePreview = async (data: any) => {
-    const year = new Date().getFullYear();
-    const rollNo = await getNextRollNo(data.class, data.section);
-    const seq = await getNextStudentSeq();
-    const studentId = generateStudentId(schoolName, year, rollNo, seq);
+    try {
+      const year = new Date().getFullYear();
+      const rollNo = await getNextRollNo(data.class, data.section);
+      
+      // Get next sequence from current user's data
+      const admissions = UserDataManager.getSectionData('admissions');
+      const seq = admissions.length + 1;
+      
+      const studentId = generateStudentId(schoolName, year, rollNo, seq);
 
-    setPreviewData({ ...data, rollNo, studentId });
-    setConfirmOpen(true);
+      setPreviewData({ ...data, rollNo, studentId, createdAt: new Date().toISOString() });
+      setConfirmOpen(true);
+    } catch (error) {
+      console.error('Error in preview handler:', error);
+    }
   };
 
-  // Confirm handler: store admission in IndexedDB
+  // Confirm handler: store admission in user's MongoDB data
   const handleConfirm = async () => {
-    await addAdmission(previewData);
-    setSuccessMsg(`Success! New admission added. Student ID: ${previewData.studentId}`);
-    setConfirmOpen(false);
-    setTimeout(() => setSuccessMsg(''), 3000);
+    try {
+      // Save to local IndexedDB (if you still want to use it)
+      await addAdmission(previewData);
+      
+      // Save to user's MongoDB file
+      await UserDataManager.addToSection('admissions', previewData);
+      
+      // Also add to history
+      await UserDataManager.addToSection('history', {
+        ...previewData,
+        action: 'admission_added',
+        timestamp: new Date().toISOString()
+      });
+      
+      setSuccessMsg(`Success! New admission added. Student ID: ${previewData.studentId}`);
+      setConfirmOpen(false);
+      setTimeout(() => setSuccessMsg(''), 3000);
+      
+    } catch (error) {
+      console.error('Error confirming admission:', error);
+      setSuccessMsg('Error saving admission. Please try again.');
+      setTimeout(() => setSuccessMsg(''), 3000);
+    }
   };
 
-  const handleLogin = () => {
-    // captcha check first
+  const handleLogin = async () => {
+    // Captcha check first
     if (captchaInput.trim() !== captcha) {
       setLoginError('Captcha does not match.');
       return;
@@ -106,170 +489,180 @@ function App() {
       s.password === loginPassword
     );
 
-
     if (found) {
-      // Set logged in and set the display school name from the found record
-      setLoggedIn(true);
-      setSchoolName(found.schoolName);   // <-- this ensures AppBar / sidebar show the correct schoolName
-      setLoginPassword('');
-      setLoginError('');
-      setCaptchaInput('');
-      setUsername('');                    // optional: clear username field
+      try {
+        setDataLoading(true);
+        
+        // Set current user in UserDataManager
+        UserDataManager.setCurrentUser(found.username);
+        
+        // Load or create user data
+        const dataLoaded = await UserDataManager.loadUserData();
+        
+        if (dataLoaded) {
+          setLoggedIn(true);
+          setSchoolName(found.schoolName);
+          setLoginPassword('');
+          setLoginError('');
+          setCaptchaInput('');
+          setUsername('');
+          
+          // Save login info to localStorage
+          localStorage.setItem('loggedIn', 'true');
+          localStorage.setItem('schoolName', found.schoolName);
+          localStorage.setItem('currentUsername', found.username);
+          
+          console.log('✅ Login successful for user:', found.username);
+        } else {
+          setLoginError('Failed to load user data. Please try again.');
+        }
+      } catch (error) {
+        console.error('❌ Login error:', error);
+        setLoginError('Login failed. Please try again.');
+      } finally {
+        setDataLoading(false);
+      }
     } else {
       setLoginError('Invalid username or password.');
     }
   };
 
+  // Check for existing login on component mount
+  useEffect(() => {
+    const checkExistingLogin = async () => {
+      const storedLogin = localStorage.getItem('loggedIn');
+      const storedSchoolName = localStorage.getItem('schoolName');
+      const storedUsername = localStorage.getItem('currentUsername');
+      
+      if (storedLogin === 'true' && storedSchoolName && storedUsername) {
+        setDataLoading(true);
+        
+        try {
+          UserDataManager.setCurrentUser(storedUsername);
+          const dataLoaded = await UserDataManager.loadUserData();
+          
+          if (dataLoaded) {
+            setLoggedIn(true);
+            setSchoolName(storedSchoolName);
+            console.log('✅ Auto-login successful for user:', storedUsername);
+          } else {
+            // Clear invalid stored login
+            localStorage.clear();
+          }
+        } catch (error) {
+          console.error('❌ Auto-login failed:', error);
+          localStorage.clear();
+        } finally {
+          setDataLoading(false);
+        }
+      }
+    };
+    
+    checkExistingLogin();
+  }, []);
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.clear();
+    UserDataManager.setCurrentUser('');
+    UserDataManager.setUserData({});
+    setLoggedIn(false);
+    setSchoolName('');
+  };
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
-        backgroundSize: '400% 400%',
-        animation: 'gradientShift 15s ease infinite',
-        '@keyframes gradientShift': {
-          '0%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-          '100%': { backgroundPosition: '0% 50%' }
-        }
-      }}
-    >
+    <Box sx={styles.mainContainer}>
       <CssBaseline />
 
       {/* Login Dialog */}
       <Dialog
         open={!loggedIn}
         disableEscapeKeyDown
-        PaperProps={{
-          sx: {
-            background: 'rgba(255, 255, 255, 0.25)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.18)',
-            borderRadius: '20px',
-            boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)',
-          }
-        }}
+        sx={styles.loginDialog}
         TransitionComponent={Fade}
       >
-        <DialogTitle sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          color: '#fff',
-          textAlign: 'center'
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          color: '#fff', 
+          textAlign: 'center',
+          fontSize: '1.25rem',
+          fontWeight: 600
         }}>
           <LockIcon sx={{ color: '#fff' }} /> Login Required
         </DialogTitle>
-        <DialogContent sx={{ minWidth: 350 }}>
-          <Typography sx={{ mb: 3, color: '#fff', textAlign: 'center', opacity: 0.9 }}>
-            Enter profile password to access the app.
+        <DialogContent sx={{ minWidth: 350, padding: '20px' }}>
+          <Typography sx={{ 
+            marginBottom: 3, 
+            color: '#fff', 
+            textAlign: 'center', 
+            opacity: 0.9,
+            fontSize: '1rem'
+          }}>
+            {dataLoading ? 'Loading user data...' : 'Enter profile password to access the app.'}
           </Typography>
-          <TextField
-            label="Username"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            fullWidth
-            autoFocus
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '15px',
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#fff' }
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-              '& .MuiInputBase-input': { color: '#fff' }
-            }}
-          />
+          
+          {!dataLoading && (
+            <>
+              <TextField
+                label="Username"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                fullWidth
+                autoFocus
+                sx={{ ...styles.loginTextField, marginBottom: 2 }}
+              />
 
-          <TextField
-            label="Password"
-            type="password"
-            value={loginPassword}
-            onChange={e => setLoginPassword(e.target.value)}
-            fullWidth
-            onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
-            error={!!loginError}
-            helperText={loginError}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '15px',
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#fff' }
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-              '& .MuiInputBase-input': { color: '#fff' },
-              '& .MuiFormHelperText-root': { color: '#ff6b6b' }
-            }}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 1 }}>
-            <Box
-              sx={{
-                p: 1.5,
-                px: 3,
-                bgcolor: 'rgba(255,255,255,0.2)',
-                borderRadius: '10px',
-                fontWeight: 700,
-                letterSpacing: 2,
-                color: '#fff',
-                fontSize: '1.2rem'
-              }}
-            >
-              {captcha}
-            </Box>
-            <Button onClick={() => setCaptcha(generateCaptcha())} sx={{ ml: 2, color: '#fff' }}>
-              Refresh
-            </Button>
-          </Box>
-          <TextField
-            label="Enter Captcha"
-            value={captchaInput}
-            onChange={e => setCaptchaInput(e.target.value)}
-            fullWidth
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '15px',
-                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                '&:hover fieldset': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                '&.Mui-focused fieldset': { borderColor: '#fff' }
-              },
-              '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' },
-              '& .MuiInputBase-input': { color: '#fff' }
-            }}
-          />
-
+              <TextField
+                label="Password"
+                type="password"
+                value={loginPassword}
+                onChange={e => setLoginPassword(e.target.value)}
+                fullWidth
+                onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
+                error={!!loginError}
+                helperText={loginError}
+                sx={{ ...styles.loginTextField, marginBottom: 2 }}
+              />
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2, marginBottom: 1, gap: 2 }}>
+                <Box sx={styles.captchaBox}>
+                  {captcha}
+                </Box>
+                <Button 
+                  onClick={() => setCaptcha(generateCaptcha())} 
+                  sx={{ color: '#fff', textTransform: 'none' }}
+                >
+                  Refresh
+                </Button>
+              </Box>
+              
+              <TextField
+                label="Enter Captcha"
+                value={captchaInput}
+                onChange={e => setCaptchaInput(e.target.value)}
+                fullWidth
+                onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
+                sx={styles.loginTextField}
+              />
+            </>
+          )}
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          <Button
-            onClick={handleLogin}
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-              borderRadius: '25px',
-              px: 4,
-              py: 1.5,
-              fontSize: '1.1rem',
-              fontWeight: 600,
-              textTransform: 'none',
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
-              '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
-              },
-              transition: 'all 0.3s ease'
-            }}
-          >
-            Login
-          </Button>
-        </DialogActions>
-        <Box sx={{ width: '100%', textAlign: 'center', mt: 2, pb: 2 }}>
+        
+        {!dataLoading && (
+          <DialogActions sx={{ justifyContent: 'center', paddingBottom: 3 }}>
+            <Button
+              onClick={handleLogin}
+              variant="contained"
+              sx={styles.loginButton}
+            >
+              Login
+            </Button>
+          </DialogActions>
+        )}
+        
+        <Box sx={{ width: '100%', textAlign: 'center', marginTop: 2, paddingBottom: 2 }}>
           <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
             © All rights reserved | ASK Ltd
           </Typography>
@@ -281,31 +674,33 @@ function App() {
         <Fade in={loggedIn} timeout={800}>
           <Box sx={{ display: 'flex', width: '100%' }}>
             {/* App Bar */}
-            <AppBar
-              position="fixed"
-              sx={{
-                zIndex: (theme) => theme.zIndex.drawer + 1,
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.18)',
-                boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)',
-              }}
-            >
+            <AppBar position="fixed" sx={styles.appBar}>
               <Toolbar>
-                <SchoolIcon sx={{ mr: 2, color: '#fff' }} />
+                <SchoolIcon sx={{ marginRight: 2, color: '#fff' }} />
                 <Typography
                   variant="h6"
                   noWrap
                   component="div"
                   sx={{
                     fontWeight: 700,
-                    letterSpacing: 2,
+                    letterSpacing: 1,
                     color: '#fff',
-                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                    flexGrow: 1
                   }}
                 >
                   {schoolName}
                 </Typography>
+                <Button 
+                  onClick={handleLogout}
+                  sx={{ 
+                    color: '#fff', 
+                    borderRadius: '8px',
+                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  }}
+                >
+                  Logout
+                </Button>
               </Toolbar>
             </AppBar>
 
@@ -315,14 +710,7 @@ function App() {
               sx={{
                 width: drawerWidth,
                 flexShrink: 0,
-                [`& .MuiDrawer-paper`]: {
-                  width: drawerWidth,
-                  boxSizing: 'border-box',
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  color: '#fff',
-                },
+                '& .MuiDrawer-paper': styles.drawerPaper,
               }}
             >
               <Toolbar />
@@ -330,42 +718,38 @@ function App() {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                mt: 3,
-                mb: 2,
-                animation: 'fadeInUp 0.8s ease-out'
+                marginTop: 3,
+                marginBottom: 2,
               }}>
-                <Avatar sx={{
-                  bgcolor: 'rgba(255, 255, 255, 0.2)',
-                  color: '#fff',
-                  width: 70,
-                  height: 70,
-                  mb: 2,
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                    boxShadow: '0 12px 40px rgba(31, 38, 135, 0.5)',
-                  },
-                  transition: 'all 0.3s ease'
-                }}>
+                <Avatar sx={styles.sidebarAvatar}>
                   <SchoolIcon fontSize="large" />
                 </Avatar>
                 <Typography
                   variant="h6"
                   sx={{
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: '#fff',
-                    mb: 1,
-                    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                    textAlign: 'center'
+                    marginTop: 2,
+                    marginBottom: 1,
+                    textAlign: 'center',
+                    fontSize: '1.1rem'
                   }}
                 >
                   {schoolName}
                 </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'rgba(255,255,255,0.7)',
+                    textAlign: 'center',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  User: {UserDataManager.getCurrentUsername()}
+                </Typography>
               </Box>
 
-              <List sx={{ px: 2 }}>
+              <List sx={{ padding: '0 12px' }}>
                 {[
                   { key: 'student', label: 'New Admission', icon: <PersonAddIcon /> },
                   { key: 'show', label: 'Show Student', icon: <SearchIcon /> },
@@ -373,45 +757,27 @@ function App() {
                   { key: 'updateDelete', label: 'Update/Delete Student', icon: <EditNoteIcon /> },
                   { key: 'fee', label: 'Fee Management', icon: <PaymentIcon /> },
                   { key: 'settings', label: 'Academic Settings', icon: <SettingsIcon /> },
-                ].map((item, index) => (
-                  <Slide key={item.key} direction="right" in={true} timeout={300 + index * 100}>
-                    <ListItem
+                ].map((item) => (
+                  <ListItem
+                    key={item.key}
+                    sx={menu === item.key ? styles.activeMenuItem : styles.menuItem}
+                    onClick={() => setMenu(item.key as any)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <ListItemIcon sx={{ color: '#fff', minWidth: 40 }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.label}
                       sx={{
-                        borderRadius: 3,
-                        mx: 1,
-                        my: 0.5,
-                        cursor: 'pointer',
-                        background: menu === item.key
-                          ? 'rgba(255, 255, 255, 0.25)'
-                          : 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
-                        '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          transform: 'translateX(5px)',
-                          boxShadow: '0 4px 15px rgba(31, 38, 135, 0.3)',
-                        },
-                        transition: 'all 0.3s ease',
-                        boxShadow: menu === item.key
-                          ? '0 8px 32px rgba(31, 38, 135, 0.37)'
-                          : 'none'
+                        '& .MuiListItemText-primary': {
+                          fontWeight: menu === item.key ? 600 : 400,
+                          fontSize: '0.95rem',
+                          color: '#fff'
+                        }
                       }}
-                      onClick={() => setMenu(item.key as any)}
-                    >
-                      <ListItemIcon sx={{ color: '#fff', minWidth: 40 }}>
-                        {item.icon}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={item.label}
-                        sx={{
-                          '& .MuiListItemText-primary': {
-                            fontWeight: menu === item.key ? 600 : 400,
-                            fontSize: '0.95rem'
-                          }
-                        }}
-                      />
-                    </ListItem>
-                  </Slide>
+                    />
+                  </ListItem>
                 ))}
               </List>
             </Drawer>
@@ -421,7 +787,7 @@ function App() {
               component="main"
               sx={{
                 flexGrow: 1,
-                p: 4,
+                padding: 4,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -461,18 +827,22 @@ function App() {
                       >
                         New Admission
                       </Typography>
-                      <AdmissionForm onPreview={handlePreview} getNextRollNo={getNextRollNo} />
+                      <AdmissionForm 
+                        onPreview={handlePreview} 
+                        getNextRollNo={getNextRollNo}
+                        userDataManager={UserDataManager}
+                      />
                     </Card>
                   ) : menu === 'show' ? (
-                    <ShowStudent />
+                    <ShowStudent userDataManager={UserDataManager} />
                   ) : menu === 'updateDelete' ? (
-                    <UpdateDeleteStudent />
+                    <UpdateDeleteStudent userDataManager={UserDataManager} />
                   ) : menu === 'fee' ? (
-                    <FeeManagement />
+                    <FeeManagement userDataManager={UserDataManager} />
                   ) : menu === 'settings' ? (
-                    <AcademicSettings />
+                    <AcademicSettings userDataManager={UserDataManager} />
                   ) : (
-                    <HistorySection />
+                    <HistorySection userDataManager={UserDataManager} />
                   )}
                 </Box>
               </Fade>
@@ -481,41 +851,21 @@ function App() {
               <Dialog
                 open={confirmOpen}
                 onClose={() => setConfirmOpen(false)}
-                PaperProps={{
-                  sx: {
-                    background: 'rgba(255, 255, 255, 0.25)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.18)',
-                    borderRadius: '20px',
-                    boxShadow: '0 8px 32px rgba(31, 38, 135, 0.37)',
-                    color: '#fff'
-                  }
-                }}
+                PaperProps={{ sx: styles.dialogPaper }}
                 TransitionComponent={Fade}
               >
                 <DialogTitle sx={{ color: '#fff', fontWeight: 600 }}>
                   Confirm Admission
                 </DialogTitle>
                 <DialogContent>
-                  <pre style={{
-                    color: '#fff',
-                    fontSize: '0.9rem',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    padding: '15px',
-                    borderRadius: '10px',
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                  }}>
+                  <Box sx={styles.previewContent}>
                     {JSON.stringify(previewData, null, 2)}
-                  </pre>
+                  </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 3 }}>
+                <DialogActions sx={{ padding: 3 }}>
                   <Button
                     onClick={() => setConfirmOpen(false)}
-                    sx={{
-                      color: '#fff',
-                      borderRadius: '15px',
-                      px: 3
-                    }}
+                    sx={{ color: '#fff', borderRadius: '12px', padding: '8px 20px' }}
                   >
                     Cancel
                   </Button>
@@ -523,15 +873,8 @@ function App() {
                     onClick={handleConfirm}
                     variant="contained"
                     sx={{
-                      background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                      borderRadius: '15px',
-                      px: 3,
-                      fontWeight: 600,
-                      '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
-                      },
-                      transition: 'all 0.3s ease'
+                      ...styles.loginButton,
+                      padding: '8px 20px',
                     }}
                   >
                     Confirm
@@ -542,25 +885,7 @@ function App() {
               {/* Success Message */}
               {successMsg && (
                 <Fade in={!!successMsg} timeout={500}>
-                  <Box sx={{
-                    mt: 3,
-                    p: 3,
-                    background: 'rgba(76, 175, 80, 0.2)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(76, 175, 80, 0.3)',
-                    borderRadius: '15px',
-                    color: '#4caf50',
-                    fontWeight: 600,
-                    fontSize: 18,
-                    textAlign: 'center',
-                    boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(1)' },
-                      '50%': { transform: 'scale(1.02)' },
-                      '100%': { transform: 'scale(1)' }
-                    }
-                  }}>
+                  <Box sx={styles.successMessage}>
                     {successMsg}
                   </Box>
                 </Fade>
@@ -573,4 +898,6 @@ function App() {
   );
 }
 
+// Export UserDataManager for use in other components
+export { UserDataManager };
 export default App;

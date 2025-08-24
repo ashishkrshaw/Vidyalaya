@@ -7,10 +7,10 @@ import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2', // Modern blue
+      main: '#1976d2',
     },
     secondary: {
-      main: '#ff4081', // Accent pink
+      main: '#ff4081',
     },
     background: {
       default: '#f4f6fb',
@@ -31,13 +31,30 @@ const theme = createTheme({
       fontWeight: 600,
     },
   },
+  components: {
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          width: '100%',     // Container full width
+          maxWidth: '100% !important',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          width: '100%',     // Paper bhi full width lega
+        },
+      },
+    },
+  },
 });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-    <App />
+      <App />
     </ThemeProvider>
   </StrictMode>
 )

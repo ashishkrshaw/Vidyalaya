@@ -17,6 +17,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ✅ root full stretch */
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+/* ✅ body full stretch (no flex center) */
+body {
+  margin: 0;
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+  display: block;
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -24,14 +42,6 @@ a {
 }
 a:hover {
   color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -58,6 +68,13 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* ✅ Force container, card, box to use full width */
+.container, .card, .box {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Light mode overrides */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

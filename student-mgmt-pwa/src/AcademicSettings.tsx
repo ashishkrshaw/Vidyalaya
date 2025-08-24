@@ -110,6 +110,13 @@ const AcademicSettings: React.FC = () => {
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  // Add this function inside AcademicSettings component
+  const handleLogout = (): void => {
+    localStorage.removeItem('loggedIn');
+    localStorage.removeItem('schoolName');
+    window.location.reload(); // reload karega aur login screen dikhayega
+  };
+
 
   // Initialize data on component mount
   useEffect(() => {
@@ -508,9 +515,20 @@ const AcademicSettings: React.FC = () => {
 
   return (
     <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom align="center">
-        Academic Settings
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Academic Settings
+        </Typography>
+        <Button 
+          variant="outlined" 
+          color="error" 
+          onClick={handleLogout}
+        >
+          Logout
+        </Button>
+      </Box>
+
+
 
       {/* Password Reset Section */}
       <Card sx={{ p: 3, mb: 3 }}>
