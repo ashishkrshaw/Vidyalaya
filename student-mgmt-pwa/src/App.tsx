@@ -800,7 +800,6 @@ function App() {
                   {menu === 'student' ? (
                     <Card sx={{
                       width: '100%',
-                      maxWidth: 650,
                       p: 4,
                       mt: 4,
                       background: 'rgba(255, 255, 255, 0.25)',

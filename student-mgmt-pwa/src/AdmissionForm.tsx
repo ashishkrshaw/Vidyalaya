@@ -10,6 +10,162 @@ interface AdmissionFormProps {
   getNextRollNo: (cls: string, section: string) => Promise<number>;
 }
 
+// Custom Input Component with Glassmorphism Design
+const CustomInput = ({ 
+  label, 
+  name, 
+  type = 'text', 
+  required = false, 
+  readOnly = false,
+  value,
+  options = null,
+  onChange,
+  onFocus,
+  onBlur,
+  focusedField
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  required?: boolean;
+  readOnly?: boolean;
+  value: any;
+  options?: string[] | null;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onFocus: (name: string) => void;
+  onBlur: () => void;
+  focusedField: string;
+}) => {
+  const isFocused = focusedField === name || (value !== '' && value !== undefined);
+  
+  return (
+    <div style={{ marginBottom: '20px', width: '100%' }}>
+      <div style={{
+        position: 'relative',
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(15px)',
+        borderRadius: '15px',
+        border: isFocused ? '1px solid rgba(255, 255, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.2)',
+        transition: 'all 0.3s ease',
+        boxShadow: isFocused ? '0 0 0 2px rgba(255, 255, 255, 0.1)' : 'none'
+      }}>
+        <label style={{
+          position: 'absolute',
+          left: '16px',
+          top: isFocused ? '-8px' : '16px',
+          fontSize: isFocused ? '12px' : '14px',
+          color: isFocused ? '#fff' : 'rgba(255, 255, 255, 0.7)',
+          background: isFocused ? 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)' : 'transparent',
+          WebkitBackgroundClip: isFocused ? 'text' : 'initial',
+          WebkitTextFillColor: isFocused ? 'transparent' : 'rgba(255, 255, 255, 0.7)',
+          backgroundClip: isFocused ? 'text' : 'initial',
+          padding: isFocused ? '0 8px' : '0',
+          borderRadius: '4px',
+          transition: 'all 0.3s ease',
+          fontWeight: isFocused ? '600' : '500',
+          pointerEvents: 'none',
+          zIndex: 1
+        }}>
+          {label} {required && <span style={{ color: '#ff6b6b' }}>*</span>}
+        </label>
+        
+        {options ? (
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            onFocus={() => onFocus(name)}
+            onBlur={onBlur}
+            required={required}
+            style={{
+              width: '100%',
+              padding: '20px 16px 12px 16px',
+              background: 'transparent',
+              color: '#fff',
+              border: 'none',
+              outline: 'none',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderRadius: '15px'
+            }}
+          >
+            {name === 'class' && <option value="" style={{ background: '#333', color: '#fff' }}>Select Class</option>}
+            {options.map(option => (
+              <option key={option} value={option} style={{ background: '#333', color: '#fff', padding: '8px' }}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            onFocus={() => onFocus(name)}
+            onBlur={onBlur}
+            required={required}
+            readOnly={readOnly}
+            style={{
+              width: '100%',
+              padding: '20px 16px 12px 16px',
+              background: 'transparent',
+              color: '#fff',
+              border: 'none',
+              outline: 'none',
+              fontSize: '14px',
+              borderRadius: '15px',
+              cursor: readOnly ? 'not-allowed' : 'text',
+              opacity: readOnly ? 0.7 : 1,
+              boxSizing: 'border-box'
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Custom Button Component
+const CustomButton = ({ children, onClick, disabled = false }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      type="submit"
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        padding: '16px 32px',
+        borderRadius: '15px',
+        border: 'none',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        fontSize: '16px',
+        fontWeight: '600',
+        background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+        color: '#fff',
+        boxShadow: isHovered ? '0 6px 25px rgba(102, 126, 234, 0.6)' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+        transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'all 0.3s ease',
+        opacity: disabled ? 0.6 : 1,
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '8px'
+      }}
+    >
+      {children}
+    </button>
+  );
+};
+
 const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo }) => {
   const [form, setForm] = useState({
     name: '',
@@ -50,274 +206,395 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
     onPreview({ ...form, rollNo });
   };
 
-  const InputField = ({ 
-    label, 
-    name, 
-    type = 'text', 
-    required = false, 
-    readOnly = false,
-    value,
-    options = null 
-  }: {
-    label: string;
-    name: string;
-    type?: string;
-    required?: boolean;
-    readOnly?: boolean;
-    value: any;
-    options?: string[] | null;
-  }) => {
-    const isFocused = focusedField === name || value !== '';
-    
-    return (
-      <div className="relative group">
-        <div className={`
-          absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 
-          group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-105
-        `} />
-        
-        <div className={`
-          relative backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-1
-          transition-all duration-300 hover:bg-white/15 hover:border-white/30
-          ${isFocused ? 'bg-white/15 border-white/40 shadow-lg' : ''}
-        `}>
-          <label className={`
-            absolute left-4 transition-all duration-300 pointer-events-none text-white/80
-            ${isFocused ? '-top-2 text-xs bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent font-semibold px-2' : 'top-4 text-sm'}
-          `}>
-            {label} {required && <span className="text-pink-400">*</span>}
-          </label>
-          
-          {options ? (
-            <select
-              name={name}
-              value={value}
-              onChange={handleChange}
-              onFocus={() => setFocused(name)}
-              onBlur={() => setFocused('')}
-              required={required}
-              className="w-full pt-6 pb-3 px-4 bg-transparent text-white placeholder-white/50 border-none outline-none text-sm"
-            >
-              {name === 'class' && <option value="">Select Class</option>}
-              {options.map(option => (
-                <option key={option} value={option} className="bg-slate-800 text-white">
-                  {option}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type={type}
-              name={name}
-              value={value}
-              onChange={handleChange}
-              onFocus={() => setFocused(name)}
-              onBlur={() => setFocused('')}
-              required={required}
-              readOnly={readOnly}
-              className={`
-                w-full pt-6 pb-3 px-4 bg-transparent text-white placeholder-white/50 border-none outline-none text-sm
-                ${readOnly ? 'cursor-not-allowed opacity-70' : ''}
-              `}
-            />
-          )}
-        </div>
-      </div>
-    );
+  const setFocused = (fieldName: string) => {
+    setFocusedField(fieldName);
+  };
+
+  const clearFocused = () => {
+    setFocusedField('');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-800 p-4">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+      padding: '20px',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
       {/* Animated Background Elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/30 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
-        <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}} />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 0
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '-160px',
+          right: '-160px',
+          width: '320px',
+          height: '320px',
+          background: 'rgba(59, 130, 246, 0.3)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 3s ease-in-out infinite'
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: '-160px',
+          left: '-160px',
+          width: '320px',
+          height: '320px',
+          background: 'rgba(147, 51, 234, 0.3)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 3s ease-in-out infinite 1s'
+        }} />
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '240px',
+          height: '240px',
+          background: 'rgba(236, 72, 153, 0.2)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          animation: 'pulse 3s ease-in-out infinite 2s'
+        }} />
       </div>
 
-      <div className="relative max-w-6xl mx-auto">
+      <div style={{ position: 'relative', maxWidth: '1200px', margin: '0 auto', zIndex: 1 }}>
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+          <h1 style={{
+            fontSize: '48px',
+            fontWeight: '800',
+            background: 'linear-gradient(45deg, #60a5fa, #a78bfa, #f472b6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            marginBottom: '8px',
+            textShadow: '0 4px 15px rgba(0, 0, 0, 0.2)'
+          }}>
             Student Admission Form
           </h1>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-500 mx-auto rounded-full" />
+          <div style={{
+            width: '96px',
+            height: '4px',
+            background: 'linear-gradient(45deg, #60a5fa, #a78bfa)',
+            margin: '0 auto',
+            borderRadius: '2px'
+          }} />
         </div>
 
         {/* Form Container */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <div onSubmit={handleSubmit} style={{ width: '100%' }}>
           {/* Main Form Card */}
-          <div className="backdrop-blur-lg bg-white/10 border border-white/20 rounded-3xl p-8 shadow-2xl">
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '25px',
+            padding: '40px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            marginBottom: '32px'
+          }}>
             
             {/* Personal Information Section */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white/90 mb-6 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg mr-3 flex items-center justify-center">
-                  <span className="text-white text-sm">👤</span>
+            <div style={{ marginBottom: '40px' }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
+                  borderRadius: '8px',
+                  marginRight: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  👤
                 </div>
                 Personal Information
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <InputField
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '24px'
+              }}>
+                <CustomInput
                   label="Student Name"
                   name="name"
                   value={form.name}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Father's Name"
                   name="fatherName"
                   value={form.fatherName}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Mother's Name"
                   name="motherName"
                   value={form.motherName}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Address"
                   name="address"
                   value={form.address}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
               </div>
             </div>
 
             {/* Academic Information Section */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white/90 mb-6 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg mr-3 flex items-center justify-center">
-                  <span className="text-white text-sm">🎓</span>
+            <div style={{ marginBottom: '40px' }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(45deg, #8b5cf6, #ec4899)',
+                  borderRadius: '8px',
+                  marginRight: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  🎓
                 </div>
                 Academic Information
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <InputField
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '24px'
+              }}>
+                <CustomInput
                   label="Class"
                   name="class"
                   value={form.class}
                   options={classOptions}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Section"
                   name="section"
                   value={form.section}
                   options={sectionOptions}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Roll Number"
                   name="rollNo"
                   value={rollNo}
                   readOnly
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Date of Birth"
                   name="dob"
                   type="date"
                   value={form.dob}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
               </div>
             </div>
 
             {/* Contact & Documents Section */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white/90 mb-6 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-red-600 rounded-lg mr-3 flex items-center justify-center">
-                  <span className="text-white text-sm">📞</span>
+            <div style={{ marginBottom: '40px' }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(45deg, #ec4899, #ef4444)',
+                  borderRadius: '8px',
+                  marginRight: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  📞
                 </div>
                 Contact & Documents
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <InputField
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '24px'
+              }}>
+                <CustomInput
                   label="Father's Mobile"
                   name="fatherMobile"
                   value={form.fatherMobile}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Email ID"
                   name="email"
                   type="email"
                   value={form.email}
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="Aadhar Number"
                   name="aadhar"
                   value={form.aadhar}
                   required
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
-                <InputField
+                <CustomInput
                   label="APAAR ID"
                   name="apaar"
                   value={form.apaar}
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
               </div>
             </div>
 
             {/* Additional Notes Section */}
-            <div className="mb-8">
-              <h3 className="text-xl font-semibold text-white/90 mb-6 flex items-center">
-                <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg mr-3 flex items-center justify-center">
-                  <span className="text-white text-sm">📝</span>
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: 'rgba(255, 255, 255, 0.9)',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(45deg, #10b981, #14b8a6)',
+                  borderRadius: '8px',
+                  marginRight: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px'
+                }}>
+                  📝
                 </div>
                 Additional Information
               </h3>
               
-              <div className="grid grid-cols-1 gap-6">
-                <InputField
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr',
+                gap: '24px'
+              }}>
+                <CustomInput
                   label="Special Notes"
                   name="note"
                   value={form.note}
+                  onChange={handleChange}
+                  onFocus={setFocused}
+                  onBlur={clearFocused}
+                  focusedField={focusedField}
                 />
               </div>
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center">
-            <button
-              type="submit"
-              className="group relative px-12 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white font-semibold rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-            >
-              {/* Button background animation */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-              
-              {/* Button content */}
-              <span className="relative flex items-center space-x-2">
-                <span>Submit Admission</span>
-                <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </span>
-              
-              {/* Ripple effect */}
-              <div className="absolute inset-0 -top-2 -bottom-2 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700 origin-left" />
-            </button>
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <CustomButton onClick={handleSubmit}>
+              <span>Submit Admission</span>
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </CustomButton>
           </div>
-        </form>
+        </div>
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.05); }
         }
         
         input[type="date"]::-webkit-calendar-picker-indicator {
           filter: invert(1);
           opacity: 0.7;
+          cursor: pointer;
         }
         
         select option {
@@ -326,7 +603,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
           padding: 8px;
         }
         
-        /* Custom scrollbar for better aesthetics */
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
           width: 8px;
         }
