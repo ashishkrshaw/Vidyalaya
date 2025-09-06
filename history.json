@@ -1,1 +1,123 @@
-[{"action":"update","studentId":"S25,01,0001","timestamp":"2025-07-11T14:20:26.016Z","before":{"name":"moha","fatherName":"KUMAR SHAW","motherName":"sanu","address":"Giridih, Jharkhand, India","class":"Nursery","section":"A","aadhar":"55","dob":"2025-07-11","fatherMobile":"08969910841","email":"sawashishkumar327@gmail.com","apaar":"","note":"","rollNo":1,"studentId":"S25,01,0001"},"after":{"name":"moha","fatherName":"KUMAR SHAW","motherName":"sanu","address":"Giridih, Jharkhand, India","class":"Nursery","section":"B","aadhar":"55","dob":"2025-07-11","fatherMobile":"08969910841","email":"sawashishkumar327@gmail.com","apaar":"","note":"","rollNo":1,"studentId":"S25,01,0001"},"id":1},{"action":"delete","studentId":"S25,01,0001","timestamp":"2025-07-11T14:20:54.083Z","before":{"name":"moha","fatherName":"KUMAR SHAW","motherName":"sanu","address":"Giridih, Jharkhand, India","class":"Nursery","section":"B","aadhar":"55","dob":"2025-07-11","fatherMobile":"08969910841","email":"sawashishkumar327@gmail.com","apaar":"","note":"","rollNo":1,"studentId":"S25,01,0001"},"after":null,"id":2},{"action":"delete","studentId":"S25,01,0001","timestamp":"2025-07-11T14:41:08.943Z","before":{"name":"moha","fatherName":"KUMAR SHAW","motherName":"sanu","address":"Giridih, Jharkhand, India","class":"Nursery","section":"A","aadhar":"55","dob":"2025-07-11","fatherMobile":"08969910841","email":"sawashishkumar327@gmail.com","apaar":"","note":"","rollNo":1,"studentId":"S25,01,0001"},"after":null,"id":3},{"action":"fee_payment","studentId":"S25,01,0001","timestamp":"2025-07-11T14:44:52.160Z","details":{"months":["April","May"],"amount":1000,"class":"Nursery","section":"A","rollNo":1,"name":"moha"},"id":4},{"action":"fee_payment","studentId":"S25,02,0002","timestamp":"2025-07-11T15:01:19.149Z","details":{"months":["August","July","June","May","April"],"amount":2500,"class":"Nursery","section":"A","rollNo":2,"name":"moha"},"id":5}]
+[
+    {
+        "action": "update",
+        "studentId": "S25,01,0001",
+        "timestamp": "2025-07-11T14:20:26.016Z",
+        "before": {
+            "name": "moha",
+            "fatherName": "KUMAR SHAW",
+            "motherName": "sanu",
+            "address": "Giridih, Jharkhand, India",
+            "class": "Nursery",
+            "section": "A",
+            "aadhar": "55",
+            "dob": "2025-07-11",
+            "fatherMobile": "08969910841",
+            "email": "sawashishkumar327@gmail.com",
+            "apaar": "",
+            "note": "",
+            "rollNo": 1,
+            "studentId": "S25,01,0001"
+        },
+        "after": {
+            "name": "moha",
+            "fatherName": "KUMAR SHAW",
+            "motherName": "sanu",
+            "address": "Giridih, Jharkhand, India",
+            "class": "Nursery",
+            "section": "B",
+            "aadhar": "55",
+            "dob": "2025-07-11",
+            "fatherMobile": "08969910841",
+            "email": "sawashishkumar327@gmail.com",
+            "apaar": "",
+            "note": "",
+            "rollNo": 1,
+            "studentId": "S25,01,0001"
+        },
+        "id": 1
+    },
+    {
+        "action": "delete",
+        "studentId": "S25,01,0001",
+        "timestamp": "2025-07-11T14:20:54.083Z",
+        "before": {
+            "name": "moha",
+            "fatherName": "KUMAR SHAW",
+            "motherName": "sanu",
+            "address": "Giridih, Jharkhand, India",
+            "class": "Nursery",
+            "section": "B",
+            "aadhar": "55",
+            "dob": "2025-07-11",
+            "fatherMobile": "08969910841",
+            "email": "sawashishkumar327@gmail.com",
+            "apaar": "",
+            "note": "",
+            "rollNo": 1,
+            "studentId": "S25,01,0001"
+        },
+        "after": null,
+        "id": 2
+    },
+    {
+        "action": "delete",
+        "studentId": "S25,01,0001",
+        "timestamp": "2025-07-11T14:41:08.943Z",
+        "before": {
+            "name": "moha",
+            "fatherName": "KUMAR SHAW",
+            "motherName": "sanu",
+            "address": "Giridih, Jharkhand, India",
+            "class": "Nursery",
+            "section": "A",
+            "aadhar": "55",
+            "dob": "2025-07-11",
+            "fatherMobile": "08969910841",
+            "email": "sawashishkumar327@gmail.com",
+            "apaar": "",
+            "note": "",
+            "rollNo": 1,
+            "studentId": "S25,01,0001"
+        },
+        "after": null,
+        "id": 3
+    },
+    {
+        "action": "fee_payment",
+        "studentId": "S25,01,0001",
+        "timestamp": "2025-07-11T14:44:52.160Z",
+        "details": {
+            "months": [
+                "April",
+                "May"
+            ],
+            "amount": 1000,
+            "class": "Nursery",
+            "section": "A",
+            "rollNo": 1,
+            "name": "moha"
+        },
+        "id": 4
+    },
+    {
+        "action": "fee_payment",
+        "studentId": "S25,02,0002",
+        "timestamp": "2025-07-11T15:01:19.149Z",
+        "details": {
+            "months": [
+                "August",
+                "July",
+                "June",
+                "May",
+                "April"
+            ],
+            "amount": 2500,
+            "class": "Nursery",
+            "section": "A",
+            "rollNo": 2,
+            "name": "moha"
+        },
+        "id": 5
+    }
+]
