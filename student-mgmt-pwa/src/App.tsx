@@ -212,6 +212,13 @@ class UserDataManager {
 
   static setCurrentUser(username: string) {
     this.currentUsername = username;
+    // Load from localStorage
+    const stored = localStorage.getItem(`userData_${username}`);
+    if (stored) {
+      this.userData = JSON.parse(stored);
+    } else {
+      this.createNewUserFile();
+    }
   }
 
   static getCurrentUsername() {
@@ -219,57 +226,18 @@ class UserDataManager {
   }
 
   static setUserData(data: any) {
-    this.userData = {
-      admissions: data.admissions || [],
-      students: data.students || [],
-      history: data.history || [],
-      academicSettings: data.academicSettings || {},
-      feeManagement: data.feeManagement || [],
-      profile: data.profile || {},
-      ...data
-    };
+    this.userData = data;
+    if (this.currentUsername) {
+      localStorage.setItem(`userData_${this.currentUsername}`, JSON.stringify(this.userData));
+    }
   }
 
   static getUserData() {
     return this.userData;
   }
 
-  static async loadUserData() {
-    if (!this.currentUsername) {
-      console.error('❌ No current username set');
-      return false;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/get-data/${this.currentUsername}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          this.setUserData(result.data || {});
-          console.log('✅ User data loaded from MongoDB for:', this.currentUsername);
-          return true;
-        }
-      }
-
-      console.log('ℹ️ No existing data found, creating new user file for:', this.currentUsername);
-      await this.createNewUserFile();
-      return true;
-
-    } catch (error) {
-      console.error('❌ Error loading user data:', error);
-      return false;
-    }
-  }
-
-  static async createNewUserFile() {
-    if (!this.currentUsername) return false;
+  static createNewUserFile() {
+    if (!this.currentUsername) return;
 
     const initialData = {
       username: this.currentUsername,
@@ -278,8 +246,8 @@ class UserDataManager {
       history: [],
       academicSettings: {
         currentSession: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
-        classes: ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th'],
-        sections: ['A', 'B', 'C']
+        classes: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'],
+        sections: ['A','B','C']
       },
       feeManagement: [],
       profile: {
@@ -288,84 +256,18 @@ class UserDataManager {
       }
     };
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/save-data`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          username: this.currentUsername,
-          data: initialData
-        })
-      });
-
-      if (response.ok) {
-        this.setUserData(initialData);
-        console.log('✅ New user file created in MongoDB for:', this.currentUsername);
-        return true;
-      }
-    } catch (error) {
-      console.error('❌ Error creating new user file:', error);
-    }
-
-    return false;
+    this.userData = initialData;
+    localStorage.setItem(`userData_${this.currentUsername}`, JSON.stringify(initialData));
   }
 
-  static async saveUserData(sectionName: string, sectionData: any) {
-    if (!this.currentUsername) {
-      console.error('❌ No username set for saving data');
-      return false;
-    }
+  static saveUserData(sectionName: string, sectionData: any) {
+    if (!this.currentUsername) return false;
 
-    try {
-      this.userData[sectionName] = sectionData;
-      this.userData.profile.lastUpdated = new Date().toISOString();
+    this.userData[sectionName] = sectionData;
+    this.userData.profile.lastUpdated = new Date().toISOString();
 
-      const response = await fetch(`${API_BASE_URL}/save-data`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          username: this.currentUsername,
-          data: this.userData
-        })
-      });
-
-      if (response.ok) {
-        console.log(`✅ ${sectionName} data saved to MongoDB for user:`, this.currentUsername);
-
-        fetch(`${API_BASE_URL}/upload-drive`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({
-              username: this.currentUsername,
-              name: `${this.currentUsername}_backup.json`,
-              content: this.userData
-            })
-          }).then(driveResponse => {
-            if (driveResponse.ok) {
-              console.log('✅ Data backed up to Google Drive');
-            } else {
-              console.warn('⚠️ Google Drive backup failed');
-            }
-          }).catch(driveError => {
-            console.warn('⚠️ Google Drive backup failed:', driveError);
-          });
-
-        return true;
-      }
-    } catch (error) {
-      console.error(`❌ Error saving ${sectionName} data:`, error);
-    }
-
-    return false;
+    localStorage.setItem(`userData_${this.currentUsername}`, JSON.stringify(this.userData));
+    return true;
   }
 
   static getSectionData(sectionName: string) {
@@ -373,16 +275,12 @@ class UserDataManager {
   }
 
   static addToSection(sectionName: string, newData: any) {
-    if (!this.userData[sectionName]) {
-      this.userData[sectionName] = [];
-    }
-
+    if (!this.userData[sectionName]) this.userData[sectionName] = [];
     if (Array.isArray(this.userData[sectionName])) {
       this.userData[sectionName].push(newData);
     } else {
       this.userData[sectionName] = { ...this.userData[sectionName], ...newData };
     }
-
     return this.saveUserData(sectionName, this.userData[sectionName]);
   }
 
@@ -407,6 +305,7 @@ class UserDataManager {
     return false;
   }
 }
+
 
 function App() {
   const [menu, setMenu] = useState<'student' | 'show' | 'history' | 'updateDelete' | 'settings' | 'fee'>('student');
@@ -488,43 +387,36 @@ function App() {
     setIsDataReady(false);
   };
 
-  const handleLogin = async () => {
-    if (captchaInput.trim() !== captcha) {
-      setLoginError('Captcha does not match.');
-      return;
-    }
+  const handleLogin = () => {
+  if (captchaInput.trim() !== captcha) {
+    setLoginError('Captcha does not match.');
+    return;
+  }
 
-    const found = schools.find((s: School) =>
-      s.username.toLowerCase() === username.trim().toLowerCase() &&
-      s.password === loginPassword
-    );
+  const found = schools.find((s: School) =>
+    s.username.toLowerCase() === username.trim().toLowerCase() &&
+    s.password === loginPassword
+  );
 
-    if (found) {
-      setLoggedIn(true);
-      setSchoolName(found.schoolName);
-      setLoginPassword('');
-      setLoginError('');
-      setCaptchaInput('');
-      setUsername('');
+  if (found) {
+    setLoggedIn(true);
+    setSchoolName(found.schoolName);
+    setLoginPassword('');
+    setLoginError('');
+    setCaptchaInput('');
+    setUsername('');
 
-      localStorage.setItem('loggedIn', 'true');
-      localStorage.setItem('schoolName', found.schoolName);
-      localStorage.setItem('currentUsername', found.username);
+    localStorage.setItem('loggedIn', 'true');
+    localStorage.setItem('schoolName', found.schoolName);
+    localStorage.setItem('currentUsername', found.username);
 
-      UserDataManager.setCurrentUser(found.username);
-      UserDataManager.loadUserData().then(dataLoaded => {
-        if (dataLoaded) {
-          setIsDataReady(true);
-          console.log('✅ Login successful and data loaded for user:', found.username);
-        } else {
-          handleLogout();
-          setLoginError('Failed to load user data. Please try again.');
-        }
-      });
-    } else {
-      setLoginError('Invalid username or password.');
-    }
-  };
+    UserDataManager.setCurrentUser(found.username);
+    setIsDataReady(true);
+  } else {
+    setLoginError('Invalid username or password.');
+  }
+};
+  
 
   return (
     <Box sx={styles.mainContainer}>
