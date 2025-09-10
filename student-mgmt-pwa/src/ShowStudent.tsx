@@ -8,31 +8,17 @@ import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import SearchIcon from '@mui/icons-material/Search';
-import { keyframes } from '@mui/system';
 
 // Mock functions for demo
 const getAdmissions = async () => [];
-const getAdmissionsByClassSection = async (cls, section) => [];
-const deleteAdmission = async (studentId, student) => {};
-const updateAdmission = async (editData, dialogStudent) => {};
+const getAdmissionsByClassSection = async (cls: any, section: any) => [];
+const deleteAdmission = async (studentId: any, student: any) => {};
+const updateAdmission = async (editData: any, dialogStudent: any) => {};
 
 const classOptions = [
   'Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 ];
 const sectionOptions = ['A', 'B', 'C'];
-
-// Animations
-const glow = keyframes`
-  0% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff, 0 0 15px #00d4ff; }
-  50% { box-shadow: 0 0 20px #00d4ff, 0 0 35px #00d4ff, 0 0 40px #00d4ff; }
-  100% { box-shadow: 0 0 5px #00d4ff, 0 0 10px #00d4ff, 0 0 15px #00d4ff; }
-`;
-
-const pulse = keyframes`
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-`;
 
 const ShowStudent: React.FC = () => {
   const [studentId, setStudentId] = useState('');
@@ -116,1201 +102,346 @@ const ShowStudent: React.FC = () => {
   };
 
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 25%, #16213e 50%, #0f3460 75%, #533483 100%)',
-      p: 3,
-      position: 'relative',
-      '&::before': {
-        content: '""',
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 0, 150, 0.1) 0%, transparent 50%)',
-        pointerEvents: 'none',
-        zIndex: 0
-      }
-    }}>
-      {/* Header */}
-      <Box sx={{
-        position: 'relative',
-        zIndex: 1,
-        mb: 4,
-        textAlign: 'center'
-      }}>
-        <Typography variant="h3" sx={{
-          fontWeight: 900,
-          background: 'linear-gradient(45deg, #00d4ff, #ff0096, #00d4ff)',
-          backgroundSize: '200% 200%',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          animation: `${glow} 2s ease-in-out infinite alternate`,
-          letterSpacing: 2,
-          mb: 1
-        }}>
-          STUDENT SEARCH PORTAL
-        </Typography>
-        <Typography variant="h6" sx={{
-          color: 'rgba(255, 255, 255, 0.7)',
-          fontWeight: 300,
-          letterSpacing: 1
-        }}>
-          Advanced Student Information System
-        </Typography>
-      </Box>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" sx={{ mb: 4, textAlign: 'center', fontWeight: 'bold' }}>
+        Student Search
+      </Typography>
 
-      {/* Search Panel */}
-      <Box sx={{
-        position: 'relative',
-        zIndex: 1,
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 4,
-        border: '1px solid rgba(0, 212, 255, 0.2)',
-        p: 4,
-        mb: 4,
-        boxShadow: '0 25px 45px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-        '&:hover': {
-          border: '1px solid rgba(0, 212, 255, 0.4)',
-          boxShadow: '0 0 30px rgba(0, 212, 255, 0.2)',
-        }
-      }}>
-        <Typography variant="h5" sx={{
-          fontWeight: 700,
-          color: '#00d4ff',
-          mb: 3,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2
-        }}>
-          <SearchIcon sx={{ fontSize: 28 }} />
-          Search Configuration
-        </Typography>
-        
-        <Grid container spacing={3} alignItems="center">
+      <Card sx={{ p: 3, mb: 4, boxShadow: 3 }}>
+        <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={3}>
             <FormControl fullWidth>
-              <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Search Method</InputLabel>
-              <Select 
-                value={searchType} 
-                label="Search Method" 
+              <InputLabel>Search By</InputLabel>
+              <Select
+                value={searchType}
+                label="Search By"
                 onChange={e => setSearchType(e.target.value as any)}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: 'rgba(0, 212, 255, 0.3)',
-                  },
-                  '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#00d4ff',
-                  },
-                  '& .MuiSelect-select': {
-                    color: 'white',
-                  }
-                }}
               >
-                <MenuItem value="id">🆔 Student ID</MenuItem>
-                <MenuItem value="roll">📝 Class + Section + Roll</MenuItem>
-                <MenuItem value="class">🏫 All of Class</MenuItem>
-                <MenuItem value="classSection">📚 Class & Section</MenuItem>
-                <MenuItem value="all">👥 All Students</MenuItem>
+                <MenuItem value="id">Student ID</MenuItem>
+                <MenuItem value="roll">Class + Section + Roll</MenuItem>
+                <MenuItem value="class">All of Class</MenuItem>
+                <MenuItem value="classSection">Class & Section</MenuItem>
+                <MenuItem value="all">All Students</MenuItem>
               </Select>
             </FormControl>
           </Grid>
-          
+
           {searchType === 'id' && (
-            <Grid item xs={12} sm={4}>
-              <TextField 
-                label="Student ID" 
-                value={studentId} 
-                onChange={e => setStudentId(e.target.value)} 
+            <Grid item xs={12} sm={9}>
+              <TextField
+                label="Student ID"
+                value={studentId}
+                onChange={e => setStudentId(e.target.value)}
                 fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    '& fieldset': {
-                      borderColor: 'rgba(0, 212, 255, 0.3)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#00d4ff',
-                    },
-                    '& input': {
-                      color: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  }
-                }}
               />
             </Grid>
           )}
-          
+
           {(searchType === 'roll' || searchType === 'class' || searchType === 'classSection') && (
-            <Grid item xs={12} sm={2}>
+            <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Class</InputLabel>
-                <Select 
-                  value={cls} 
-                  label="Class" 
+                <InputLabel>Class</InputLabel>
+                <Select
+                  value={cls}
+                  label="Class"
                   onChange={e => setCls(e.target.value)}
-                  sx={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 212, 255, 0.3)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00d4ff',
-                    },
-                    '& .MuiSelect-select': {
-                      color: 'white',
-                    }
-                  }}
                 >
                   {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
           )}
-          
+
           {(searchType === 'roll' || searchType === 'classSection') && (
-            <Grid item xs={12} sm={2}>
+            <Grid item xs={12} sm={3}>
               <FormControl fullWidth>
-                <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Section</InputLabel>
-                <Select 
-                  value={section} 
-                  label="Section" 
+                <InputLabel>Section</InputLabel>
+                <Select
+                  value={section}
+                  label="Section"
                   onChange={e => setSection(e.target.value)}
-                  sx={{
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-notchedOutline': {
-                      borderColor: 'rgba(0, 212, 255, 0.3)',
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                      borderColor: '#00d4ff',
-                    },
-                    '& .MuiSelect-select': {
-                      color: 'white',
-                    }
-                  }}
                 >
                   {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
                 </Select>
               </FormControl>
             </Grid>
           )}
-          
+
           {searchType === 'roll' && (
-            <Grid item xs={12} sm={2}>
-              <TextField 
-                label="Roll No" 
-                value={rollNo} 
-                onChange={e => setRollNo(e.target.value)} 
+            <Grid item xs={12} sm={3}>
+              <TextField
+                label="Roll No"
+                value={rollNo}
+                onChange={e => setRollNo(e.target.value)}
                 fullWidth
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 2,
-                    '& fieldset': {
-                      borderColor: 'rgba(0, 212, 255, 0.3)',
-                    },
-                    '&:hover fieldset': {
-                      borderColor: '#00d4ff',
-                    },
-                    '& input': {
-                      color: 'white',
-                    }
-                  },
-                  '& .MuiInputLabel-root': {
-                    color: 'rgba(255, 255, 255, 0.7)',
-                  }
-                }}
               />
             </Grid>
           )}
-          
-          <Grid item xs={12} sm={2}>
-            <Button 
-              variant="contained" 
-              onClick={handleSearch} 
-              fullWidth 
+
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              onClick={handleSearch}
+              fullWidth
               disabled={loading}
               startIcon={<SearchIcon />}
-              sx={{
-                height: 56,
-                background: loading 
-                  ? 'rgba(255, 255, 255, 0.1)' 
-                  : 'linear-gradient(45deg, #ff0096, #00d4ff)',
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: 16,
-                boxShadow: loading ? 'none' : '0 0 20px rgba(0, 212, 255, 0.5)',
-                animation: loading ? 'none' : `${pulse} 2s infinite`,
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #00d4ff, #ff0096)',
-                  boxShadow: '0 0 30px rgba(0, 212, 255, 0.8)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
+              sx={{ py: 1.5 }}
             >
-              {loading ? 'SEARCHING...' : 'SEARCH'}
+              {loading ? 'Searching...' : 'Search'}
             </Button>
           </Grid>
         </Grid>
-      </Box>
+      </Card>
 
-      {/* Export Button */}
       {results.length > 0 && (
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          mb: 2,
-          position: 'relative',
-          zIndex: 1
-        }}>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <Button
             variant="contained"
             startIcon={<DownloadIcon />}
             onClick={e => setExportAllAnchorEl(e.currentTarget)}
-            sx={{
-              background: 'linear-gradient(45deg, #00d4ff, #ff0096)',
-              borderRadius: 25,
-              px: 3,
-              py: 1.5,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: 1,
-              boxShadow: '0 10px 20px rgba(0, 212, 255, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #ff0096, #00d4ff)',
-                boxShadow: '0 15px 30px rgba(255, 0, 150, 0.4)',
-                transform: 'translateY(-3px)'
-              }
-            }}
           >
             Export All Data
           </Button>
-          <Menu 
-            anchorEl={exportAllAnchorEl} 
-            open={!!exportAllAnchorEl} 
+          <Menu
+            anchorEl={exportAllAnchorEl}
+            open={!!exportAllAnchorEl}
             onClose={() => setExportAllAnchorEl(null)}
-            sx={{
-              '& .MuiPaper-root': {
-                background: 'rgba(26, 26, 46, 0.95)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: 2,
-                border: '1px solid rgba(0, 212, 255, 0.2)',
-                boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
-              }
-            }}
           >
-            <MenuItem onClick={handleExportAllPDF} sx={{ color: 'white', '&:hover': { background: 'rgba(0, 212, 255, 0.1)' } }}>
-              <PictureAsPdfIcon sx={{ mr: 1, color: '#ff0096' }} />Export as PDF
+            <MenuItem onClick={handleExportAllPDF}>
+              <PictureAsPdfIcon sx={{ mr: 1 }} />
+              Export as PDF
             </MenuItem>
-            <MenuItem onClick={handleExportAllExcel} sx={{ color: 'white', '&:hover': { background: 'rgba(0, 212, 255, 0.1)' } }}>
-              <TableChartIcon sx={{ mr: 1, color: '#00d4ff' }} />Export as Excel
+            <MenuItem onClick={handleExportAllExcel}>
+              <TableChartIcon sx={{ mr: 1 }} />
+              Export as Excel
             </MenuItem>
           </Menu>
         </Box>
       )}
 
-      {/* Results Table */}
-      <Box sx={{ position: 'relative', zIndex: 1 }}>
-        {results.length > 0 ? (
-          <TableContainer 
-            component={Paper} 
-            sx={{
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(20px)',
-              borderRadius: 3,
-              border: '1px solid rgba(0, 212, 255, 0.2)',
-              boxShadow: '0 25px 45px rgba(0, 0, 0, 0.3)',
-              overflow: 'hidden'
-            }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ background: 'rgba(0, 212, 255, 0.1)' }}>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Student ID</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Name</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Class</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Section</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Roll No</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Father</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>Mobile</TableCell>
-                  <TableCell sx={{ color: '#00d4ff', fontWeight: 700, fontSize: 16 }}>DOB</TableCell>
+      {results.length > 0 ? (
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Student ID</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Class</TableCell>
+                <TableCell>Section</TableCell>
+                <TableCell>Roll No</TableCell>
+                <TableCell>Father</TableCell>
+                <TableCell>Mobile</TableCell>
+                <TableCell>DOB</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {results.map((row, idx) => (
+                <TableRow
+                  key={row.studentId + idx}
+                  hover
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => setDialogStudent(row)}
+                >
+                  <TableCell>{row.studentId}</TableCell>
+                  <TableCell>{row.name}</TableCell>
+                  <TableCell>{row.class}</TableCell>
+                  <TableCell>{row.section}</TableCell>
+                  <TableCell>{row.rollNo}</TableCell>
+                  <TableCell>{row.fatherName}</TableCell>
+                  <TableCell>{row.fatherMobile}</TableCell>
+                  <TableCell>{row.dob}</TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {results.map((row, idx) => (
-                  <TableRow 
-                    key={row.studentId + idx} 
-                    hover 
-                    sx={{ 
-                      cursor: 'pointer',
-                      background: dialogStudent && dialogStudent.studentId === row.studentId 
-                        ? 'rgba(0, 212, 255, 0.15)' 
-                        : 'transparent',
-                      '&:hover': {
-                        background: 'rgba(255, 0, 150, 0.1)',
-                        transform: 'scale(1.01)',
-                        transition: 'all 0.3s ease'
-                      },
-                      '& .MuiTableCell-root': {
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-                      }
-                    }} 
-                    onClick={() => setDialogStudent(row)}
-                  >
-                    <TableCell>{row.studentId}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.class}</TableCell>
-                    <TableCell>{row.section}</TableCell>
-                    <TableCell>{row.rollNo}</TableCell>
-                    <TableCell>{row.fatherName}</TableCell>
-                    <TableCell>{row.fatherMobile}</TableCell>
-                    <TableCell>{row.dob}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        ) : (
-          <Box sx={{
-            textAlign: 'center',
-            py: 8,
-            background: 'rgba(255, 255, 255, 0.03)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 3,
-            border: '1px solid rgba(0, 212, 255, 0.2)'
-          }}>
-            <Typography sx={{ 
-              color: loading ? '#00d4ff' : 'rgba(255, 255, 255, 0.6)',
-              fontSize: 18,
-              fontWeight: loading ? 600 : 400
-            }}>
-              {loading ? '🔍 Searching database...' : '📭 No results to display. Start searching!'}
-            </Typography>
-          </Box>
-        )}
-      </Box>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      ) : (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <Typography color="text.secondary">
+            {loading ? 'Searching database...' : 'No results to display. Start searching!'}
+          </Typography>
+        </Box>
+      )}
 
-      {/* Student Details Dialog */}
       {dialogStudent && (
-        <Dialog 
-          open={!!dialogStudent} 
+        <Dialog
+          open={!!dialogStudent}
           onClose={() => setDialogStudent(null)}
           maxWidth="md"
           fullWidth
-          sx={{
-            '& .MuiDialog-paper': {
-              background: 'rgba(26, 26, 46, 0.95)',
-              backdropFilter: 'blur(30px)',
-              borderRadius: 4,
-              border: '2px solid rgba(0, 212, 255, 0.3)',
-              boxShadow: '0 40px 80px rgba(0, 0, 0, 0.5)',
-              maxHeight: '90vh'
-            }
-          }}
         >
-          <DialogTitle sx={{
-            background: 'linear-gradient(45deg, #ff0096, #00d4ff)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            fontWeight: 900,
-            fontSize: 24,
-            textAlign: 'center',
-            pb: 2
-          }}>
-            🎓 Student Profile
-          </DialogTitle>
-          <DialogContent sx={{ p: 0 }}>
-            <Card sx={{
-              background: 'transparent',
-              border: 'none',
-              boxShadow: 'none',
-              p: 4
-            }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
-                <Avatar sx={{
-                  background: 'linear-gradient(45deg, #00d4ff, #ff0096)',
-                  width: 80,
-                  height: 80,
-                  mb: 2,
-                  boxShadow: '0 0 30px rgba(0, 212, 255, 0.5)'
-                }}>
+          <DialogTitle>Student Profile</DialogTitle>
+          <DialogContent>
+            <Card sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <Avatar sx={{ width: 80, height: 80, mr: 3 }}>
                   <PersonIcon fontSize="large" />
                 </Avatar>
-                <Typography variant="h4" sx={{
-                  fontWeight: 900,
-                  color: 'white',
-                  textAlign: 'center',
-                  mb: 1
-                }}>
-                  {dialogStudent.name}
-                </Typography>
-                <Typography variant="h6" sx={{
-                  color: '#00d4ff',
-                  fontWeight: 600,
-                  letterSpacing: 1
-                }}>
-                  ID: {dialogStudent.studentId}
-                </Typography>
+                <Box>
+                  <Typography variant="h4">{dialogStudent.name}</Typography>
+                  <Typography variant="h6" color="text.secondary">ID: {dialogStudent.studentId}</Typography>
+                </Box>
               </Box>
 
-              <Grid container spacing={3}>
+              <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 3,
-                    p: 3,
-                    border: '1px solid rgba(0, 212, 255, 0.2)',
-                    height: '100%'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#ff0096', fontWeight: 700, mb: 2 }}>
-                      📚 Academic Info
-                    </Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Class:</strong> {dialogStudent.class}</Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Section:</strong> {dialogStudent.section}</Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Roll No:</strong> {dialogStudent.rollNo}</Typography>
-                  </Box>
+                  <Typography><b>Class:</b> {dialogStudent.class}</Typography>
+                  <Typography><b>Section:</b> {dialogStudent.section}</Typography>
+                  <Typography><b>Roll No:</b> {dialogStudent.rollNo}</Typography>
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 3,
-                    p: 3,
-                    border: '1px solid rgba(255, 0, 150, 0.2)',
-                    height: '100%'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#00d4ff', fontWeight: 700, mb: 2 }}>
-                      👥 Family Info
-                    </Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Father:</strong> {dialogStudent.fatherName}</Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Mother:</strong> {dialogStudent.motherName}</Typography>
-                    <Typography sx={{ color: 'white', mb: 1 }}><strong>Mobile:</strong> {dialogStudent.fatherMobile}</Typography>
-                  </Box>
+                  <Typography><b>Father:</b> {dialogStudent.fatherName}</Typography>
+                  <Typography><b>Mother:</b> {dialogStudent.motherName}</Typography>
+                  <Typography><b>Mobile:</b> {dialogStudent.fatherMobile}</Typography>
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 3,
-                    p: 3,
-                    border: '1px solid rgba(0, 212, 255, 0.2)'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#ff0096', fontWeight: 700, mb: 2 }}>
-                      📋 Personal Details
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>DOB:</strong> {dialogStudent.dob}</Typography>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>Aadhar:</strong> {dialogStudent.aadhar}</Typography>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>Email:</strong> {dialogStudent.email}</Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>APAAR ID:</strong> {dialogStudent.apaar}</Typography>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>Address:</strong> {dialogStudent.address}</Typography>
-                        <Typography sx={{ color: 'white', mb: 1 }}><strong>Note:</strong> {dialogStudent.note}</Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
+                  <Typography><b>DOB:</b> {dialogStudent.dob}</Typography>
+                  <Typography><b>Aadhar:</b> {dialogStudent.aadhar}</Typography>
+                  <Typography><b>Email:</b> {dialogStudent.email}</Typography>
+                  <Typography><b>APAAR ID:</b> {dialogStudent.apaar}</Typography>
+                  <Typography><b>Address:</b> {dialogStudent.address}</Typography>
+                  <Typography><b>Note:</b> {dialogStudent.note}</Typography>
                 </Grid>
 
                 <Grid item xs={12}>
-                  <Box sx={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 3,
-                    p: 3,
-                    border: '1px solid rgba(255, 0, 150, 0.2)'
-                  }}>
-                    <Typography variant="h6" sx={{ color: '#00d4ff', fontWeight: 700, mb: 2 }}>
-                      💰 Financial Status
-                    </Typography>
-                    <Typography variant="h5" sx={{
-                      color: dialogStudent.dues > 0 ? '#ff4444' : '#00ff88',
-                      fontWeight: 700,
-                      mb: 2
-                    }}>
-                      Current Dues: ₹{dialogStudent.dues || 0}
-                    </Typography>
-                    
-                    <Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 600, mb: 2 }}>
-                      💳 Payment History:
-                    </Typography>
-                    {(dialogStudent.feeHistory && dialogStudent.feeHistory.length > 0) ? (
-                      <TableContainer sx={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        borderRadius: 2,
-                        maxHeight: 200
-                      }}>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell sx={{ color: '#00d4ff', fontWeight: 600 }}>Date</TableCell>
-                              <TableCell sx={{ color: '#00d4ff', fontWeight: 600 }}>Months</TableCell>
-                              <TableCell sx={{ color: '#00d4ff', fontWeight: 600 }}>Amount</TableCell>
-                              <TableCell sx={{ color: '#00d4ff', fontWeight: 600 }}>Dues After</TableCell>
+                  <Typography variant="h6">Financial Status</Typography>
+                  <Typography variant="h5" color={dialogStudent.dues > 0 ? 'error' : 'success'}>
+                    Current Dues: ₹{dialogStudent.dues || 0}
+                  </Typography>
+
+                  <Typography variant="subtitle1" sx={{ mt: 2 }}>Payment History:</Typography>
+                  {(dialogStudent.feeHistory && dialogStudent.feeHistory.length > 0) ? (
+                    <TableContainer component={Paper} sx={{ mt: 1 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Months</TableCell>
+                            <TableCell>Amount</TableCell>
+                            <TableCell>Dues After</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {dialogStudent.feeHistory.slice().reverse().map((p: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell>{p.date ? new Date(p.date).toLocaleDateString() : ''}</TableCell>
+                              <TableCell>{Array.isArray(p.months) ? p.months.join(', ') : ''}</TableCell>
+                              <TableCell>₹{p.amount}</TableCell>
+                              <TableCell>₹{typeof p.dues === 'number' ? p.dues : ''}</TableCell>
                             </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {dialogStudent.feeHistory.slice().reverse().map((p: any, idx: number) => (
-                              <TableRow key={idx} sx={{
-                                '&:hover': { background: 'rgba(0, 212, 255, 0.1)' }
-                              }}>
-                                <TableCell sx={{ color: 'white' }}>
-                                  {p.date ? new Date(p.date).toLocaleDateString() : ''}
-                                </TableCell>
-                                <TableCell sx={{ color: 'white' }}>
-                                  {Array.isArray(p.months) ? p.months.join(', ') : ''}
-                                </TableCell>
-                                <TableCell sx={{ color: '#00ff88' }}>₹{p.amount}</TableCell>
-                                <TableCell sx={{ color: p.dues > 0 ? '#ff4444' : '#00ff88' }}>
-                                  ₹{typeof p.dues === 'number' ? p.dues : ''}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    ) : (
-                      <Typography sx={{ 
-                        color: 'rgba(255, 255, 255, 0.6)', 
-                        fontStyle: 'italic',
-                        textAlign: 'center',
-                        py: 2
-                      }}>
-                        💸 No fee payments recorded yet
-                      </Typography>
-                    )}
-                  </Box>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Typography sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+                      No fee payments recorded yet
+                    </Typography>
+                  )}
                 </Grid>
               </Grid>
             </Card>
           </DialogContent>
-          <DialogActions sx={{ 
-            p: 3, 
-            background: 'rgba(0, 0, 0, 0.2)',
-            gap: 2
-          }}>
-            <Button 
-              onClick={handleEditOpen} 
-              variant="contained"
-              startIcon={<EditIcon />}
-              sx={{
-                background: 'linear-gradient(45deg, #00d4ff, #0099cc)',
-                borderRadius: 25,
-                px: 3,
-                py: 1.5,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                boxShadow: '0 10px 20px rgba(0, 212, 255, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #0099cc, #00d4ff)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
-            >
-              Edit
-            </Button>
-            <Button 
-              onClick={() => setDeleteConfirm(true)} 
-              variant="contained"
-              startIcon={<DeleteIcon />}
-              sx={{
-                background: 'linear-gradient(45deg, #ff4444, #cc0000)',
-                borderRadius: 25,
-                px: 3,
-                py: 1.5,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                boxShadow: '0 10px 20px rgba(255, 68, 68, 0.3)',
-                '&:hover': {
-                  background: 'linear-gradient(45deg, #cc0000, #ff4444)',
-                  transform: 'translateY(-2px)'
-                }
-              }}
-            >
-              Delete
-            </Button>
-            <Button 
-              onClick={e => setExportAnchorEl(e.currentTarget)} 
-              variant="outlined"
-              sx={{
-                borderColor: '#ff0096',
-                color: '#ff0096',
-                borderRadius: 25,
-                px: 3,
-                py: 1.5,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                '&:hover': {
-                  borderColor: '#00d4ff',
-                  color: '#00d4ff',
-                  background: 'rgba(0, 212, 255, 0.1)'
-                }
-              }}
-            >
-              Export
-            </Button>
-            <Button 
-              onClick={() => setDialogStudent(null)} 
-              variant="outlined"
-              sx={{
-                borderColor: 'rgba(255, 255, 255, 0.3)',
-                color: 'rgba(255, 255, 255, 0.8)',
-                borderRadius: 25,
-                px: 3,
-                py: 1.5,
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                '&:hover': {
-                  borderColor: 'white',
-                  color: 'white',
-                  background: 'rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              Close
-            </Button>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={handleEditOpen} startIcon={<EditIcon />}>Edit</Button>
+            <Button onClick={() => setDeleteConfirm(true)} startIcon={<DeleteIcon />} color="error">Delete</Button>
+            <Button onClick={e => setExportAnchorEl(e.currentTarget)} startIcon={<DownloadIcon />}>Export</Button>
+            <Button onClick={() => setDialogStudent(null)}>Close</Button>
           </DialogActions>
         </Dialog>
       )}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog 
-        open={deleteConfirm} 
-        onClose={() => setDeleteConfirm(false)}
-        sx={{
-          '& .MuiDialog-paper': {
-            background: 'rgba(26, 26, 46, 0.95)',
-            backdropFilter: 'blur(30px)',
-            borderRadius: 4,
-            border: '2px solid rgba(255, 68, 68, 0.5)',
-            boxShadow: '0 40px 80px rgba(0, 0, 0, 0.5)'
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          color: '#ff4444',
-          fontWeight: 900,
-          fontSize: 24,
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 2
-        }}>
-          ⚠️ Confirm Deletion
-        </DialogTitle>
-        <DialogContent sx={{ textAlign: 'center', py: 3 }}>
-          <Typography sx={{ 
-            color: 'white', 
-            fontSize: 18,
-            mb: 2
-          }}>
-            Are you sure you want to permanently delete this student record?
-          </Typography>
-          <Typography sx={{ 
-            color: 'rgba(255, 255, 255, 0.6)', 
-            fontSize: 14
-          }}>
-            This action cannot be undone.
-          </Typography>
+      <Dialog open={deleteConfirm} onClose={() => setDeleteConfirm(false)}>
+        <DialogTitle>Confirm Deletion</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to permanently delete this student record?</Typography>
+          <Typography color="text.secondary">This action cannot be undone.</Typography>
         </DialogContent>
-        <DialogActions sx={{ 
-          p: 3, 
-          justifyContent: 'center',
-          gap: 2
-        }}>
-          <Button 
-            onClick={() => setDeleteConfirm(false)}
-            variant="outlined"
-            sx={{
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              color: 'white',
-              borderRadius: 25,
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              '&:hover': {
-                borderColor: 'white',
-                background: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleDelete} 
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(45deg, #ff4444, #cc0000)',
-              borderRadius: 25,
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              boxShadow: '0 10px 20px rgba(255, 68, 68, 0.4)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #cc0000, #ff0000)',
-                transform: 'translateY(-2px)'
-              }
-            }}
-          >
-            Delete Forever
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setDeleteConfirm(false)}>Cancel</Button>
+          <Button onClick={handleDelete} color="error">Delete Forever</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Student Dialog */}
-      <Dialog 
-        open={editMode} 
-        onClose={() => setEditMode(false)}
-        maxWidth="md"
-        fullWidth
-        sx={{
-          '& .MuiDialog-paper': {
-            background: 'rgba(26, 26, 46, 0.95)',
-            backdropFilter: 'blur(30px)',
-            borderRadius: 4,
-            border: '2px solid rgba(0, 212, 255, 0.3)',
-            boxShadow: '0 40px 80px rgba(0, 0, 0, 0.5)',
-            maxHeight: '90vh'
-          }
-        }}
-      >
-        <DialogTitle sx={{
-          background: 'linear-gradient(45deg, #00d4ff, #ff0096)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontWeight: 900,
-          fontSize: 24,
-          textAlign: 'center',
-          pb: 2
-        }}>
-          ✏️ Edit Student Information
-        </DialogTitle>
-        <DialogContent sx={{ p: 4 }}>
+      <Dialog open={editMode} onClose={() => setEditMode(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Student Information</DialogTitle>
+        <DialogContent>
           {editData && (
-            <Box component="form" sx={{ mt: 1 }}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Student ID" 
-                    value={editData.studentId} 
-                    fullWidth 
-                    margin="dense" 
-                    InputProps={{ readOnly: true }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '& input': {
-                          color: 'rgba(255, 255, 255, 0.6)',
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Roll No" 
-                    value={editData.rollNo} 
-                    fullWidth 
-                    margin="dense" 
-                    InputProps={{ readOnly: true }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                        '& input': {
-                          color: 'rgba(255, 255, 255, 0.6)',
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField 
-                    label="Student Name" 
-                    value={editData.name} 
-                    onChange={e => handleEditChange('name', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': {
-                          borderColor: 'rgba(0, 212, 255, 0.3)',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: '#00d4ff',
-                        },
-                        '& input': {
-                          color: 'white',
-                        }
-                      },
-                      '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Class</InputLabel>
-                    <Select 
-                      value={editData.class} 
-                      label="Class" 
-                      onChange={e => handleEditChange('class', e.target.value)}
-                      sx={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(0, 212, 255, 0.3)',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#00d4ff',
-                        },
-                        '& .MuiSelect-select': {
-                          color: 'white',
-                        }
-                      }}
-                    >
-                      {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth margin="dense">
-                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Section</InputLabel>
-                    <Select 
-                      value={editData.section} 
-                      label="Section" 
-                      onChange={e => handleEditChange('section', e.target.value)}
-                      sx={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(0, 212, 255, 0.3)',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#00d4ff',
-                        },
-                        '& .MuiSelect-select': {
-                          color: 'white',
-                        }
-                      }}
-                    >
-                      {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                {/* Continue with remaining fields with same styling */}
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Father's Name" 
-                    value={editData.fatherName} 
-                    onChange={e => handleEditChange('fatherName', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Mother's Name" 
-                    value={editData.motherName} 
-                    onChange={e => handleEditChange('motherName', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField 
-                    label="Address" 
-                    value={editData.address} 
-                    onChange={e => handleEditChange('address', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    multiline
-                    rows={2}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& textarea': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Aadhar No" 
-                    value={editData.aadhar} 
-                    onChange={e => handleEditChange('aadhar', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Date of Birth" 
-                    type="date" 
-                    value={editData.dob} 
-                    onChange={e => handleEditChange('dob', e.target.value)} 
-                    fullWidth 
-                    margin="dense" 
-                    InputLabelProps={{ shrink: true }}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Father's Mobile" 
-                    value={editData.fatherMobile} 
-                    onChange={e => handleEditChange('fatherMobile', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Email" 
-                    value={editData.email} 
-                    onChange={e => handleEditChange('email', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="APAAR ID" 
-                    value={editData.apaar} 
-                    onChange={e => handleEditChange('apaar', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label="Note" 
-                    value={editData.note} 
-                    onChange={e => handleEditChange('note', e.target.value)} 
-                    fullWidth 
-                    margin="dense"
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 2,
-                        '& fieldset': { borderColor: 'rgba(0, 212, 255, 0.3)' },
-                        '&:hover fieldset': { borderColor: '#00d4ff' },
-                        '& input': { color: 'white' }
-                      },
-                      '& .MuiInputLabel-root': { color: 'rgba(255, 255, 255, 0.7)' }
-                    }}
-                  />
-                </Grid>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Student ID" value={editData.studentId} fullWidth margin="dense" InputProps={{ readOnly: true }} />
               </Grid>
-            </Box>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Roll No" value={editData.rollNo} fullWidth margin="dense" InputProps={{ readOnly: true }} />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Student Name" value={editData.name} onChange={e => handleEditChange('name', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Class</InputLabel>
+                  <Select value={editData.class} label="Class" onChange={e => handleEditChange('class', e.target.value)}>
+                    {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth margin="dense">
+                  <InputLabel>Section</InputLabel>
+                  <Select value={editData.section} label="Section" onChange={e => handleEditChange('section', e.target.value)}>
+                    {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Father's Name" value={editData.fatherName} onChange={e => handleEditChange('fatherName', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Mother's Name" value={editData.motherName} onChange={e => handleEditChange('motherName', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Address" value={editData.address} onChange={e => handleEditChange('address', e.target.value)} fullWidth margin="dense" multiline rows={2} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Aadhar No" value={editData.aadhar} onChange={e => handleEditChange('aadhar', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Date of Birth" type="date" value={editData.dob} onChange={e => handleEditChange('dob', e.target.value)} fullWidth margin="dense" InputLabelProps={{ shrink: true }} />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Father's Mobile" value={editData.fatherMobile} onChange={e => handleEditChange('fatherMobile', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Email" value={editData.email} onChange={e => handleEditChange('email', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="APAAR ID" value={editData.apaar} onChange={e => handleEditChange('apaar', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField label="Note" value={editData.note} onChange={e => handleEditChange('note', e.target.value)} fullWidth margin="dense" />
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
-        <DialogActions sx={{ 
-          p: 3, 
-          background: 'rgba(0, 0, 0, 0.2)',
-          gap: 2
-        }}>
-          <Button 
-            onClick={() => setEditMode(false)}
-            variant="outlined"
-            sx={{
-              borderColor: 'rgba(255, 255, 255, 0.3)',
-              color: 'white',
-              borderRadius: 25,
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              '&:hover': {
-                borderColor: 'white',
-                background: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleEditSave} 
-            variant="contained"
-            sx={{
-              background: 'linear-gradient(45deg, #00d4ff, #0099cc)',
-              borderRadius: 25,
-              px: 4,
-              py: 1.5,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              boxShadow: '0 10px 20px rgba(0, 212, 255, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(45deg, #0099cc, #00d4ff)',
-                transform: 'translateY(-2px)'
-              }
-            }}
-          >
-            Save Changes
-          </Button>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setEditMode(false)}>Cancel</Button>
+          <Button onClick={handleEditSave} variant="contained">Save Changes</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Export Menu */}
-      <Menu 
-        anchorEl={exportAnchorEl} 
-        open={!!exportAnchorEl} 
+      <Menu
+        anchorEl={exportAnchorEl}
+        open={!!exportAnchorEl}
         onClose={() => setExportAnchorEl(null)}
-        sx={{
-          '& .MuiPaper-root': {
-            background: 'rgba(26, 26, 46, 0.95)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: 2,
-            border: '1px solid rgba(0, 212, 255, 0.2)',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)'
-          }
-        }}
       >
-        <MenuItem 
-          onClick={handleExportPDF} 
-          sx={{ 
-            color: 'white', 
-            '&:hover': { background: 'rgba(255, 0, 150, 0.1)' },
-            py: 1.5,
-            px: 3
-          }}
-        >
-          <PictureAsPdfIcon sx={{ mr: 2, color: '#ff0096' }} />
+        <MenuItem onClick={handleExportPDF}>
+          <PictureAsPdfIcon sx={{ mr: 1 }} />
           Export as PDF
         </MenuItem>
-        <MenuItem 
-          onClick={handleExportExcel} 
-          sx={{ 
-            color: 'white', 
-            '&:hover': { background: 'rgba(0, 212, 255, 0.1)' },
-            py: 1.5,
-            px: 3
-          }}
-        >
-          <TableChartIcon sx={{ mr: 2, color: '#00d4ff' }} />
+        <MenuItem onClick={handleExportExcel}>
+          <TableChartIcon sx={{ mr: 1 }} />
           Export as Excel
         </MenuItem>
       </Menu>

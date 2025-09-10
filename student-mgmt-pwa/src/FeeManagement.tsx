@@ -173,80 +173,82 @@ const FeeManagement: React.FC = () => {
     if (!receiptData) return;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     // Header
-    doc.setFont('times', 'bold');
-    doc.setFontSize(20);
-    doc.text('Sunrise Public School', 105, 20, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('Sunrise Public School', 105, 22, { align: 'center' });
     doc.setFontSize(12);
-    doc.setFont('times', 'normal');
-    doc.text('123 Main Road, City, State, PIN', 105, 28, { align: 'center' });
-    doc.text('Contact: 9876543210 | info@sunrise.edu', 105, 34, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('123 Main Road, City, State, PIN', 105, 30, { align: 'center' });
+    doc.text('Contact: 9876543210 | info@sunrise.edu', 105, 36, { align: 'center' });
     // Logo placeholder
     doc.setDrawColor(0);
-    doc.rect(15, 15, 20, 20);
+    doc.rect(20, 15, 25, 25);
     doc.setFontSize(10);
-    doc.text('Logo', 25, 27, { align: 'center' });
+    doc.text('Logo', 32.5, 27.5, { align: 'center' });
     // Receipt Title & Info
-    doc.setFont('times', 'bold');
-    doc.setFontSize(16);
-    doc.text('Student Fee Receipt', 105, 48, { align: 'center' });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Fee Receipt', 105, 52, { align: 'center' });
     doc.setFontSize(12);
-    doc.setFont('times', 'normal');
-    doc.text(`Receipt No: ${receiptNumber}`, 15, 56);
-    doc.text(`Date: ${receiptData.date}`, 160, 56);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Receipt No: ${receiptNumber}`, 20, 60);
+    doc.text(`Date: ${receiptData.date}`, 150, 60);
     // Student Info
-    let y = 66;
-    doc.setFont('times', 'bold');
-    doc.text('Student Information', 15, y);
-    doc.setFont('times', 'normal');
-    y += 7;
-    doc.text(`Name: ${receiptData.student.name}`, 15, y);
-    doc.text(`Roll/Admission No: ${receiptData.student.rollNo || receiptData.student.studentId}`, 110, y);
-    y += 7;
-    doc.text(`Class: ${receiptData.student.class}  Section: ${receiptData.student.section}`, 15, y);
-    doc.text(`Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`, 110, y);
-    y += 7;
-    doc.text(`Guardian: ${receiptData.student.fatherName}`, 15, y);
-    doc.text(`Contact: ${receiptData.student.fatherMobile}`, 110, y);
+    let y = 75;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student Information', 20, y);
+    doc.setLineWidth(0.5);
+    doc.line(20, y + 2, 190, y + 2);
+    doc.setFont('helvetica', 'normal');
+    y += 10;
+    doc.text(`Name: ${receiptData.student.name}`, 20, y);
+    doc.text(`Roll No: ${receiptData.student.rollNo || receiptData.student.studentId}`, 120, y);
+    y += 8;
+    doc.text(`Class: ${receiptData.student.class} - ${receiptData.student.section}`, 20, y);
+    doc.text(`Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`, 120, y);
+    y += 8;
+    doc.text(`Guardian: ${receiptData.student.fatherName}`, 20, y);
+    doc.text(`Contact: ${receiptData.student.fatherMobile}`, 120, y);
     // Fee Details
-    y += 10;
-    doc.setFont('times', 'bold');
-    doc.text('Fee Details', 15, y);
-    doc.setFont('times', 'normal');
-    y += 7;
-    doc.text(`Tuition Fee: ₹${receiptData.tuitionFee || receiptData.total}`, 15, y);
-    doc.text(`Transport Fee: ₹${receiptData.transportFee || 0}`, 110, y);
-    y += 7;
-    doc.text(`Exam Fee: ₹${receiptData.examFee || 0}`, 15, y);
-    doc.text(`Other Charges: ₹${receiptData.otherFee || 0}`, 110, y);
-    y += 7;
-    doc.text(`Discounts: ₹${receiptData.discount || 0}`, 15, y);
-    y += 7;
-    doc.setFont('times', 'bold');
-    doc.text(`Total Amount Paid: ₹${receiptData.total}`, 15, y);
-    doc.setFont('times', 'normal');
-    y += 7;
-    doc.text(`Payment Method: ${receiptData.paymentMethod || 'Cash'}`, 15, y);
-    doc.text(`Paid Date: ${receiptData.date}`, 110, y);
-    y += 7;
-    doc.text(`Due Amount: ₹${receiptData.due || 0}`, 15, y);
-    // Footer
     y += 15;
-    doc.setFont('times', 'normal');
-    doc.text('Signature of Accountant', 15, y);
-    doc.text('Signature of Principal/Admin', 160, y);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fee Details', 20, y);
+    doc.line(20, y + 2, 190, y + 2);
     y += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Tuition Fee:`, 20, y);
+    doc.text(`Rs. ${receiptData.total.toFixed(2)}`, 180, y, { align: 'right' });
+    y += 8;
+    doc.text(`Months Paid:`, 20, y);
+    doc.text(`${receiptData.months.join(', ')}`, 180, y, { align: 'right' });
+    y += 12;
+    doc.setFont('helvetica', 'bold');
+    doc.line(20, y, 190, y);
+    y += 8;
+    doc.text(`Total Amount Paid:`, 20, y);
+    doc.text(`Rs. ${receiptData.total.toFixed(2)}`, 180, y, { align: 'right' });
+    y += 8;
+    doc.line(20, y, 190, y);
+    // Footer
+    y += 25;
+    doc.setFont('helvetica', 'normal');
+    doc.line(20, y, 80, y);
+    doc.text('Accountant', 35, y + 5);
+    doc.line(130, y, 190, y);
+    doc.text('Principal', 150, y + 5);
+    y += 20;
     if (principalSignature && principalSignature.type && principalSignature.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = function(e) {
         const imgData = e.target?.result as string;
-        doc.addImage(imgData, 'PNG', 160, y - 8, 30, 12);
+        doc.addImage(imgData, 'PNG', 145, y - 18, 40, 15);
         doc.save(`Receipt_${receiptData.student.name}_${receiptData.date}.pdf`);
       };
       reader.readAsDataURL(principalSignature);
       return;
     }
     doc.setFontSize(10);
-    doc.text('This is a computer-generated receipt.', 105, 285, { align: 'center' });
+    doc.text('This is a computer-generated receipt and does not require a signature.', 105, 280, { align: 'center' });
     doc.save(`Receipt_${receiptData.student.name}_${receiptData.date}.pdf`);
   };
 
@@ -278,154 +280,192 @@ const FeeManagement: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5" gutterBottom align="center">Fee Management</Typography>
-      <Card sx={{ p: 3, borderRadius: 3, boxShadow: 4, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Class</InputLabel>
-              <Select value={cls} label="Class" onChange={e => setCls(e.target.value)}>
-                {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Section</InputLabel>
-              <Select value={section} label="Section" onChange={e => setSection(e.target.value)}>
-                {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth />
-          </Grid>
-          <Grid item xs={12}>
-            <Button variant="contained" onClick={handleSearch} fullWidth>Search Student</Button>
-          </Grid>
+    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 4 }}>
+      <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>Fee Management</Typography>
+      <Grid container spacing={4}>
+        <Grid item xs={12} md={5}>
+          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: '100%' }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Find Student</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Class</InputLabel>
+                  <Select value={cls} label="Class" onChange={e => setCls(e.target.value)}>
+                    {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Section</InputLabel>
+                  <Select value={section} label="Section" onChange={e => setSection(e.target.value)}>
+                    {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth />
+              </Grid>
+              <Grid item xs={12}>
+                <Button variant="contained" onClick={handleSearch} fullWidth>Search Student</Button>
+              </Grid>
+            </Grid>
+          </Card>
         </Grid>
-      </Card>
-      {student && (
-        <Card sx={{ p: 3, borderRadius: 3, boxShadow: 4, mb: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>{student.name}</Typography>
-          <Typography variant="body2" color="text.secondary">{student.studentId}</Typography>
-          <Typography sx={{ mt: 1 }}><b>Class:</b> {student.class} <b>Section:</b> {student.section} <b>Roll No:</b> {student.rollNo}</Typography>
-          <FormControl fullWidth sx={{ mt: 3 }}>
-            <InputLabel>Months to Pay</InputLabel>
-            <Select
-              multiple
-              value={months}
-              onChange={e => setMonths(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
-              renderValue={selected => (selected as string[]).join(', ')}
-              label="Months to Pay"
-            >
-              {monthOptions.map(month => (
-                <MenuItem key={month} value={month}>
-                  <Checkbox checked={months.indexOf(month) > -1} />
-                  <ListItemText primary={month} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Box sx={{ mt: 3, mb: 2 }}>
-            <Typography variant="subtitle1">Fee per Month: <b>₹{feeMap[student.class] || '0'}</b></Typography>
-            <Typography variant="subtitle1">Months Selected: <b>{months.length}</b></Typography>
-            <Typography variant="h6" sx={{ mt: 1 }}>Total: ₹{total}</Typography>
-          </Box>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<MonetizationOnIcon />}
-            disabled={months.length === 0 || !feeMap[student.class]}
-            onClick={handlePayRequest}
-            fullWidth
-            sx={{ fontWeight: 700 }}
-          >
-            Make Payment
-          </Button>
-        </Card>
-      )}
-      <Card sx={{ p: 3, borderRadius: 3, boxShadow: 4, mb: 3 }}>
-        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>Fee Payment Summary</Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Class</InputLabel>
-            <Select value={summaryClass} label="Class" onChange={e => setSummaryClass(e.target.value)}>
-              <MenuItem value=""><em>All</em></MenuItem>
-              {classOptions.map(cls => <MenuItem key={cls} value={cls}>{cls}</MenuItem>)}
-            </Select>
-          </FormControl>
-          <FormControl sx={{ minWidth: 120 }}>
-            <InputLabel>Month</InputLabel>
-            <Select value={summaryMonth} label="Month" onChange={e => setSummaryMonth(e.target.value)}>
-              <MenuItem value=""><em>All</em></MenuItem>
-              {monthOptions.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
-            </Select>
-          </FormControl>
-        </Box>
-        {summaryClass && summaryMonth && (
-          <Typography sx={{ mb: 2 }}>Total paid for <b>{summaryClass}</b> in <b>{summaryMonth}</b>: <b>₹{classMonthSum || 0}</b></Typography>
-        )}
-        <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Month</TableCell>
-                <TableCell>Total Paid (All Classes)</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {monthOptions.map(m => (
-                <TableRow key={m}>
-                  <TableCell>{m}</TableCell>
-                  <TableCell>₹{summary[m] ? summary[m].toFixed(2) : '0.00'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-      {/* Payment Confirmation Dialog */}
+        <Grid item xs={12} md={7}>
+          {student && (
+            <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: '100%' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>{student.name}</Typography>
+              <Typography variant="body1" color="text.secondary" gutterBottom>{student.studentId}</Typography>
+              <Typography sx={{ mt: 1 }}><b>Class:</b> {student.class} &nbsp; <b>Section:</b> {student.section} &nbsp; <b>Roll No:</b> {student.rollNo}</Typography>
+              <FormControl fullWidth sx={{ mt: 3 }}>
+                <InputLabel>Months to Pay</InputLabel>
+                <Select
+                  multiple
+                  value={months}
+                  onChange={e => setMonths(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+                  renderValue={selected => (selected as string[]).join(', ')}
+                  label="Months to Pay"
+                >
+                  {monthOptions.map(month => (
+                    <MenuItem key={month} value={month}>
+                      <Checkbox checked={months.indexOf(month) > -1} />
+                      <ListItemText primary={month} />
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Box sx={{ mt: 3, mb: 2 }}>
+                <Typography variant="h6">Fee per Month: <b>₹{feeMap[student.class] || 'N/A'}</b></Typography>
+                <Typography variant="h6">Months Selected: <b>{months.length}</b></Typography>
+                <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Total: ₹{total}</Typography>
+              </Box>
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<MonetizationOnIcon />}
+                disabled={months.length === 0 || !feeMap[student.class]}
+                onClick={handlePayRequest}
+                fullWidth
+                sx={{ py: 1.5, fontWeight: 600 }}
+              >
+                Make Payment
+              </Button>
+            </Card>
+          )}
+        </Grid>
+        <Grid item xs={12}>
+          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Fee Payment Summary</Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <FormControl sx={{ minWidth: 150 }}>
+                <InputLabel>Filter by Class</InputLabel>
+                <Select value={summaryClass} label="Filter by Class" onChange={e => setSummaryClass(e.target.value)}>
+                  <MenuItem value=""><em>All Classes</em></MenuItem>
+                  {classOptions.map(cls => <MenuItem key={cls} value={cls}>{cls}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <FormControl sx={{ minWidth: 150 }}>
+                <InputLabel>Filter by Month</InputLabel>
+                <Select value={summaryMonth} label="Filter by Month" onChange={e => setSummaryMonth(e.target.value)}>
+                  <MenuItem value=""><em>All Months</em></MenuItem>
+                  {monthOptions.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
+                </Select>
+              </FormControl>
+              <Button onClick={handleExportAllExcel} variant="outlined">Export All to Excel</Button>
+            </Box>
+            {summaryClass && summaryMonth && (
+              <Typography sx={{ mb: 2, fontWeight: 'bold' }}>Total for {summaryClass} in {summaryMonth}: ₹{classMonthSum !== null ? classMonthSum.toFixed(2) : '0.00'}</Typography>
+            )}
+            <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: 1 }}>
+              <Table stickyHeader>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{fontWeight: 'bold'}}>Month</TableCell>
+                    <TableCell sx={{fontWeight: 'bold'}}>Total Paid (All Classes)</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {monthOptions.map(m => (
+                    <TableRow key={m} hover>
+                      <TableCell>{m}</TableCell>
+                      <TableCell>₹{summary[m] ? summary[m].toFixed(2) : '0.00'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Card>
+        </Grid>
+      </Grid>
+      
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Confirm Payment</DialogTitle>
         <DialogContent>
           <Typography>Student: <b>{student?.name}</b></Typography>
           <Typography>Class: {student?.class} Section: {student?.section} Roll No: {student?.rollNo}</Typography>
           <Typography>Months: {months.join(', ')}</Typography>
-          <Typography>Total Amount: <b>₹{total}</b></Typography>
+          <Typography variant="h6" sx={{mt: 1}}>Total Amount: <b>₹{total}</b></Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
           <Button onClick={handlePay} variant="contained" color="primary">Confirm & Pay</Button>
         </DialogActions>
       </Dialog>
-      {/* Payment Receipt Dialog */}
-      <Dialog open={receiptOpen} onClose={() => setReceiptOpen(false)} maxWidth="sm" fullWidth>
+      
+      <Dialog open={receiptOpen} onClose={() => setReceiptOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Payment Receipt</DialogTitle>
         <DialogContent>
           {receiptData && (
-            <Box sx={{ p: 2, textAlign: 'center', fontFamily: 'serif' }}>
-              <Typography variant="h6" sx={{ fontWeight: 700 }}>{'School Name'}</Typography>
-              <Typography sx={{ fontSize: 15, mb: 2 }}>{'School Address, City, State, PIN'}</Typography>
-              <Typography variant="subtitle1" sx={{ mt: 2 }}>Payment Receipt</Typography>
-              <Box sx={{ mt: 2, textAlign: 'left', mx: 'auto', maxWidth: 400 }}>
-                <Typography><b>Student Name:</b> {receiptData.student.name}</Typography>
-                <Typography><b>Class:</b> {receiptData.student.class} <b>Section:</b> {receiptData.student.section} <b>Roll No:</b> {receiptData.student.rollNo}</Typography>
-                <Typography><b>Date:</b> {receiptData.date}</Typography>
-                <Typography><b>Months Paid:</b> {receiptData.months.join(', ')}</Typography>
-                <Typography><b>Amount Paid:</b> ₹{receiptData.total}</Typography>
-              </Box>
-              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end', alignItems: 'flex-end', minHeight: 80 }}>
-                {principalSignature && principalSignature.type && principalSignature.type.startsWith('image/') ? (
-                  <img src={URL.createObjectURL(principalSignature)} alt="Principal Signature" style={{ maxWidth: 140, maxHeight: 60 }} />
-                ) : principalSignature && typeof principalSignature === 'string' ? (
-                  <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>PDF Signature Uploaded</Typography>
-                ) : null}
-                <Box sx={{ ml: 2, textAlign: 'right' }}>
-                  <Typography sx={{ fontSize: 13, color: 'text.secondary' }}>Principal/Head</Typography>
-                </Box>
-              </Box>
+            <Box sx={{ p: 3, border: '1px solid #ccc', borderRadius: 2 }}>
+              <Grid container justifyContent="space-between" alignItems="center">
+                <Grid item>
+                  <Typography variant="h5" sx={{ fontWeight: 700 }}>Sunrise Public School</Typography>
+                  <Typography>123 Main Road, City, State, PIN</Typography>
+                </Grid>
+                <Grid item>
+                  <Typography variant="h6">Receipt No: {receiptNumber}</Typography>
+                  <Typography>Date: {receiptData.date}</Typography>
+                </Grid>
+              </Grid>
+              <hr style={{margin: '20px 0'}}/>
+              <Grid container spacing={2}>
+                <Grid item xs={6}><b>Student:</b> {receiptData.student.name}</Grid>
+                <Grid item xs={6}><b>Roll No:</b> {receiptData.student.rollNo}</Grid>
+                <Grid item xs={6}><b>Class:</b> {receiptData.student.class} - {receiptData.student.section}</Grid>
+                <Grid item xs={6}><b>Academic Year:</b> {new Date().getFullYear()}-{new Date().getFullYear() + 1}</Grid>
+              </Grid>
+              <TableContainer component={Paper} sx={{ my: 3, borderRadius: 2, boxShadow: 0, border: '1px solid #ddd' }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Description</TableCell>
+                      <TableCell align="right">Amount</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Tuition Fee ({receiptData.months.join(', ')})</TableCell>
+                      <TableCell align="right">₹{receiptData.total.toFixed(2)}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell sx={{fontWeight: 'bold'}}>Total Paid</TableCell>
+                      <TableCell align="right" sx={{fontWeight: 'bold'}}>₹{receiptData.total.toFixed(2)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <Grid container justifyContent="space-between" sx={{mt: 4}}>
+                <Grid item>
+                  <Typography sx={{mt: 8}}>Accountant's Seal</Typography>
+                </Grid>
+                <Grid item textAlign="center">
+                  {principalSignature && principalSignature.type && principalSignature.type.startsWith('image/') ? (
+                    <img src={URL.createObjectURL(principalSignature)} alt="Principal Signature" style={{ maxWidth: 140, maxHeight: 60 }} />
+                  ) : <Box sx={{height: 60}}/>}
+                  <Typography>Principal's Signature</Typography>
+                </Grid>
+              </Grid>
             </Box>
           )}
         </DialogContent>
@@ -434,10 +474,11 @@ const FeeManagement: React.FC = () => {
           <Button onClick={handleDownloadPDF} variant="contained" color="primary">Download PDF</Button>
         </DialogActions>
       </Dialog>
+
       {msg && (
-        <Alert severity="success" sx={{ mt: 3 }}>{msg}</Alert>
+        <Alert severity="success" sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 9999 }}>{msg}</Alert>
       )}
-      {/* Password Confirmation Dialog */}
+
       <Dialog open={passwordDialogOpen} onClose={() => { setPasswordDialogOpen(false); setPasswordInput(''); setPasswordError(''); setPendingPayment(false); }}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LockIcon /> Password Required</DialogTitle>
         <DialogContent>

@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import schools, { type School } from "./Schools";
-import { Box, CssBaseline, Drawer, Toolbar, AppBar, Typography, List, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, Card, Avatar, ListItemIcon, TextField, Fade } from '@mui/material';
+
+import { 
+  Box, CssBaseline, Drawer, Toolbar, AppBar, Typography, List, 
+  ListItem, ListItemText, Dialog, DialogTitle, DialogContent, 
+  DialogActions, Button, Card, Avatar, ListItemIcon, TextField, 
+  Fade, CircularProgress, IconButton 
+} from '@mui/material';
+
 import SchoolIcon from '@mui/icons-material/School';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import SearchIcon from '@mui/icons-material/Search';
@@ -16,139 +23,164 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import FeeManagement from './FeeManagement';
 import LockIcon from '@mui/icons-material/Lock';
 import { addAdmission } from './db';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import Chatbot from './Chatbot';
+import './Chatbot.css';
+
 
 const drawerWidth = 260;
 const API_BASE_URL = "https://gdrive-backend-1.onrender.com";
 
-const styles = {
+const getStyles = (mode: 'light' | 'dark') => ({
   mainContainer: {
     display: 'flex',
     minHeight: '100vh',
-    background: '#1a237e',
-    backgroundImage: 'linear-gradient(135deg, #1a237e 0%, #283593 25%, #3949ab 50%, #3f51b5 75%, #5c6bc0 100%)',
+    backgroundColor: mode === 'dark' ? '#1f2937' : '#f4f6f8',
+    color: mode === 'dark' ? '#ffffff' : '#212121',
   },
   appBar: {
-    backgroundColor: 'rgba(25, 118, 210, 0.9)',
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    backgroundColor: mode === 'dark' ? '#374151' : '#ffffff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+    color: mode === 'dark' ? '#ffffff' : '#212121',
   },
   drawerPaper: {
     width: drawerWidth,
-    backgroundColor: 'rgba(63, 81, 181, 0.95)',
-    backdropFilter: 'blur(10px)',
-    borderRight: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: mode === 'dark' ? '#374151' : '#ffffff',
+    borderRight: mode === 'dark' ? '1px solid #4b5563' : '1px solid #e0e0e0',
   },
   loginDialog: {
     '& .MuiDialog-paper': {
-      backgroundColor: 'rgba(63, 81, 181, 0.95)',
-      backdropFilter: 'blur(15px)',
-      borderRadius: '16px',
-      border: '1px solid rgba(255,255,255,0.1)',
+      backgroundColor: mode === 'dark' ? '#374151' : '#ffffff',
+      borderRadius: '8px',
       minWidth: '400px',
+      color: mode === 'dark' ? '#ffffff' : '#212121',
     }
   },
   loginTextField: {
     '& .MuiOutlinedInput-root': {
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderRadius: '12px',
+      backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+      borderRadius: '8px',
       '& fieldset': {
-        borderColor: 'rgba(255,255,255,0.3)',
+        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.2)',
       },
       '&:hover fieldset': {
-        borderColor: 'rgba(255,255,255,0.5)',
+        borderColor: mode === 'dark' ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.4)',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#ffffff',
+        borderColor: mode === 'dark' ? '#60a5fa' : '#1976d2',
       }
     },
     '& .MuiInputLabel-root': {
-      color: 'rgba(255,255,255,0.7)',
+      color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)',
     },
     '& .MuiInputBase-input': {
-      color: '#ffffff',
+      color: mode === 'dark' ? '#ffffff' : '#212121',
     },
     '& .MuiFormHelperText-root': {
-      color: '#ff5252',
+      color: mode === 'dark' ? '#f87171' : '#d32f2f',
     }
   },
   captchaBox: {
     padding: '12px 24px',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: '8px',
+    backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#eeeeee',
+    borderRadius: '4px',
     fontWeight: 'bold',
     letterSpacing: '2px',
-    color: '#ffffff',
+    color: mode === 'dark' ? '#ffffff' : '#212121',
     fontSize: '1.2rem',
     fontFamily: 'monospace',
-    border: '1px solid rgba(255,255,255,0.2)',
+    border: mode === 'dark' ? '1px solid rgba(255,255,255,0.3)' : '1px solid #dcdcdc',
   },
   loginButton: {
-    background: 'linear-gradient(45deg, #2196f3 30%, #21cbf3 90%)',
-    borderRadius: '24px',
-    padding: '12px 32px',
-    fontSize: '1.1rem',
+    background: '#2563eb',
+    borderRadius: '8px',
+    padding: '10px 24px',
+    fontSize: '1rem',
     fontWeight: '600',
     textTransform: 'none',
     color: '#ffffff',
-    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
     '&:hover': {
-      background: 'linear-gradient(45deg, #1976d2 30%, #1cb5e0 90%)',
-      transform: 'translateY(-2px)',
-      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
+      background: '#1d4ed8',
     },
-    transition: 'all 0.3s ease'
+    transition: 'all 0.2s ease'
   },
   sidebarAvatar: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#2563eb',
     width: 64,
     height: 64,
-    border: '2px solid rgba(255,255,255,0.2)',
-    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
   },
   menuItem: {
-    borderRadius: '12px',
-    margin: '4px 8px',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: '8px',
+    margin: '4px 12px',
+    padding: '10px 16px',
     '&:hover': {
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      transform: 'translateX(4px)',
+      backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
     },
     transition: 'all 0.2s ease',
+    '& .MuiListItemIcon-root': {
+        color: mode === 'dark' ? '#d1d5db' : '#5f6368'
+    },
+    '& .MuiListItemText-primary': {
+        color: mode === 'dark' ? '#d1d5db' : '#3c4043',
+        fontWeight: 500,
+    }
   },
   activeMenuItem: {
-    borderRadius: '12px',
-    margin: '4px 8px',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+    borderRadius: '8px',
+    margin: '4px 12px',
+    padding: '10px 16px',
+    backgroundColor: mode === 'dark' ? 'rgba(96, 165, 250, 0.16)' : 'rgba(25, 118, 210, 0.08)',
+    '& .MuiListItemIcon-root': {
+        color: '#1976d2'
+    },
+    '& .MuiListItemText-primary': {
+        color: '#1976d2',
+        fontWeight: 600
+    }
   },
   dialogPaper: {
-    backgroundColor: 'rgba(63, 81, 181, 0.95)',
-    backdropFilter: 'blur(15px)',
-    borderRadius: '16px',
-    border: '1px solid rgba(255,255,255,0.1)',
+    backgroundColor: mode === 'dark' ? '#374151' : '#ffffff',
+    borderRadius: '8px',
+    color: mode === 'dark' ? '#ffffff' : '#212121',
   },
   previewContent: {
-    color: '#ffffff',
+    color: mode === 'dark' ? '#e5e7eb' : '#212121',
     fontSize: '0.9rem',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.2)' : '#f5f5f5',
     padding: '16px',
     borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.2)',
+    border: mode === 'dark' ? '1px solid #4b5563' : '1px solid #e0e0e0',
     fontFamily: 'monospace',
     whiteSpace: 'pre-wrap',
   },
   successMessage: {
     marginTop: '24px',
     padding: '20px',
-    backgroundColor: 'rgba(76, 175, 80, 0.9)',
-    borderRadius: '12px',
+    backgroundColor: '#059669',
+    borderRadius: '8px',
     color: '#ffffff',
     fontWeight: '600',
     fontSize: '16px',
     textAlign: 'center',
-    boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)',
+  },
+  mainCard: {
+    padding: '24px',
+    borderRadius: '12px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+    width: '100%',
+    maxWidth: '1100px',
+    backgroundColor: mode === 'dark' ? '#374151' : '#ffffff',
+    color: mode === 'dark' ? '#ffffff' : '#212121',
+  },
+  appBarButton: {
+    color: 'inherit',
+    borderRadius: '8px',
+    '&:hover': { 
+        backgroundColor: mode === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' 
+    }
   }
-};
+});
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
   const firstLetter = schoolName[0].toUpperCase();
@@ -306,8 +338,7 @@ class UserDataManager {
       if (response.ok) {
         console.log(`✅ ${sectionName} data saved to MongoDB for user:`, this.currentUsername);
 
-        try {
-          await fetch(`${API_BASE_URL}/upload-drive`, {
+        fetch(`${API_BASE_URL}/upload-drive`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -318,11 +349,15 @@ class UserDataManager {
               name: `${this.currentUsername}_backup.json`,
               content: this.userData
             })
+          }).then(driveResponse => {
+            if (driveResponse.ok) {
+              console.log('✅ Data backed up to Google Drive');
+            } else {
+              console.warn('⚠️ Google Drive backup failed');
+            }
+          }).catch(driveError => {
+            console.warn('⚠️ Google Drive backup failed:', driveError);
           });
-          console.log('✅ Data backed up to Google Drive');
-        } catch (driveError) {
-          console.warn('⚠️ Google Drive backup failed:', driveError);
-        }
 
         return true;
       }
@@ -385,7 +420,10 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [dataLoading, setDataLoading] = useState(false);
+  const [isDataReady, setIsDataReady] = useState(false);
+  const [mode, setMode] = useState<'light' | 'dark'>('dark');
+
+  const styles = useMemo(() => getStyles(mode), [mode]);
 
   const getNextRollNo = async (cls: string, section: string): Promise<number> => {
     try {
@@ -403,12 +441,7 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCaptcha(generateCaptcha());
-    }, 30000);
-    return () => clearInterval(timer);
-  }, []);
+  
 
   const handlePreview = async (data: any) => {
     try {
@@ -446,6 +479,15 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    UserDataManager.setCurrentUser('');
+    UserDataManager.setUserData({});
+    setLoggedIn(false);
+    setSchoolName('');
+    setIsDataReady(false);
+  };
+
   const handleLogin = async () => {
     if (captchaInput.trim() !== captcha) {
       setLoginError('Captcha does not match.');
@@ -458,80 +500,35 @@ function App() {
     );
 
     if (found) {
-      try {
-        setDataLoading(true);
-        UserDataManager.setCurrentUser(found.username);
-        const dataLoaded = await UserDataManager.loadUserData();
-        
+      setLoggedIn(true);
+      setSchoolName(found.schoolName);
+      setLoginPassword('');
+      setLoginError('');
+      setCaptchaInput('');
+      setUsername('');
+
+      localStorage.setItem('loggedIn', 'true');
+      localStorage.setItem('schoolName', found.schoolName);
+      localStorage.setItem('currentUsername', found.username);
+
+      UserDataManager.setCurrentUser(found.username);
+      UserDataManager.loadUserData().then(dataLoaded => {
         if (dataLoaded) {
-          setLoggedIn(true);
-          setSchoolName(found.schoolName);
-          setLoginPassword('');
-          setLoginError('');
-          setCaptchaInput('');
-          setUsername('');
-
-          localStorage.setItem('loggedIn', 'true');
-          localStorage.setItem('schoolName', found.schoolName);
-          localStorage.setItem('currentUsername', found.username);
-
-          console.log('✅ Login successful for user:', found.username);
+          setIsDataReady(true);
+          console.log('✅ Login successful and data loaded for user:', found.username);
         } else {
+          handleLogout();
           setLoginError('Failed to load user data. Please try again.');
         }
-      } catch (error) {
-        console.error('❌ Login error:', error);
-        setLoginError('Login failed. Please try again.');
-      } finally {
-        setDataLoading(false);
-      }
+      });
     } else {
       setLoginError('Invalid username or password.');
     }
   };
 
-  useEffect(() => {
-    const checkExistingLogin = async () => {
-      const storedLogin = localStorage.getItem('loggedIn');
-      const storedSchoolName = localStorage.getItem('schoolName');
-      const storedUsername = localStorage.getItem('currentUsername');
-
-      if (storedLogin === 'true' && storedSchoolName && storedUsername) {
-        setDataLoading(true);
-
-        try {
-          UserDataManager.setCurrentUser(storedUsername);
-          const dataLoaded = await UserDataManager.loadUserData();
-
-          if (dataLoaded) {
-            setLoggedIn(true);
-            setSchoolName(storedSchoolName);
-            console.log('✅ Auto-login successful for user:', storedUsername);
-          } else {
-            localStorage.clear();
-          }
-        } catch (error) {
-          console.error('❌ Auto-login failed:', error);
-          localStorage.clear();
-        } finally {
-          setDataLoading(false);
-        }
-      }
-    };
-
-    checkExistingLogin();
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    UserDataManager.setCurrentUser('');
-    UserDataManager.setUserData({});
-    setLoggedIn(false);
-    setSchoolName('');
-  };
-
   return (
     <Box sx={styles.mainContainer}>
+      <Chatbot />
       <CssBaseline />
 
       <Dialog
@@ -544,82 +541,77 @@ function App() {
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          color: '#fff',
+          color: 'inherit',
           textAlign: 'center',
           fontSize: '1.25rem',
           fontWeight: 600
         }}>
-          <LockIcon sx={{ color: '#fff' }} /> Login Required
+          <LockIcon /> Login Required
         </DialogTitle>
         <DialogContent sx={{ minWidth: 350, padding: '20px' }}>
           <Typography sx={{
             marginBottom: 3,
-            color: '#fff',
             textAlign: 'center',
             opacity: 0.9,
             fontSize: '1rem'
           }}>
-            {dataLoading ? 'Loading user data...' : 'Enter profile password to access the app.'}
+            Enter profile password to access the app.
           </Typography>
 
-          {!dataLoading && (
-            <>
-              <TextField
-                label="Username"
-                value={username}
-                onChange={e => setUsername(e.target.value)}
-                fullWidth
-                autoFocus
-                sx={{ ...styles.loginTextField, marginBottom: 2 }}
-              />
+          <>
+            <TextField
+              label="Username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              fullWidth
+              autoFocus
+              sx={{ ...styles.loginTextField, marginBottom: 2 }}
+            />
 
-              <TextField
-                label="Password"
-                type="password"
-                value={loginPassword}
-                onChange={e => setLoginPassword(e.target.value)}
-                fullWidth
-                onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
-                error={!!loginError}
-                helperText={loginError}
-                sx={{ ...styles.loginTextField, marginBottom: 2 }}
-              />
+            <TextField
+              label="Password"
+              type="password"
+              value={loginPassword}
+              onChange={e => setLoginPassword(e.target.value)}
+              fullWidth
+              onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
+              error={!!loginError}
+              helperText={loginError}
+              sx={{ ...styles.loginTextField, marginBottom: 2 }}
+            />
 
-              <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2, marginBottom: 1, gap: 2 }}>
-                <Box sx={styles.captchaBox}>
-                  {captcha}
-                </Box>
-                <Button
-                  onClick={() => setCaptcha(generateCaptcha())}
-                  sx={{ color: '#fff', textTransform: 'none' }}
-                >
-                  Refresh
-                </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', marginTop: 2, marginBottom: 1, gap: 2 }}>
+              <Box sx={styles.captchaBox}>
+                {captcha}
               </Box>
+              <Button
+                onClick={() => setCaptcha(generateCaptcha())}
+                sx={{ color: 'inherit', textTransform: 'none' }}
+              >
+                Refresh
+              </Button>
+            </Box>
 
-              <TextField
-                label="Enter Captcha"
-                value={captchaInput}
-                onChange={e => setCaptchaInput(e.target.value)}
-                fullWidth
-                onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
-                sx={styles.loginTextField}
-              />
-            </>
-          )}
+            <TextField
+              label="Enter Captcha"
+              value={captchaInput}
+              onChange={e => setCaptchaInput(e.target.value)}
+              fullWidth
+              onKeyDown={e => { if (e.key === 'Enter') handleLogin(); }}
+              sx={styles.loginTextField}
+            />
+          </>
         </DialogContent>
 
-        {!dataLoading && (
-          <DialogActions sx={{ justifyContent: 'center', paddingBottom: 3 }}>
-            <Button
-              onClick={handleLogin}
-              variant="contained"
-              sx={styles.loginButton}
-            >
-              Login
-            </Button>
-          </DialogActions>
-        )}
+        <DialogActions sx={{ justifyContent: 'center', paddingBottom: 3 }}>
+          <Button
+            onClick={handleLogin}
+            variant="contained"
+            sx={styles.loginButton}
+          >
+            Login
+          </Button>
+        </DialogActions>
 
         <Box sx={{ width: '100%', textAlign: 'center', marginTop: 2, paddingBottom: 2 }}>
           <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.6)' }}>
@@ -633,7 +625,7 @@ function App() {
           <Box sx={{ display: 'flex', width: '100%' }}>
             <AppBar position="fixed" sx={styles.appBar}>
               <Toolbar>
-                <SchoolIcon sx={{ marginRight: 2, color: '#fff' }} />
+                <SchoolIcon sx={{ marginRight: 2 }} />
                 <Typography
                   variant="h6"
                   noWrap
@@ -641,20 +633,19 @@ function App() {
                   sx={{
                     fontWeight: 700,
                     letterSpacing: 1,
-                    color: '#fff',
                     textShadow: '0 2px 4px rgba(0,0,0,0.3)',
                     flexGrow: 1
                   }}
                 >
                   {schoolName}
                 </Typography>
+                <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
+                  {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
                 <Button
                   onClick={handleLogout}
-                  sx={{
-                    color: '#fff',
-                    borderRadius: '8px',
-                    '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
-                  }}
+                  color="inherit"
+                  sx={styles.appBarButton}
                 >
                   Logout
                 </Button>
@@ -684,7 +675,6 @@ function App() {
                   variant="h6"
                   sx={{
                     fontWeight: 600,
-                    color: '#fff',
                     marginTop: 2,
                     marginBottom: 1,
                     textAlign: 'center',
@@ -696,7 +686,7 @@ function App() {
                 <Typography
                   variant="caption"
                   sx={{
-                    color: 'rgba(255,255,255,0.7)',
+                    opacity: 0.7,
                     textAlign: 'center',
                     fontSize: '0.8rem'
                   }}
@@ -720,7 +710,7 @@ function App() {
                     onClick={() => setMenu(item.key as any)}
                     style={{ cursor: 'pointer' }}
                   >
-                    <ListItemIcon sx={{ color: '#fff', minWidth: 40 }}>
+                    <ListItemIcon sx={{ minWidth: 40 }}>
                       {item.icon}
                     </ListItemIcon>
                     <ListItemText
@@ -728,8 +718,7 @@ function App() {
                       sx={{
                         '& .MuiListItemText-primary': {
                           fontWeight: menu === item.key ? 600 : 400,
-                          fontSize: '0.95rem',
-                          color: '#fff'
+                          fontSize: '0.95rem'
                         }
                       }}
                     />
@@ -750,6 +739,7 @@ function App() {
               }}
             >
               <Toolbar />
+              {isDataReady ? (
               <Fade in={true} timeout={600}>
                 <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                   {menu === 'student' ? (
@@ -759,7 +749,6 @@ function App() {
                         gutterBottom
                         align="center"
                         sx={{
-                          color: '#fff',
                           fontWeight: 700,
                           textShadow: '0 2px 4px rgba(0,0,0,0.3)',
                           mb: 3
@@ -770,7 +759,7 @@ function App() {
                       <AdmissionForm
                         onPreview={handlePreview}
                         getNextRollNo={getNextRollNo}
-                        userDataManager={UserDataManager}
+                        styles={styles}
                       />
                     </Card>
                   ) : menu === 'show' ? (
@@ -786,6 +775,11 @@ function App() {
                   )}
                 </Box>
               </Fade>
+              ) : (
+                <Box sx={{ display: 'flex', flexGrow: 1, alignItems: 'center', justifyContent: 'center' }}>
+                  <CircularProgress />
+                </Box>
+              )}
 
               <Dialog
                 open={confirmOpen}
@@ -793,7 +787,7 @@ function App() {
                 PaperProps={{ sx: styles.dialogPaper }}
                 TransitionComponent={Fade}
               >
-                <DialogTitle sx={{ color: '#fff', fontWeight: 600 }}>
+                <DialogTitle sx={{ fontWeight: 600 }}>
                   Confirm Admission
                 </DialogTitle>
                 <DialogContent>
@@ -804,7 +798,7 @@ function App() {
                 <DialogActions sx={{ padding: 3 }}>
                   <Button
                     onClick={() => setConfirmOpen(false)}
-                    sx={{ color: '#fff', borderRadius: '12px', padding: '8px 20px' }}
+                    sx={{ color: 'inherit', borderRadius: '12px', padding: '8px 20px' }}
                   >
                     Cancel
                   </Button>

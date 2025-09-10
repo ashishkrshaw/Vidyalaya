@@ -14,9 +14,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip
+  Chip,
+  Grid
 } from '@mui/material';
-import Grid from '@mui/material/Grid';
 import LockIcon from '@mui/icons-material/Lock';
 import {
   saveFeeMap,
@@ -514,9 +514,9 @@ const AcademicSettings: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', mt: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5" gutterBottom>
+    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
           Academic Settings
         </Typography>
         <Button 
@@ -528,196 +528,232 @@ const AcademicSettings: React.FC = () => {
         </Button>
       </Box>
 
-
-
-      {/* Password Reset Section */}
-      <Card sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Password Reset
-        </Typography>
-        
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Button 
-            variant="outlined" 
-            onClick={() => { 
-              setResetType('login'); 
-              setResetError(''); 
-              setResetMsg(''); 
-            }}
-          >
-            Reset Login Password
-          </Button>
-          <Button 
-            variant="outlined" 
-            onClick={() => { 
-              setResetType('confirm'); 
-              setResetError(''); 
-              setResetMsg(''); 
-            }}
-          >
-            Reset Confirmation Password
-          </Button>
-        </Box>
-
-        {resetType && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-            <TextField
-              label="Old Password"
-              type="password"
-              value={oldPassInput}
-              onChange={(e) => setOldPassInput(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              label="New Password"
-              type="password"
-              value={newPassInput}
-              onChange={(e) => setNewPassInput(e.target.value)}
-              fullWidth
-            />
-            {resetError && <Alert severity="error">{resetError}</Alert>}
-            <Button variant="contained" onClick={handleResetPassword}>
-              Update Password
-            </Button>
-            <Button onClick={cancelPasswordReset}>Cancel</Button>
-            {resetMsg && <Alert severity="success">{resetMsg}</Alert>}
-          </Box>
-        )}
-      </Card>
-
-      {/* Backup/Sync Section */}
-      {typeof window !== 'undefined' && 'showDirectoryPicker' in window && (
-        <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-          <Button variant="contained" color="primary" onClick={backupData}>
-            Backup to Local
-          </Button>
-          <Button variant="contained" color="secondary" onClick={syncData}>
-            Sync from Local
-          </Button>
-          {backupMsg && <Alert severity="success">{backupMsg}</Alert>}
-          {syncMsg && <Alert severity="success">{syncMsg}</Alert>}
-        </Box>
-      )}
-
-      {/* Google Drive Section */}
-      <Card sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Google Drive Backup
-        </Typography>
-        
-        {checkingConnection ? (
-          <Typography>Checking Google Drive connection...</Typography>
-        ) : (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Chip
-              label={driveConnected ? "Connected to Google Drive" : "Not Connected"}
-              color={driveConnected ? "success" : "error"}
-              variant="outlined"
-            />
-            {!driveConnected && (
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={connectGoogleDrive}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>Password Reset</Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+              <Button 
+                variant="outlined" 
+                onClick={() => { 
+                  setResetType('login'); 
+                  setResetError(''); 
+                  setResetMsg(''); 
+                }}
               >
-                Connect Google Drive
+                Reset Login Password
               </Button>
-            )}
-          </Box>
-        )}
-        
-        <Button
-          variant="contained"
-          color="success"
-          onClick={backupToDrive}
-          disabled={!driveConnected}
-        >
-          {driveConnected ? "Backup to Google Drive" : "Connect Drive First"}
-        </Button>
-      </Card>
-
-      {/* Sync Warning */}
-      {syncWarning && (
-        <Alert 
-          severity="warning" 
-          action={
-            <Box>
-              <Button color="inherit" size="small" onClick={handleSyncConfirm}>
-                Proceed (Restore from Backup)
-              </Button>
-              <Button color="inherit" size="small" onClick={handleSyncCancel}>
-                Cancel
+              <Button 
+                variant="outlined" 
+                onClick={() => { 
+                  setResetType('confirm'); 
+                  setResetError(''); 
+                  setResetMsg(''); 
+                }}
+              >
+                Reset Confirmation Password
               </Button>
             </Box>
-          }
-        >
-          {syncWarning}
-        </Alert>
-      )}
 
-      {/* Promotion Date Section */}
-      <Card sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Promotion Date
-        </Typography>
-        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Promotion Date"
-              type="date"
-              value={promotionDate}
-              onChange={(e) => setPromotionDate(e.target.value)}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <Button variant="contained" onClick={handlePromotionSaveRequest}>
-              Save Promotion Date
-            </Button>
-          </Grid>
+            {resetType && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
+                <TextField
+                  label="Old Password"
+                  type="password"
+                  value={oldPassInput}
+                  onChange={(e) => setOldPassInput(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  label="New Password"
+                  type="password"
+                  value={newPassInput}
+                  onChange={(e) => setNewPassInput(e.target.value)}
+                  fullWidth
+                />
+                {resetError && <Alert severity="error">{resetError}</Alert>}
+                <Button variant="contained" onClick={handleResetPassword}>
+                  Update Password
+                </Button>
+                <Button onClick={cancelPasswordReset}>Cancel</Button>
+                {resetMsg && <Alert severity="success">{resetMsg}</Alert>}
+              </Box>
+            )}
+          </Card>
         </Grid>
-      </Card>
 
-      {/* Fee Settings Section */}
-      <Card sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Fee Settings
-        </Typography>
-        <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-          <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
-              <InputLabel>Class</InputLabel>
-              <Select
-                value={feeClass}
-                label="Class"
-                onChange={(e) => setFeeClass(e.target.value)}
-              >
-                {classOptions.map((c) => (
-                  <MenuItem key={c} value={c}>
-                    {c}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Fee Amount"
-              value={feeAmount}
-              onChange={(e) => setFeeAmount(e.target.value)}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Button variant="contained" onClick={handleFeeSaveRequest}>
-              Save Fee
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: '100%' }}>
+            <Typography variant="h6" gutterBottom>Data Management</Typography>
+            {typeof window !== 'undefined' && 'showDirectoryPicker' in window && (
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Button variant="contained" color="primary" onClick={backupData}>
+                  Backup to Local
+                </Button>
+                <Button variant="contained" color="secondary" onClick={syncData}>
+                  Sync from Local
+                </Button>
+                {backupMsg && <Alert severity="success">{backupMsg}</Alert>}
+                {syncMsg && <Alert severity="success">{syncMsg}</Alert>}
+              </Box>
+            )}
+
+            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Google Drive Backup</Typography>
+            {checkingConnection ? (
+              <Typography>Checking Google Drive connection...</Typography>
+            ) : (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Chip
+                  label={driveConnected ? "Connected to Google Drive" : "Not Connected"}
+                  color={driveConnected ? "success" : "error"}
+                  variant="outlined"
+                />
+                {!driveConnected && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={connectGoogleDrive}
+                  >
+                    Connect Google Drive
+                  </Button>
+                )}
+              </Box>
+            )}
+            <Button
+              variant="contained"
+              color="success"
+              onClick={backupToDrive}
+              disabled={!driveConnected}
+            >
+              {driveConnected ? "Backup to Google Drive" : "Connect Drive First"}
             </Button>
-          </Grid>
+          </Card>
         </Grid>
-      </Card>
 
-      {/* Password Confirmation Dialog */}
+        {syncWarning && (
+          <Grid item xs={12}>
+            <Alert 
+              severity="warning" 
+              action={
+                <Box>
+                  <Button color="inherit" size="small" onClick={handleSyncConfirm}>
+                    Proceed (Restore from Backup)
+                  </Button>
+                  <Button color="inherit" size="small" onClick={handleSyncCancel}>
+                    Cancel
+                  </Button>
+                </Box>
+              }
+            >
+              {syncWarning}
+            </Alert>
+          </Grid>
+        )}
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Promotion Date</Typography>
+            <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Promotion Date"
+                  type="date"
+                  value={promotionDate}
+                  onChange={(e) => setPromotionDate(e.target.value)}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Button variant="contained" onClick={handlePromotionSaveRequest}>
+                  Save Promotion Date
+                </Button>
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" gutterBottom>Fee Settings</Typography>
+            <Grid container spacing={2} sx={{ alignItems: 'center' }}>
+              <Grid item xs={12} sm={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Class</InputLabel>
+                  <Select
+                    value={feeClass}
+                    label="Class"
+                    onChange={(e) => setFeeClass(e.target.value)}
+                  >
+                    {classOptions.map((c) => (
+                      <MenuItem key={c} value={c}>
+                        {c}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <TextField
+                  label="Fee Amount"
+                  value={feeAmount}
+                  onChange={(e) => setFeeAmount(e.target.value)}
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} sm={4}>
+                <Button variant="contained" onClick={handleFeeSaveRequest}>
+                  Save Fee
+                </Button>
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>Principal/Head Signature (Image or PDF)</Typography>
+            <Button variant="contained" component="label" sx={{ mb: 2 }}>
+              Upload Signature
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                hidden
+                onChange={handleSignatureUpload}
+              />
+            </Button>
+            {signature && (
+              <Box sx={{ mt: 2 }}>
+                {signature.type && signature.type.startsWith('image/') && signatureUrl ? (
+                  <img
+                    src={signatureUrl}
+                    alt="Signature Preview"
+                    style={{
+                      maxWidth: 180,
+                      maxHeight: 80,
+                      display: 'block',
+                      marginBottom: 8
+                    }}
+                  />
+                ) : (
+                  <Typography>
+                    PDF Uploaded: {signature.name || signatureUrl}
+                  </Typography>
+                )}
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={handleRemoveSignature}
+                  sx={{ mt: 1 }}
+                >
+                  Remove
+                </Button>
+              </Box>
+            )}
+          </Card>
+        </Grid>
+      </Grid>
+
       <Dialog open={passwordDialogOpen} onClose={closePasswordDialog}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LockIcon /> Password Required
@@ -748,60 +784,12 @@ const AcademicSettings: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Principal Signature Upload Section */}
-      <Card sx={{ p: 3, borderRadius: 3, boxShadow: 4, mb: 2 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Principal/Head Signature (Image or PDF)
-        </Typography>
-        
-        <Button variant="contained" component="label" sx={{ mb: 2 }}>
-          Upload Signature
-          <input
-            type="file"
-            accept="image/*,application/pdf"
-            hidden
-            onChange={handleSignatureUpload}
-          />
-        </Button>
-        
-        {signature && (
-          <Box sx={{ mt: 2 }}>
-            {signature.type && signature.type.startsWith('image/') && signatureUrl ? (
-              <img
-                src={signatureUrl}
-                alt="Signature Preview"
-                style={{
-                  maxWidth: 180,
-                  maxHeight: 80,
-                  display: 'block',
-                  marginBottom: 8
-                }}
-              />
-            ) : (
-              <Typography>
-                PDF Uploaded: {signature.name || signatureUrl}
-              </Typography>
-            )}
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleRemoveSignature}
-              sx={{ mt: 1 }}
-            >
-              Remove
-            </Button>
-          </Box>
-        )}
-      </Card>
-
-      {/* Success Messages */}
       {msg && (
         <Alert severity="success" sx={{ mt: 3 }}>
           {msg}
         </Alert>
       )}
 
-      {/* Footer */}
       <Box sx={{ width: '100%', textAlign: 'center', mt: 4 }}>
         <Typography variant="caption" color="text.secondary">
           © All rights reserved | ASK Ltd
