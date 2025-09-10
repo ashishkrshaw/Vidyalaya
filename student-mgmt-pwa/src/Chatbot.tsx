@@ -6,7 +6,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>([]);
   const [input, setInput] = useState('');
 
-  const PERPLEXITY_API_KEY = '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';
+  const PERPLEXITY_API_KEY = '';
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
