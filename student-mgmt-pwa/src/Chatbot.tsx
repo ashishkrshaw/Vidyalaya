@@ -6,7 +6,7 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>([]);
   const [input, setInput] = useState('');
 
-  const PERPLEXITY_API_KEY = '';
+  const PERPLEXITY_API_KEY = process.env.REACT_APP_PERPLEXITY_API_KEY;
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
