@@ -6,13 +6,64 @@ const Chatbot = () => {
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>([]);
   const [input, setInput] = useState('');
 
-  const PERPLEXITY_API_KEY = process.env.REACT_APP_PERPLEXITY_API_KEY;
-
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleSend = async () => {
+  // ELIZA-style response function
+  const getBotResponse = (userInput: string) => {
+    const lowerInput = userInput.toLowerCase().trim();
+
+    // Greetings
+    const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
+    if (greetings.some(greet => lowerInput.includes(greet))) {
+      const responses = [
+        'Hello! How can I help you with school today?',
+        'Hi there! Ready to answer your school questions.',
+        'Hey! What would you like to know about our school?'
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    // Small talk
+    if (lowerInput.includes('how are you')) {
+      const responses = [
+        "I'm doing well! How about you?",
+        "I'm good! Ready to assist with any school queries.",
+        "Doing great! What school-related questions do you have?"
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    // School-related ELIZA-style responses
+    if (lowerInput.includes('admission')) {
+      return "Admissions are important. What specific information about admissions would you like to know?";
+    }
+    if (lowerInput.includes('curriculum')) {
+      return "You mentioned curriculum. Which part of our curriculum interests you most?";
+    }
+    if (lowerInput.includes('faculty')) {
+      return "Our faculty is committed to students. Are you curious about a particular department or teacher?";
+    }
+    if (lowerInput.includes('fee')) {
+      return "Fees can vary. Are you asking about tuition, activities, or other costs?";
+    }
+    if (lowerInput.includes('timings') || lowerInput.includes('hours')) {
+      return "School timings are scheduled to balance learning and rest. Do you want the exact hours?";
+    }
+
+    // Default reflective ELIZA-style prompts
+    const prompts = [
+      "Can you tell me more about that?",
+      "Why do you say that?",
+      "How does that affect your question?",
+      "What makes you ask that?",
+      "Interesting. Could you elaborate?"
+    ];
+    return prompts[Math.floor(Math.random() * prompts.length)];
+  };
+
+  const handleSend = () => {
     if (input.trim() === '') return;
 
     const userMessage = { text: input, sender: 'user' };
@@ -24,54 +75,15 @@ const Chatbot = () => {
     const botMessage = { text: 'Thinking...', sender: 'bot' };
     setMessages(prevMessages => [...prevMessages, botMessage]);
 
-    try {
-      const response = await fetch('https://api.perplexity.ai/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${PERPLEXITY_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.1-sonar-small-128k-online',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a professional school AI assistant. Help with queries about admissions, curriculum, faculty, and general school-related questions.'
-            },
-            {
-              role: 'user',
-              content: currentInput
-            }
-          ],
-          max_tokens: 500,
-          temperature: 0.7
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const aiResponse = data.choices[0].message.content;
-
+    // Simulate async response like API
+    setTimeout(() => {
+      const aiResponse = getBotResponse(currentInput);
       setMessages(prevMessages => {
         const newMessages = [...prevMessages];
         newMessages[newMessages.length - 1] = { text: aiResponse, sender: 'bot' };
         return newMessages;
       });
-
-    } catch (error) {
-      console.error('Error calling Perplexity API:', error);
-      setMessages(prevMessages => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1] = { 
-          text: 'Sorry, I encountered an error. Please try again later.', 
-          sender: 'bot' 
-        };
-        return newMessages;
-      });
-    }
+    }, 500); // 0.5s delay to mimic thinking
   };
 
   return (
