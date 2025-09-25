@@ -1,108 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Chatbot.css';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>([]);
   const [input, setInput] = useState('');
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages]);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
 
-  // ELIZA-style response function
   const getBotResponse = (userInput: string) => {
     const lowerInput = userInput.toLowerCase().trim();
 
-    // Greetings
-    const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening'];
-    if (greetings.some(greet => lowerInput.includes(greet))) {
-      const responses = [
-        'Hello! How can I help you with school today?',
-        'Hi there! Ready to answer your school questions.',
-        'Hey! What would you like to know about our school?'
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
+    if (lowerInput.includes('add student')) {
+      return "To add a new student, go to the 'New Admission' section from the dashboard or sidebar.";
     }
-
-    // Small talk
-    if (lowerInput.includes('how are you')) {
-      const responses = [
-        "I'm doing well! How about you?",
-        "I'm good! Ready to assist with any school queries.",
-        "Doing great! What school-related questions do you have?"
-      ];
-      return responses[Math.floor(Math.random() * responses.length)];
-    }
-
-    // School-related ELIZA-style responses
-    if (lowerInput.includes('admission')) {
-      return "Admissions are important. What specific information about admissions would you like to know?";
-    }
-    if (lowerInput.includes('curriculum')) {
-      return "You mentioned curriculum. Which part of our curriculum interests you most?";
-    }
-    if (lowerInput.includes('faculty')) {
-      return "Our faculty is committed to students. Are you curious about a particular department or teacher?";
+    if (lowerInput.includes('find student') || lowerInput.includes('search student')) {
+      return "You can search for students in the 'Show Student' section.";
     }
     if (lowerInput.includes('fee')) {
-      return "Fees can vary. Are you asking about tuition, activities, or other costs?";
+      return "Manage fees and payments in the 'Fee Management' section.";
     }
-    if (lowerInput.includes('timings') || lowerInput.includes('hours')) {
-      return "School timings are scheduled to balance learning and rest. Do you want the exact hours?";
+    if (lowerInput.includes('settings')) {
+      return "You can configure academic settings, fees, and more in the 'Settings' section.";
     }
 
-    // Default reflective ELIZA-style prompts
     const prompts = [
-      "Can you tell me more about that?",
-      "Why do you say that?",
-      "How does that affect your question?",
-      "What makes you ask that?",
-      "Interesting. Could you elaborate?"
+      "How can I help you with managing the school?",
+      "What task would you like to perform?",
+      "Is there anything I can assist you with?",
     ];
     return prompts[Math.floor(Math.random() * prompts.length)];
   };
 
-  const handleSend = () => {
-    if (input.trim() === '') return;
+  const handleSend = (text: string = input) => {
+    if (text.trim() === '') return;
 
-    const userMessage = { text: input, sender: 'user' };
-    setMessages(prevMessages => [...prevMessages, userMessage]);
-    const currentInput = input;
+    const userMessage = { text, sender: 'user' };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    // Show thinking message
-    const botMessage = { text: 'Thinking...', sender: 'bot' };
-    setMessages(prevMessages => [...prevMessages, botMessage]);
-
-    // Simulate async response like API
     setTimeout(() => {
-      const aiResponse = getBotResponse(currentInput);
-      setMessages(prevMessages => {
-        const newMessages = [...prevMessages];
-        newMessages[newMessages.length - 1] = { text: aiResponse, sender: 'bot' };
-        return newMessages;
-      });
-    }, 500); // 0.5s delay to mimic thinking
+      const botMessage = { text: getBotResponse(text), sender: 'bot' };
+      setMessages(prev => [...prev, botMessage]);
+    }, 500);
   };
+
+  const defaultPrompts = [
+    "How to add a new student?",
+    "How to find a student?",
+    "Where can I manage fees?",
+    "Go to settings",
+  ];
 
   return (
     <div className="chatbot-container">
       <div className={`chatbot-icon ${isOpen ? 'open' : ''}`} onClick={toggleChat}>
-        AI
+        🤖
       </div>
       {isOpen && (
         <div className="chatbot-window">
           <div className="chatbot-header">
-            <h2>School AI Assistant</h2>
-            <button onClick={toggleChat}>X</button>
+            <h2>AI Assistant</h2>
+            <button onClick={toggleChat}>&times;</button>
           </div>
           <div className="chatbot-messages">
+            {messages.length === 0 && (
+              <div className="default-prompts">
+                {defaultPrompts.map((prompt, i) => (
+                  <button key={i} className="prompt-button" onClick={() => handleSend(prompt)}>
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+            )}
             {messages.map((msg, index) => (
               <div key={index} className={`message ${msg.sender}`}>
                 {msg.text}
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
           <div className="chatbot-input">
             <input
@@ -110,9 +97,9 @@ const Chatbot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Ask a question..."
+              placeholder="Ask something..."
             />
-            <button onClick={handleSend}>Send</button>
+            <button onClick={() => handleSend()}>&#x27A4;</button>
           </div>
         </div>
       )}

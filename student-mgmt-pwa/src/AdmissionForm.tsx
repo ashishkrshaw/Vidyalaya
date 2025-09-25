@@ -79,7 +79,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               onChange={handleChange}
               required
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               inputProps={{ pattern: "[A-Za-z\\s]+" }}
               title="Only letters and spaces are allowed."
             />
@@ -92,7 +92,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               onChange={handleChange}
               required
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               inputProps={{ pattern: "[A-Za-z\\s]+" }}
               title="Only letters and spaces are allowed."
             />
@@ -105,7 +105,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               onChange={handleChange}
               required
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               inputProps={{ pattern: "[A-Za-z\\s]+" }}
               title="Only letters and spaces are allowed."
             />
@@ -120,7 +120,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               fullWidth
               multiline
               rows={2}
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
             />
           </Grid>
         </Grid>
@@ -132,7 +132,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
         <Divider sx={{ mb: 3 }} />
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required sx={styles.loginTextField}>
+            <FormControl fullWidth required sx={styles.formTextField}>
               <InputLabel>Class</InputLabel>
               <Select
                 name="class"
@@ -147,7 +147,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <FormControl fullWidth required sx={styles.loginTextField}>
+            <FormControl fullWidth required sx={styles.formTextField}>
               <InputLabel>Section</InputLabel>
               <Select
                 name="section"
@@ -167,7 +167,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               name="rollNo"
               value={rollNo}
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               InputProps={{
                 readOnly: true,
               }}
@@ -182,7 +182,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               onChange={handleChange}
               required
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               InputLabelProps={{
                 shrink: true,
               }}
@@ -205,7 +205,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               required
               fullWidth
               type="tel"
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               inputProps={{ pattern: "[0-9]{10}", maxLength: 10 }}
               title="Please enter a 10-digit mobile number."
             />
@@ -218,7 +218,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               value={form.email}
               onChange={handleChange}
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
             />
           </Grid>
           <Grid item xs={12} sm={6}>
@@ -229,7 +229,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               onChange={handleChange}
               required
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
               inputProps={{ pattern: "[0-9]{12}", maxLength: 12 }}
               title="Please enter a 12-digit Aadhar number."
             />
@@ -241,7 +241,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               value={form.apaar}
               onChange={handleChange}
               fullWidth
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
             />
           </Grid>
         </Grid>
@@ -261,7 +261,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
               fullWidth
               multiline
               rows={3}
-              sx={styles.loginTextField}
+              sx={styles.formTextField}
             />
           </Grid>
         </Grid>

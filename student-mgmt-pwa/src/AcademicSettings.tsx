@@ -1,23 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import Grid from '@mui/material/Grid'; // Corrected import
 import {
-  Box,
-  Typography,
-  Card,
-  TextField,
-  Button,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  Grid
+  Box, Typography, Card, TextField, Button, MenuItem, FormControl, InputLabel, 
+  Select, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Divider, CircularProgress
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import SaveIcon from '@mui/icons-material/Save';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
+import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import {
   saveFeeMap,
   loadFeeMap,
@@ -31,72 +23,40 @@ import {
 } from './db';
 
 // Type definitions
-interface FeeMap {
-  [className: string]: string;
-}
-
-interface Admission {
-  id?: string;
-  updatedAt?: string;
-  timestamp?: string;
-  createdAt?: string;
-  dob?: string;
-  [key: string]: any;
-}
-
-interface History {
-  id?: string;
-  timestamp?: string;
-  [key: string]: any;
-}
-
+interface FeeMap { [className: string]: string; }
+interface Admission { id?: string; updatedAt?: string; timestamp?: string; createdAt?: string; dob?: string; [key: string]: any; }
+interface History { id?: string; timestamp?: string; [key: string]: any; }
 type PrincipalSignature = File | string | null;
 type PromotionDate = string;
 type ResetType = 'login' | 'confirm' | null;
 type PendingAction = 'promotion' | 'fee' | null;
-
-interface SyncData {
-  admissions: Admission[];
-  history: History[];
-  feeMap: FeeMap;
-  promotionDate: PromotionDate;
-  principalSignature: PrincipalSignature;
-  db: any;
-}
-
-declare global {
-  interface Window {
-    showDirectoryPicker: () => Promise<any>;
-  }
-}
+interface SyncData { admissions: Admission[]; history: History[]; feeMap: FeeMap; promotionDate: PromotionDate; principalSignature: PrincipalSignature; db: any; }
+declare global { interface Window { showDirectoryPicker: () => Promise<any>; } }
 
 const classOptions = [
   'Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 ];
 
+const commonTextFieldStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '8px',
+  },
+};
+
 const AcademicSettings: React.FC = () => {
-  // State for promotion date and fees
   const [promotionDate, setPromotionDate] = useState<string>('');
   const [feeClass, setFeeClass] = useState<string>('');
   const [feeAmount, setFeeAmount] = useState<string>('');
   const [feeMap, setFeeMap] = useState<FeeMap>({});
   const [msg, setMsg] = useState<string>('');
-
-  // State for signature
   const [signature, setSignature] = useState<PrincipalSignature>(null);
   const [signatureUrl, setSignatureUrl] = useState<string>('');
-
-  // State for Google Drive
   const [driveConnected, setDriveConnected] = useState<boolean>(false);
   const [checkingConnection, setCheckingConnection] = useState<boolean>(true);
-
-  // State for backup/sync
   const [backupMsg, setBackupMsg] = useState<string>('');
   const [syncMsg, setSyncMsg] = useState<string>('');
   const [syncWarning, setSyncWarning] = useState<string>('');
   const [syncPending, setSyncPending] = useState<SyncData | null>(null);
-
-  // State for password management
   const [loginPassword, setLoginPassword] = useState<string>('825419');
   const [confirmPassword, setConfirmPassword] = useState<string>('123456');
   const [resetType, setResetType] = useState<ResetType>(null);
@@ -104,21 +64,17 @@ const AcademicSettings: React.FC = () => {
   const [newPassInput, setNewPassInput] = useState<string>('');
   const [resetError, setResetError] = useState<string>('');
   const [resetMsg, setResetMsg] = useState<string>('');
-
-  // State for password confirmation dialog
   const [passwordDialogOpen, setPasswordDialogOpen] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  // Add this function inside AcademicSettings component
+
   const handleLogout = (): void => {
     localStorage.removeItem('loggedIn');
     localStorage.removeItem('schoolName');
-    window.location.reload(); // reload karega aur login screen dikhayega
+    window.location.reload();
   };
 
-
-  // Initialize data on component mount
   useEffect(() => {
     const initializeData = async () => {
       try {
@@ -132,7 +88,6 @@ const AcademicSettings: React.FC = () => {
         setPromotionDate(loadedPromotionDate);
         setSignature(loadedSignature);
 
-        // Handle signature URL
         if (loadedSignature) {
           if (typeof loadedSignature !== 'string' && loadedSignature.type?.startsWith('image/')) {
             setSignatureUrl(URL.createObjectURL(loadedSignature));
@@ -150,13 +105,11 @@ const AcademicSettings: React.FC = () => {
     initializeData();
   }, []);
 
-  // Helper function to show temporary messages
-  const showTempMessage = (setter: React.Dispatch<React.SetStateAction<string>>, message: string, duration = 2000) => {
+  const showTempMessage = (setter: React.Dispatch<React.SetStateAction<string>>, message: string, duration = 3000) => {
     setter(message);
     setTimeout(() => setter(''), duration);
   };
 
-  // Promotion date handlers
   const handlePromotionSave = async (): Promise<void> => {
     try {
       await savePromotionDate(promotionDate);
@@ -172,7 +125,6 @@ const AcademicSettings: React.FC = () => {
     setPasswordDialogOpen(true);
   };
 
-  // Fee management handlers
   const handleFeeSave = async (): Promise<void> => {
     if (feeClass && feeAmount) {
       try {
@@ -194,7 +146,6 @@ const AcademicSettings: React.FC = () => {
     setPasswordDialogOpen(true);
   };
 
-  // Password confirmation handlers
   const handlePasswordConfirm = (): void => {
     if (passwordInput === confirmPassword) {
       setPasswordDialogOpen(false);
@@ -217,7 +168,6 @@ const AcademicSettings: React.FC = () => {
     setPendingAction(null);
   };
 
-  // Password reset handlers
   const handleResetPassword = (): void => {
     if (resetType === 'login') {
       if (oldPassInput !== loginPassword) {
@@ -247,7 +197,6 @@ const AcademicSettings: React.FC = () => {
     setResetError('');
   };
 
-  // Signature handlers
   const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -276,7 +225,6 @@ const AcademicSettings: React.FC = () => {
     }
   };
 
-  // Backup and sync handlers
   const backupData = async (): Promise<void> => {
     if (!('showDirectoryPicker' in window)) {
       showTempMessage(setBackupMsg, 'Backup not supported in this browser.');
@@ -286,7 +234,6 @@ const AcademicSettings: React.FC = () => {
     try {
       const dir = await window.showDirectoryPicker();
       
-      // Export all stores
       const [admissions, history, feeMapData, promotionDateData, principalSignatureData] = await Promise.all([
         getAdmissions(),
         getHistory(),
@@ -295,7 +242,6 @@ const AcademicSettings: React.FC = () => {
         loadPrincipalSignature(),
       ]);
 
-      // Write files
       const files = [
         { name: 'admissions.json', data: admissions },
         { name: 'history.json', data: history },
@@ -334,7 +280,6 @@ const AcademicSettings: React.FC = () => {
     try {
       const dir = await window.showDirectoryPicker();
       
-      // Read files
       const admissionsFile = await (await dir.getFileHandle('admissions.json')).getFile();
       const historyFile = await (await dir.getFileHandle('history.json')).getFile();
       
@@ -346,11 +291,8 @@ const AcademicSettings: React.FC = () => {
       let principalSignatureData = undefined;
       try {
         principalSignatureData = await (await (await dir.getFileHandle('principalSignature')).getFile());
-      } catch {
-        // File doesn't exist, that's okay
-      }
+      } catch {}
 
-      // Get latest timestamp in backup
       const backupLatest = Math.max(
         ...admissions.map((a: Admission) => new Date(a.updatedAt || a.timestamp || a.createdAt || a.dob || 0).getTime()),
         ...history.map((h: History) => new Date(h.timestamp || 0).getTime()),
@@ -358,7 +300,6 @@ const AcademicSettings: React.FC = () => {
         historyFile.lastModified
       );
 
-      // Get latest timestamp in current app data
       const db = await getDb();
       const currentAdmissions = await db.getAll('admissions');
       const currentHistory = await db.getAll('history');
@@ -370,26 +311,11 @@ const AcademicSettings: React.FC = () => {
 
       if (backupLatest <= appLatest) {
         setSyncWarning('Backup data is not newer than current app data. Sync may cause data loss. Proceed?');
-        setSyncPending({ 
-          admissions, 
-          history, 
-          feeMap: feeMapData, 
-          promotionDate: promotionDateData, 
-          principalSignature: principalSignatureData, 
-          db 
-        });
+        setSyncPending({ admissions, history, feeMap: feeMapData, promotionDate: promotionDateData, principalSignature: principalSignatureData, db });
         return;
       }
 
-      // Proceed with sync
-      await doSync({ 
-        admissions, 
-        history, 
-        feeMap: feeMapData, 
-        promotionDate: promotionDateData, 
-        principalSignature: principalSignatureData, 
-        db 
-      });
+      await doSync({ admissions, history, feeMap: feeMapData, promotionDate: promotionDateData, principalSignature: principalSignatureData, db });
       
       showTempMessage(setSyncMsg, 'Sync successful!', 3000);
     } catch (error) {
@@ -433,7 +359,6 @@ const AcademicSettings: React.FC = () => {
     setSyncPending(null);
   };
 
-  // Google Drive handlers
   const checkDriveConnection = async (): Promise<void> => {
     const username = "admin";
     const BASE_URL = import.meta.env.VITE_BASE_URL || "https://gdrive-backend-1.onrender.com";
@@ -456,7 +381,6 @@ const AcademicSettings: React.FC = () => {
 
     window.open(`${BASE_URL}/auth/google?username=${username}`, '_blank', 'width=500,height=600');
 
-    // Check connection after a delay
     setTimeout(() => {
       checkDriveConnection();
     }, 3000);
@@ -467,7 +391,6 @@ const AcademicSettings: React.FC = () => {
     const BASE_URL = import.meta.env.VITE_BASE_URL || "https://gdrive-backend-1.onrender.com";
 
     try {
-      // Load all app data
       const [admissions, history, feeMapData, promotionDateData, principalSignatureData] = await Promise.all([
         getAdmissions() as Promise<Admission[]>,
         getHistory() as Promise<History[]>,
@@ -489,7 +412,6 @@ const AcademicSettings: React.FC = () => {
 
         let content: string;
 
-        // Handle signature file conversion
         if (f.name === "principalSignature" && f.data instanceof File) {
           content = await f.data.text();
         } else {
@@ -499,11 +421,7 @@ const AcademicSettings: React.FC = () => {
         await fetch(`${BASE_URL}/upload-drive`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username,
-            name: f.name,
-            content,
-          }),
+          body: JSON.stringify({ username, name: f.name, content }),
         });
       }
 
@@ -514,286 +432,135 @@ const AcademicSettings: React.FC = () => {
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 4 }}>
+    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-          Academic Settings
-        </Typography>
-        <Button 
-          variant="outlined" 
-          color="error" 
-          onClick={handleLogout}
-        >
-          Logout
-        </Button>
+        <Typography variant="h4" sx={{ fontWeight: 700 }}>Academic Settings</Typography>
+        <Button variant="outlined" color="error" onClick={handleLogout}>Logout</Button>
       </Box>
 
+      {msg && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{msg}</Alert>}
+
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Password Reset</Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-              <Button 
-                variant="outlined" 
-                onClick={() => { 
-                  setResetType('login'); 
-                  setResetError(''); 
-                  setResetMsg(''); 
-                }}
-              >
-                Reset Login Password
-              </Button>
-              <Button 
-                variant="outlined" 
-                onClick={() => { 
-                  setResetType('confirm'); 
-                  setResetError(''); 
-                  setResetMsg(''); 
-                }}
-              >
-                Reset Confirmation Password
-              </Button>
-            </Box>
-
-            {resetType && (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 2 }}>
-                <TextField
-                  label="Old Password"
-                  type="password"
-                  value={oldPassInput}
-                  onChange={(e) => setOldPassInput(e.target.value)}
-                  fullWidth
-                />
-                <TextField
-                  label="New Password"
-                  type="password"
-                  value={newPassInput}
-                  onChange={(e) => setNewPassInput(e.target.value)}
-                  fullWidth
-                />
-                {resetError && <Alert severity="error">{resetError}</Alert>}
-                <Button variant="contained" onClick={handleResetPassword}>
-                  Update Password
-                </Button>
-                <Button onClick={cancelPasswordReset}>Cancel</Button>
-                {resetMsg && <Alert severity="success">{resetMsg}</Alert>}
-              </Box>
-            )}
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h6" gutterBottom>Data Management</Typography>
-            {typeof window !== 'undefined' && 'showDirectoryPicker' in window && (
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Button variant="contained" color="primary" onClick={backupData}>
-                  Backup to Local
-                </Button>
-                <Button variant="contained" color="secondary" onClick={syncData}>
-                  Sync from Local
-                </Button>
-                {backupMsg && <Alert severity="success">{backupMsg}</Alert>}
-                {syncMsg && <Alert severity="success">{syncMsg}</Alert>}
-              </Box>
-            )}
-
-            <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>Google Drive Backup</Typography>
-            {checkingConnection ? (
-              <Typography>Checking Google Drive connection...</Typography>
-            ) : (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Chip
-                  label={driveConnected ? "Connected to Google Drive" : "Not Connected"}
-                  color={driveConnected ? "success" : "error"}
-                  variant="outlined"
-                />
-                {!driveConnected && (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={connectGoogleDrive}
-                  >
-                    Connect Google Drive
-                  </Button>
-                )}
-              </Box>
-            )}
-            <Button
-              variant="contained"
-              color="success"
-              onClick={backupToDrive}
-              disabled={!driveConnected}
-            >
-              {driveConnected ? "Backup to Google Drive" : "Connect Drive First"}
-            </Button>
-          </Card>
-        </Grid>
-
-        {syncWarning && (
-          <Grid item xs={12}>
-            <Alert 
-              severity="warning" 
-              action={
-                <Box>
-                  <Button color="inherit" size="small" onClick={handleSyncConfirm}>
-                    Proceed (Restore from Backup)
-                  </Button>
-                  <Button color="inherit" size="small" onClick={handleSyncCancel}>
-                    Cancel
-                  </Button>
+        <Grid item xs={12}>
+          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+            <Typography variant="h6" gutterBottom>Fees & Promotions</Typography>
+            <Divider sx={{ my: 2 }} />
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Set Class Fee</Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <FormControl fullWidth sx={{ flex: 2 }}><InputLabel>Class</InputLabel><Select value={feeClass} label="Class" onChange={(e) => setFeeClass(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+                  <TextField label="Amount" value={feeAmount} onChange={(e) => setFeeAmount(e.target.value)} fullWidth sx={{ ...commonTextFieldStyles, flex: 2 }} />
+                  <Button variant="contained" onClick={handleFeeSaveRequest} sx={{ flex: 1, height: 56 }}><SaveIcon /></Button>
                 </Box>
-              }
-            >
-              {syncWarning}
-            </Alert>
-          </Grid>
-        )}
-
-        <Grid item xs={12}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Promotion Date</Typography>
-            <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Promotion Date"
-                  type="date"
-                  value={promotionDate}
-                  onChange={(e) => setPromotionDate(e.target.value)}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <Button variant="contained" onClick={handlePromotionSaveRequest}>
-                  Save Promotion Date
-                </Button>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Set Promotion Date</Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                  <TextField type="date" value={promotionDate} onChange={(e) => setPromotionDate(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} sx={{ ...commonTextFieldStyles, flex: 3 }} />
+                  <Button variant="contained" onClick={handlePromotionSaveRequest} sx={{ flex: 1, height: 56 }}><SaveIcon /></Button>
+                </Box>
               </Grid>
             </Grid>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>Fee Settings</Typography>
-            <Grid container spacing={2} sx={{ alignItems: 'center' }}>
-              <Grid item xs={12} sm={4}>
-                <FormControl fullWidth>
-                  <InputLabel>Class</InputLabel>
-                  <Select
-                    value={feeClass}
-                    label="Class"
-                    onChange={(e) => setFeeClass(e.target.value)}
-                  >
-                    {classOptions.map((c) => (
-                      <MenuItem key={c} value={c}>
-                        {c}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <TextField
-                  label="Fee Amount"
-                  value={feeAmount}
-                  onChange={(e) => setFeeAmount(e.target.value)}
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Button variant="contained" onClick={handleFeeSaveRequest}>
-                  Save Fee
-                </Button>
-              </Grid>
-            </Grid>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Card sx={{ p: 3 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Principal/Head Signature (Image or PDF)</Typography>
-            <Button variant="contained" component="label" sx={{ mb: 2 }}>
-              Upload Signature
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                hidden
-                onChange={handleSignatureUpload}
-              />
-            </Button>
-            {signature && (
-              <Box sx={{ mt: 2 }}>
-                {signature.type && signature.type.startsWith('image/') && signatureUrl ? (
-                  <img
-                    src={signatureUrl}
-                    alt="Signature Preview"
-                    style={{
-                      maxWidth: 180,
-                      maxHeight: 80,
-                      display: 'block',
-                      marginBottom: 8
-                    }}
-                  />
-                ) : (
-                  <Typography>
-                    PDF Uploaded: {signature.name || signatureUrl}
-                  </Typography>
-                )}
-                <Button
-                  variant="outlined"
-                  color="error"
-                  onClick={handleRemoveSignature}
-                  sx={{ mt: 1 }}
-                >
-                  Remove
-                </Button>
+            {Object.keys(feeMap).length > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle1" gutterBottom>Current Fee Structure (₹/month)</Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {Object.entries(feeMap).map(([c, a]) => <Chip key={c} label={`${c}: ₹${a}`} />)}
+                </Box>
               </Box>
             )}
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+            <Typography variant="h6" gutterBottom>Data Management</Typography>
+            <Divider sx={{ my: 2 }} />
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Local Backup & Sync</Typography>
+                {typeof window !== 'undefined' && 'showDirectoryPicker' in window ? (
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={backupData}>Backup</Button>
+                    <Button variant="outlined" color="secondary" startIcon={<CloudDownloadIcon />} onClick={syncData}>Sync</Button>
+                  </Box>
+                ) : <Alert severity="info">Local backup/sync is not supported in your browser.</Alert>}
+                {backupMsg && <Alert severity="info" sx={{ mt: 2 }}>{backupMsg}</Alert>}
+                {syncMsg && <Alert severity="info" sx={{ mt: 2 }}>{syncMsg}</Alert>}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Google Drive</Typography>
+                {checkingConnection ? <CircularProgress size={24} /> : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Chip label={driveConnected ? "Connected" : "Not Connected"} color={driveConnected ? "success" : "error"} />
+                    {!driveConnected && <Button variant="contained" onClick={connectGoogleDrive}>Connect</Button>}
+                    {driveConnected && <Button variant="contained" color="success" startIcon={<DriveFolderUploadIcon />} onClick={backupToDrive}>Backup to Drive</Button>}
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+            {syncWarning && <Alert severity="warning" action={<><Button color="inherit" size="small" onClick={handleSyncConfirm}>Proceed</Button><Button color="inherit" size="small" onClick={handleSyncCancel}>Cancel</Button></>} sx={{ mt: 2 }}>{syncWarning}</Alert>}
+          </Card>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
+            <Typography variant="h6" gutterBottom>Security</Typography>
+            <Divider sx={{ my: 2 }} />
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Principal's Signature</Typography>
+                <Button variant="contained" component="label" sx={{ mb: 1 }}>Upload Signature<input type="file" accept="image/*,application/pdf" hidden onChange={handleSignatureUpload} /></Button>
+                {signature && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                    {signatureUrl && signature instanceof File && signature.type?.startsWith('image/') ? <img src={signatureUrl} alt="Signature" style={{ maxWidth: 120, height: 'auto', border: '1px solid #ddd' }} /> : <Typography variant="body2">{signature instanceof File ? signature.name : signatureUrl}</Typography>}
+                    <Button variant="outlined" color="error" size="small" onClick={handleRemoveSignature}>Remove</Button>
+                  </Box>
+                )}
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>Password Management</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button variant="outlined" startIcon={<VpnKeyIcon />} onClick={() => setResetType('login')}>Login Password</Button>
+                  <Button variant="outlined" startIcon={<LockIcon />} onClick={() => setResetType('confirm')}>Action Password</Button>
+                </Box>
+              </Grid>
+            </Grid>
           </Card>
         </Grid>
       </Grid>
 
-      <Dialog open={passwordDialogOpen} onClose={closePasswordDialog}>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LockIcon /> Password Required
-        </DialogTitle>
+      <Dialog open={!!resetType} onClose={cancelPasswordReset}>
+        <DialogTitle>Reset {resetType === 'login' ? 'Login' : 'Action Confirmation'} Password</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2 }}>
-            Enter confirmation password to proceed.
-          </Typography>
-          <TextField
-            label="Password"
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            fullWidth
-            autoFocus
-            onKeyDown={(e) => { 
-              if (e.key === 'Enter') handlePasswordConfirm(); 
-            }}
-            error={!!passwordError}
-            helperText={passwordError}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+            <TextField label="Old Password" type="password" value={oldPassInput} onChange={(e) => setOldPassInput(e.target.value)} fullWidth autoFocus sx={commonTextFieldStyles} />
+            <TextField label="New Password" type="password" value={newPassInput} onChange={(e) => setNewPassInput(e.target.value)} fullWidth sx={commonTextFieldStyles} />
+            {resetError && <Alert severity="error">{resetError}</Alert>}
+            {resetMsg && <Alert severity="success">{resetMsg}</Alert>}
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closePasswordDialog}>Cancel</Button>
-          <Button onClick={handlePasswordConfirm} variant="contained">
-            Confirm
-          </Button>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={cancelPasswordReset}>Cancel</Button>
+          <Button onClick={handleResetPassword} variant="contained">Update</Button>
         </DialogActions>
       </Dialog>
 
-      {msg && (
-        <Alert severity="success" sx={{ mt: 3 }}>
-          {msg}
-        </Alert>
-      )}
+      <Dialog open={passwordDialogOpen} onClose={closePasswordDialog}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LockIcon /> Password Required</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>Enter action confirmation password.</Typography>
+          <TextField label="Password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} fullWidth autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handlePasswordConfirm(); }} error={!!passwordError} helperText={passwordError} sx={commonTextFieldStyles} />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={closePasswordDialog}>Cancel</Button>
+          <Button onClick={handlePasswordConfirm} variant="contained">Confirm</Button>
+        </DialogActions>
+      </Dialog>
 
       <Box sx={{ width: '100%', textAlign: 'center', mt: 4 }}>
-        <Typography variant="caption" color="text.secondary">
-          © All rights reserved | ASK Ltd
-        </Typography>
+        <Typography variant="caption" color="text.secondary">© All rights reserved | ASK Ltd</Typography>
       </Box>
     </Box>
   );

@@ -1,11 +1,16 @@
-import React, { useState } from 'react';
-import { Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, Select, Card, Dialog, DialogTitle, DialogContent, DialogActions, Avatar, Grid, CircularProgress, Alert } from '@mui/material';
+import React, { useState, useRef, useEffect } from 'react';
+import Grid from '@mui/material/Grid';
+import { 
+  Box, Typography, TextField, Button, MenuItem, FormControl, InputLabel, 
+  Select, Card, Dialog, DialogTitle, DialogContent, DialogActions, Avatar, 
+  CircularProgress, Alert, Divider, Chip
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PersonIcon from '@mui/icons-material/Person';
 import LockIcon from '@mui/icons-material/Lock';
 import SearchIcon from '@mui/icons-material/Search';
-import { getAdmissions, getAdmissionsByClassSection, updateAdmission, deleteAdmission } from './db';
+import { getAdmissions, getAdmissionsByClassSection, updateAdmission, deleteAdmission, addAdmission } from './db';
 
 const classOptions = [
   'Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
@@ -14,6 +19,7 @@ const sectionOptions = ['A', 'B', 'C'];
 
 const commonTextFieldStyles = {
   '& .MuiOutlinedInput-root': {
+    borderRadius: '8px',
     '& fieldset': {
       borderColor: 'rgba(0, 0, 0, 0.23)',
     },
@@ -43,16 +49,28 @@ const UpdateDeleteStudent: React.FC = () => {
   const [pendingAction, setPendingAction] = useState<'edit' | 'delete' | null>(null);
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [lastDeletedStudent, setLastDeletedStudent] = useState<any | null>(null);
+  const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimeoutRef.current) {
+        clearTimeout(undoTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const showMessage = (setter: React.Dispatch<React.SetStateAction<string>>, message: string) => {
     setter(message);
-    setTimeout(() => setter(''), 3000);
+    setTimeout(() => setter(''), 4000);
   };
 
   const handleSearch = async () => {
     setLoading(true);
     setError('');
     setStudent(null);
+    setLastDeletedStudent(null);
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     try {
       let found: any[] = [];
       if (searchType === 'id' && studentId) {
@@ -85,7 +103,7 @@ const UpdateDeleteStudent: React.FC = () => {
   };
 
   const handlePasswordConfirm = () => {
-    if (passwordInput === '123456') {
+    if (passwordInput === '123456') { // In a real app, use a secure method
       setPasswordDialogOpen(false);
       setPasswordInput('');
       setPasswordError('');
@@ -113,10 +131,29 @@ const UpdateDeleteStudent: React.FC = () => {
   };
 
   const handleDelete = async () => {
+    if (!student) return;
+    if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
+
+    setLastDeletedStudent(student);
     await deleteAdmission(student.studentId, student);
     setStudent(null);
     setDeleteConfirm(false);
-    showMessage(setMsg, 'Student deleted successfully!');
+
+    undoTimeoutRef.current = setTimeout(() => {
+      setLastDeletedStudent(null);
+      showMessage(setMsg, `Permanently deleted student: ${lastDeletedStudent?.name}`);
+    }, 5 * 60 * 1000);
+  };
+
+  const handleUndoDelete = async () => {
+    if (lastDeletedStudent) {
+      await addAdmission(lastDeletedStudent);
+      showMessage(setMsg, `Student ${lastDeletedStudent.name} has been restored.`);
+      setLastDeletedStudent(null);
+      if (undoTimeoutRef.current) {
+        clearTimeout(undoTimeoutRef.current);
+      }
+    }
   };
 
   const closePasswordDialog = () => {
@@ -132,8 +169,7 @@ const UpdateDeleteStudent: React.FC = () => {
         Manage Student Record
       </Typography>
       
-      {/* Search Panel */}
-      <Card sx={{ p: 4, borderRadius: 2, mb: 4, boxShadow: 3 }}>
+      <Card sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2, mb: 4, boxShadow: 3 }}>
         <Grid container spacing={2} alignItems="flex-end">
           <Grid item xs={12} sm={4}>
             <FormControl fullWidth variant="outlined">
@@ -150,71 +186,53 @@ const UpdateDeleteStudent: React.FC = () => {
             </Grid>
           ) : (
             <>
-              <Grid item xs={12} sm={3}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Class</InputLabel>
-                  <Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>
-                    {classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Section</InputLabel>
-                  <Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>
-                    {sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={3}>
-                <TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth variant="outlined" sx={commonTextFieldStyles} />
-              </Grid>
+              <Grid item xs={12} sm={3}><FormControl fullWidth variant="outlined"><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl></Grid>
+              <Grid item xs={12} sm={2}><FormControl fullWidth variant="outlined"><InputLabel>Section</InputLabel><Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl></Grid>
+              <Grid item xs={12} sm={3}><TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth variant="outlined" sx={commonTextFieldStyles} /></Grid>
             </>
           )}
           <Grid item xs={12} sm={searchType === 'id' ? 12 : 4}>
-            <Button 
-              variant="contained" 
-              onClick={handleSearch} 
-              fullWidth 
-              disabled={loading}
-              startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
-              sx={{ 
-                height: 56,
-              }}
-            >
+            <Button variant="contained" onClick={handleSearch} fullWidth disabled={loading} startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />} sx={{ height: 56 }}>
               {loading ? 'Searching...' : 'Search'}
             </Button>
           </Grid>
         </Grid>
       </Card>
 
-      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
-      {msg && <Alert severity="success" sx={{ mb: 3 }}>{msg}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>{error}</Alert>}
+      {msg && !lastDeletedStudent && <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>{msg}</Alert>}
+      {lastDeletedStudent && (
+        <Alert severity="warning" action={<Button color="inherit" size="small" onClick={handleUndoDelete}>UNDO</Button>} sx={{ mb: 3, borderRadius: 2 }}>
+          Student {lastDeletedStudent.name} deleted.
+        </Alert>
+      )}
 
-      {/* Student Display Card */}
       {student && (
-        <Card sx={{ p: 4, borderRadius: 2, boxShadow: 3 }}>
+        <Card sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2, boxShadow: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 3 }}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 80, height: 80 }}>
-              <PersonIcon sx={{ fontSize: 50 }} />
-            </Avatar>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 80, height: 80 }}><PersonIcon sx={{ fontSize: 50 }} /></Avatar>
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>{student.name}</Typography>
-              <Typography variant="h6" color="primary">{student.studentId}</Typography>
+              <Typography variant="h5" sx={{ fontWeight: 700 }}>{student.name}</Typography>
+              <Chip label={`ID: ${student.studentId}`} size="small" />
             </Box>
           </Box>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}><Typography><b>Class:</b> {student.class}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Section:</b> {student.section}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Roll No:</b> {student.rollNo}</Typography></Grid>
+            <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">ACADEMIC</Typography></Divider></Grid>
+            <Grid item xs={12} sm={4}><Typography><b>Class:</b> {student.class}</Typography></Grid>
+            <Grid item xs={12} sm={4}><Typography><b>Section:</b> {student.section}</Typography></Grid>
+            <Grid item xs={12} sm={4}><Typography><b>Roll No:</b> {student.rollNo}</Typography></Grid>
+            
+            <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">PERSONAL</Typography></Divider></Grid>
             <Grid item xs={12} sm={6}><Typography><b>DOB:</b> {student.dob}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Father's Name:</b> {student.fatherName}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Mother's Name:</b> {student.motherName}</Typography></Grid>
-            <Grid item xs={12}><Typography><b>Address:</b> {student.address}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Aadhar No:</b> {student.aadhar}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Father's Mobile:</b> {student.fatherMobile}</Typography></Grid>
-            <Grid item xs={12} sm={6}><Typography><b>Email:</b> {student.email}</Typography></Grid>
+            <Grid item xs={12} sm={6}><Typography><b>Aadhar:</b> {student.aadhar}</Typography></Grid>
             <Grid item xs={12} sm={6}><Typography><b>APAAR ID:</b> {student.apaar}</Typography></Grid>
+            <Grid item xs={12}><Typography><b>Address:</b> {student.address}</Typography></Grid>
+
+            <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">GUARDIAN</Typography></Divider></Grid>
+            <Grid item xs={12} sm={6}><Typography><b>Father:</b> {student.fatherName}</Typography></Grid>
+            <Grid item xs={12} sm={6}><Typography><b>Mother:</b> {student.motherName}</Typography></Grid>
+            <Grid item xs={12} sm={6}><Typography><b>Mobile:</b> {student.fatherMobile}</Typography></Grid>
+            <Grid item xs={12} sm={6}><Typography><b>Email:</b> {student.email}</Typography></Grid>
             <Grid item xs={12}><Typography><b>Note:</b> {student.note}</Typography></Grid>
           </Grid>
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4 }}>
@@ -224,8 +242,7 @@ const UpdateDeleteStudent: React.FC = () => {
         </Card>
       )}
 
-      {/* Dialogs */}
-      <Dialog open={editMode} onClose={() => setEditMode(false)}>
+      <Dialog open={editMode} onClose={() => setEditMode(false)} maxWidth="md" fullWidth>
         <DialogTitle>Edit Student Information</DialogTitle>
         <DialogContent>
           {editData && (
@@ -265,7 +282,7 @@ const UpdateDeleteStudent: React.FC = () => {
       <Dialog open={passwordDialogOpen} onClose={closePasswordDialog}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LockIcon /> Password Required</DialogTitle>
         <DialogContent>
-          <Typography sx={{ mb: 2 }}>Enter password to confirm this action.</Typography>
+          <Typography sx={{ mb: 2 }}>Enter password to perform this action.</Typography>
           <TextField label="Password" type="password" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} fullWidth autoFocus onKeyDown={e => { if (e.key === 'Enter') handlePasswordConfirm(); }} error={!!passwordError} helperText={passwordError} sx={commonTextFieldStyles} />
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
