@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+// @ts-ignore
+// Removed Perplexity API key
 import './Chatbot.css';
 
 const Chatbot = () => {
@@ -19,41 +21,51 @@ const Chatbot = () => {
     setIsOpen(!isOpen);
   };
 
-  const getBotResponse = (userInput: string) => {
-    const lowerInput = userInput.toLowerCase().trim();
-
-    if (lowerInput.includes('add student')) {
-      return "To add a new student, go to the 'New Admission' section from the dashboard or sidebar.";
+  // Default xchat bot response logic
+  const getBotResponse = async (userInput: string) => {
+    // Eliza-like responses for greetings
+    if (/^(hi|hello|hey|how are you|how areyou|hoaw)/i.test(userInput.trim())) {
+      const responses = [
+        "Hello! How can I help you today?",
+        "I'm just a bot, but I'm here to assist you!",
+        "Hi there! Need help with students or fees?",
+        "I'm doing well, thank you! How can I help you?"
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
     }
-    if (lowerInput.includes('find student') || lowerInput.includes('search student')) {
-      return "You can search for students in the 'Show Student' section.";
+    // Section-based navigation
+    if (/add.*student/i.test(userInput)) {
+      document.getElementById('menu-add-student')?.click();
+      return 'Navigating to Add Student section... You can add a new student by filling the form.';
     }
-    if (lowerInput.includes('fee')) {
-      return "Manage fees and payments in the 'Fee Management' section.";
+    if (/find.*student/i.test(userInput)) {
+      document.getElementById('menu-show-student')?.click();
+      return 'Navigating to Find Student section...';
     }
-    if (lowerInput.includes('settings')) {
-      return "You can configure academic settings, fees, and more in the 'Settings' section.";
+    if (/fee/i.test(userInput)) {
+      document.getElementById('menu-fee-management')?.click();
+      return 'Navigating to Fee Management section...';
     }
-
-    const prompts = [
-      "How can I help you with managing the school?",
-      "What task would you like to perform?",
-      "Is there anything I can assist you with?",
-    ];
-    return prompts[Math.floor(Math.random() * prompts.length)];
+    if (/settings/i.test(userInput)) {
+      document.getElementById('menu-settings')?.click();
+      return 'Navigating to Settings section...';
+    }
+    // Eliza-like fallback
+    if (/student/i.test(userInput)) {
+      return "You can add or find students using the menu. What would you like to do?";
+    }
+    return 'Hello! I am your school assistant bot. You can ask me about adding students, finding students, managing fees, or navigating to settings.';
   };
 
-  const handleSend = (text: string = input) => {
+  const handleSend = async (text: string = input) => {
     if (text.trim() === '') return;
 
     const userMessage = { text, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
 
-    setTimeout(() => {
-      const botMessage = { text: getBotResponse(text), sender: 'bot' };
-      setMessages(prev => [...prev, botMessage]);
-    }, 500);
+    const botReply = await getBotResponse(text);
+    setMessages(prev => [...prev, { text: botReply, sender: 'bot' }]);
   };
 
   const defaultPrompts = [

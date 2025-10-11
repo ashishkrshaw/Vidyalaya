@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import schools, { type School } from "./Schools";
+import schools from "./Schools";
 
 import { 
   Box, CssBaseline, Toolbar, AppBar, Typography, 
   Dialog, DialogTitle, DialogContent, 
   DialogActions, Button, Card, 
-  Fade, CircularProgress, IconButton, Container, useTheme, Tooltip
+  Fade, CircularProgress, IconButton, Container, Tooltip
 } from '@mui/material';
 
 import SchoolIcon from '@mui/icons-material/School';
@@ -24,8 +24,10 @@ import FeeManagement from './FeeManagement';
 import { addAdmission, getAdmissions, getNextStudentSeq, addHistoryEntry } from './db';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import Chatbot from './Chatbot';
 import './Chatbot.css';
+import StudentIdCard from './StudentIdCard';
 
 const getStyles = (mode: 'light' | 'dark') => ({
   mainContainer: {
@@ -48,34 +50,72 @@ const getStyles = (mode: 'light' | 'dark') => ({
     color: mode === 'dark' ? '#ffffff' : '#1a202c',
   },
   mainCard: {
-    padding: '32px',
-    borderRadius: '16px',
+    padding: '40px',
+    borderRadius: '20px',
     background: mode === 'dark'
-      ? '#1e1e1e'
-      : '#ffffff',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
+      ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+      : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+    boxShadow: mode === 'dark'
+      ? '0 20px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)'
+      : '0 20px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.05)',
     border: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
     width: '100%',
     maxWidth: '1200px',
+    margin: '0 auto',
     color: mode === 'dark' ? '#ffffff' : '#1a202c',
+    position: 'relative',
+    overflow: 'hidden',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+    },
   },
   formTextField: {
     '& .MuiOutlinedInput-root': {
       background: mode === 'dark' 
-        ? 'rgba(255, 255, 255, 0.05)' 
-        : 'rgba(0, 0, 0, 0.05)',
-      borderRadius: '8px',
+        ? 'rgba(255, 255, 255, 0.08)' 
+        : 'rgba(255, 255, 255, 0.9)',
+      borderRadius: '12px',
+      transition: 'all 0.3s ease',
       '& fieldset': {
         borderColor: mode === 'dark' 
-          ? 'rgba(255, 255, 255, 0.2)' 
-          : 'rgba(0, 0, 0, 0.2)',
+          ? 'rgba(255, 255, 255, 0.3)' 
+          : 'rgba(0, 0, 0, 0.3)',
+        borderWidth: '1px',
+      },
+      '&:hover fieldset': {
+        borderColor: mode === 'dark' 
+          ? 'rgba(255, 255, 255, 0.5)' 
+          : 'rgba(0, 0, 0, 0.5)',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#2196F3',
+        borderWidth: '2px',
       },
     },
     '& .MuiInputLabel-root': {
-      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)',
+      fontWeight: 500,
+      '&.Mui-focused': {
+        color: '#2196F3',
+        fontWeight: 600,
+      },
     },
     '& .MuiInputBase-input': {
       color: mode === 'dark' ? '#ffffff' : '#000000',
+      fontSize: '16px',
+    },
+    '& .MuiFormHelperText-root': {
+      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
+      fontSize: '12px',
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)',
     },
   },
 });
@@ -88,20 +128,23 @@ function generateStudentId(schoolName: string, year: number, rollNo: number, seq
   return `${firstLetter}${yr}-${rno}-${last4}`;
 }
 
+import Statistics from './Statistics';
+// ...existing code...
 const menuItems = [
   { key: 'student', label: 'New Admission', icon: <PersonAddIcon /> },
   { key: 'show', label: 'Show Student', icon: <SearchIcon /> },
+  { key: 'idcard', label: 'Student ID Card', icon: <CardMembershipIcon /> },
   { key: 'history', label: 'History', icon: <HistoryIcon /> },
   { key: 'updateDelete', label: 'Update/Delete', icon: <EditNoteIcon /> },
   { key: 'fee', label: 'Fee Management', icon: <PaymentIcon /> },
+  { key: 'stats', label: 'Statistics', icon: <HistoryIcon /> },
   { key: 'settings', label: 'Settings', icon: <SettingsIcon /> },
 ];
 
 function App() {
-  const [menu, setMenu] = useState<'student' | 'show' | 'history' | 'updateDelete' | 'settings' | 'fee'>('student');
+  const [menu, setMenu] = useState<'student' | 'show' | 'idcard' | 'history' | 'updateDelete' | 'settings' | 'fee' | 'stats'>('student');
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
   const [schoolName, setSchoolName] = useState('');
   const [loggedIn, setLoggedIn] = useState(false);
   const [isDataReady, setIsDataReady] = useState(false);
@@ -109,7 +152,6 @@ function App() {
   const [formKey, setFormKey] = useState(0);
 
   const styles = useMemo(() => getStyles(mode), [mode]);
-  const theme = useTheme();
 
   useEffect(() => {
     const autoLogin = () => {
@@ -148,10 +190,9 @@ function App() {
     try {
       await addAdmission(previewData);
       await addHistoryEntry({ ...previewData, action: 'admission_added', timestamp: new Date().toISOString() });
-      setSuccessMsg(`Success! New admission added. Student ID: ${previewData.studentId}`);
+      console.log(`Success! New admission added. Student ID: ${previewData.studentId}`);
       setConfirmOpen(false);
       setFormKey(prevKey => prevKey + 1); // This will reset the form
-      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (error) {
       console.error("Error in handleConfirm:", error);
     }
@@ -161,6 +202,9 @@ function App() {
     localStorage.clear();
     window.location.reload();
   };
+
+  // Student selection for ID card
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
   return (
     <Box sx={styles.mainContainer}>
@@ -198,6 +242,17 @@ function App() {
                     </Card>
                   ) : menu === 'show' ? (
                     <ShowStudent />
+                  ) : menu === 'idcard' ? (
+                    <Box>
+                      {!selectedStudent ? (
+                        <ShowStudent
+                          onSelectStudent={setSelectedStudent}
+                          idCardMode={true}
+                        />
+                      ) : (
+                        <StudentIdCard student={selectedStudent} onUpdatePhoto={(photo) => setSelectedStudent((s: any) => ({ ...s, photo }))} onGenerateId={() => {}} />
+                      )}
+                    </Box>
                   ) : menu === 'history' ? (
                     <HistorySection />
                   ) : menu === 'updateDelete' ? (
@@ -206,6 +261,8 @@ function App() {
                     <AcademicSettings />
                   ) : menu === 'fee' ? (
                     <FeeManagement />
+                  ) : menu === 'stats' ? (
+                    <Statistics />
                   ) : null}
                 </Container>
               ) : <CircularProgress />}
@@ -213,7 +270,7 @@ function App() {
           </Box>
         </Fade>
       )}
-       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Confirm Admission</DialogTitle>
         <DialogContent>
           <pre>{JSON.stringify(previewData, null, 2)}</pre>

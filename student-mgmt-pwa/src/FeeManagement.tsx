@@ -55,7 +55,7 @@ const FeeManagement: React.FC = () => {
   useEffect(() => {
     getAdmissions().then(students => {
       // Gather all payments from all students
-      const payments = [];
+      const payments: any[] = [];
       students.forEach((s: any) => {
         (s.feeHistory || []).forEach((p: any) => {
           payments.push({ ...p, class: s.class });
@@ -312,7 +312,7 @@ const FeeManagement: React.FC = () => {
             </Grid>
           </Card>
         </Grid>
-        <Grid item xs={12} md={7}>
+  <Grid item xs={12} md={7}>
           {student && (
             <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3, height: '100%' }}>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>{student.name}</Typography>
@@ -354,7 +354,7 @@ const FeeManagement: React.FC = () => {
             </Card>
           )}
         </Grid>
-        <Grid item xs={12}>
+  <Grid item xs={12}>
           <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>Fee Payment Summary</Typography>
             <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
@@ -459,7 +459,7 @@ const FeeManagement: React.FC = () => {
                 <Grid item>
                   <Typography sx={{mt: 8}}>Accountant's Seal</Typography>
                 </Grid>
-                <Grid item textAlign="center">
+                <Grid item sx={{ textAlign: 'center' }}>
                   {principalSignature && principalSignature.type && principalSignature.type.startsWith('image/') ? (
                     <img src={URL.createObjectURL(principalSignature)} alt="Principal Signature" style={{ maxWidth: 140, maxHeight: 60 }} />
                   ) : <Box sx={{height: 60}}/>}

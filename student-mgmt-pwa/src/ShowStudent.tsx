@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import Grid from '@mui/material/Grid'; // Corrected import
+import { Grid } from '@mui/material';
 import { 
   Box, TextField, Button, MenuItem, Typography, Table, TableBody, TableCell, 
   TableContainer, TableHead, TableRow, Paper, Select, InputLabel, FormControl, 
   Dialog, DialogTitle, DialogContent, DialogActions, Card, Avatar, Menu, 
-  CircularProgress, IconButton, Chip, Divider 
+  CircularProgress, Chip, Divider 
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,6 +14,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import SearchIcon from '@mui/icons-material/Search';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import { getAdmissions, getAdmissionsByClassSection, deleteAdmission, updateAdmission } from './db';
 
 const classOptions = [
@@ -36,7 +37,12 @@ const commonTextFieldStyles = {
   },
 };
 
-const ShowStudent: React.FC = () => {
+interface ShowStudentProps {
+  onSelectStudent?: (student: any) => void;
+  idCardMode?: boolean;
+}
+
+const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }) => {
   const [studentId, setStudentId] = useState('');
   const [cls, setCls] = useState('');
   const [section, setSection] = useState('');
@@ -49,7 +55,7 @@ const ShowStudent: React.FC = () => {
   const [editData, setEditData] = useState<any | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
-  const [exportAllAnchorEl, setExportAllAnchorEl] = useState<null | HTMLElement>(null);
+  // Removed unused exportAllAnchorEl
 
   const handleSearch = async () => {
     setLoading(true);
@@ -111,36 +117,36 @@ const ShowStudent: React.FC = () => {
     setExportAnchorEl(null);
   };
 
-  const handleExportAllPDF = () => {
-    // PDF export logic for all results
-    setExportAllAnchorEl(null);
-  };
-
-  const handleExportAllExcel = () => {
-    // Excel export logic for all results
-    setExportAllAnchorEl(null);
-  };
+  // Removed unused handleExportAllPDF and handleExportAllExcel
 
   const renderSearchFields = () => {
     switch (searchType) {
       case 'id':
-        return <Grid item xs={12} sm={9}><TextField label="Student ID" value={studentId} onChange={e => setStudentId(e.target.value)} fullWidth sx={commonTextFieldStyles} /></Grid>;
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <TextField label="Student ID" value={studentId} onChange={e => setStudentId(e.target.value)} fullWidth sx={commonTextFieldStyles} />
+          </Box>
+        );
       case 'roll':
         return (
-          <>
-            <Grid item xs={12} sm={3}><FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid item xs={12} sm={3}><FormControl fullWidth><InputLabel>Section</InputLabel><Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid item xs={12} sm={3}><TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth sx={commonTextFieldStyles} /></Grid>
-          </>
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+            <FormControl fullWidth><InputLabel>Section</InputLabel><Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl>
+            <TextField label="Roll No" value={rollNo} onChange={e => setRollNo(e.target.value)} fullWidth sx={commonTextFieldStyles} />
+          </Box>
         );
       case 'class':
-        return <Grid item xs={12} sm={9}><FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl></Grid>;
+        return (
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+          </Box>
+        );
       case 'classSection':
         return (
-          <>
-            <Grid item xs={12} sm={4.5}><FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl></Grid>
-            <Grid item xs={12} sm={4.5}><FormControl fullWidth><InputLabel>Section</InputLabel><Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl></Grid>
-          </>
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: 2 }}>
+            <FormControl fullWidth><InputLabel>Class</InputLabel><Select value={cls} label="Class" onChange={e => setCls(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+            <FormControl fullWidth><InputLabel>Section</InputLabel><Select value={section} label="Section" onChange={e => setSection(e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl>
+          </Box>
         );
       case 'all':
       default:
@@ -149,85 +155,81 @@ const ShowStudent: React.FC = () => {
   }
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 1200, mx: 'auto', mt: 4 }}>
-      <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
-        Student Search
-      </Typography>
-
-      <Card sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2, mb: 4, boxShadow: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={3}>
+    <Box sx={{ p: { xs: 1, md: 3 }, maxWidth: 1200, mx: 'auto' }}>
+      <Card elevation={3} sx={{ mb: 3, borderRadius: 3, p: { xs: 2, md: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <SearchIcon color="primary" sx={{ fontSize: 32 }} />
+          <Typography variant="h6" fontWeight={600}>Search Student</Typography>
+        </Box>
+        <Grid container spacing={2}>
+          <Box sx={{ width: { xs: '100%', sm: '48%', md: '24%' }, mb: 2 }}>
             <FormControl fullWidth>
-              <InputLabel>Search By</InputLabel>
-              <Select value={searchType} label="Search By" onChange={e => setSearchType(e.target.value as any)} sx={commonTextFieldStyles}>
-                <MenuItem value="id">Student ID</MenuItem>
-                <MenuItem value="roll">Class, Section & Roll</MenuItem>
-                <MenuItem value="class">Entire Class</MenuItem>
-                <MenuItem value="classSection">Class & Section</MenuItem>
+              <InputLabel>Search Type</InputLabel>
+              <Select value={searchType} label="Search Type" onChange={e => setSearchType(e.target.value as any)}>
+                <MenuItem value="id">By Student ID</MenuItem>
+                <MenuItem value="roll">By Roll No</MenuItem>
+                <MenuItem value="class">By Class</MenuItem>
+                <MenuItem value="classSection">By Class & Section</MenuItem>
                 <MenuItem value="all">All Students</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
+          </Box>
           {renderSearchFields()}
-          <Grid item xs={12}>
-            <Button variant="contained" onClick={handleSearch} fullWidth disabled={loading} startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />} sx={{ height: 56 }}>
-              {loading ? 'Searching...' : 'Search'}
+          <Box sx={{ flex: 1, minWidth: 200, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', mt: { xs: 2, md: 0 } }}>
+            <Button variant="contained" color="primary" sx={{ borderRadius: 2, fontWeight: 600 }} onClick={handleSearch}>
+              Search
             </Button>
-          </Grid>
+          </Box>
         </Grid>
       </Card>
-
-      {results.length > 0 && (
-        <Card sx={{ p: { xs: 1, sm: 2 }, borderRadius: 2, boxShadow: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, px: 2 }}>
-            <Typography variant="h6">Search Results ({results.length})</Typography>
-            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={e => setExportAllAnchorEl(e.currentTarget)}>
-              Export All
-            </Button>
-            <Menu anchorEl={exportAllAnchorEl} open={!!exportAllAnchorEl} onClose={() => setExportAllAnchorEl(null)}>
-              <MenuItem onClick={handleExportAllPDF}><PictureAsPdfIcon sx={{ mr: 1 }} /> As PDF</MenuItem>
-              <MenuItem onClick={handleExportAllExcel}><TableChartIcon sx={{ mr: 1 }} /> As Excel</MenuItem>
-            </Menu>
-          </Box>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 'bold' } }}>
-                  <TableCell>Student ID</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Class</TableCell>
-                  <TableCell>Roll No</TableCell>
-                  <TableCell>Father's Name</TableCell>
-                  <TableCell>Mobile</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {results.map((row) => (
-                  <TableRow key={row.studentId} hover>
-                    <TableCell>{row.studentId}</TableCell>
-                    <TableCell>{row.name}</TableCell>
-                    <TableCell>{row.class} '{row.section}'</TableCell>
-                    <TableCell>{row.rollNo}</TableCell>
-                    <TableCell>{row.fatherName}</TableCell>
-                    <TableCell>{row.fatherMobile}</TableCell>
-                    <TableCell align="right">
-                      <IconButton onClick={() => setDialogStudent(row)} color="primary"><VisibilityIcon /></IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Card>
-      )}
-
-      {!loading && results.length === 0 && (
-        <Paper sx={{ textAlign: 'center', p: 8, borderRadius: 2, boxShadow: 3 }}>
-          <Typography variant="h6" color="text.secondary">No results to display</Typography>
-          <Typography color="text.secondary">Start a new search to see student records.</Typography>
-        </Paper>
-      )}
+      {/* Results Section */}
+      <Box>
+        {loading ? (
+          <CircularProgress />
+        ) : results.length === 0 ? (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>No students found.</Typography>
+        ) : (
+          <Grid container spacing={2}>
+            {results.map(student => (
+              <Box key={student.studentId} sx={{ width: { xs: '100%', sm: '48%', md: '32%' }, mb: 2 }}>
+                <Card elevation={2} sx={{ p: 2, borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar src={student.photo || undefined} sx={{ width: 56, height: 56, bgcolor: 'primary.light' }}>
+                      {!student.photo && <PersonIcon />}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="h6" fontWeight={600}>{student.name}</Typography>
+                      <Typography variant="body2">Class: {student.class} - {student.section}</Typography>
+                      <Typography variant="body2">Roll No: {student.rollNo}</Typography>
+                      <Typography variant="body2">ID: {student.studentId}</Typography>
+                    </Box>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    {!idCardMode ? (
+                      <>
+                        <Button size="small" variant="outlined" startIcon={<VisibilityIcon />} onClick={() => setDialogStudent(student)}>
+                          View
+                        </Button>
+                        <Button size="small" variant="outlined" color="primary" startIcon={<EditIcon />} onClick={() => { setEditMode(true); setEditData(student); }}>
+                          Edit
+                        </Button>
+                        <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => { setDeleteConfirm(true); setDialogStudent(student); }}>
+                          Delete
+                        </Button>
+                      </>
+                    ) : (
+                      <Button size="small" variant="contained" color="primary" startIcon={<CardMembershipIcon />} onClick={() => onSelectStudent && onSelectStudent(student)}>
+                        Generate ID Card
+                      </Button>
+                    )}
+                  </Box>
+                </Card>
+              </Box>
+            ))}
+          </Grid>
+        )}
+      </Box>
 
       {dialogStudent && (
         <Dialog open={!!dialogStudent} onClose={() => setDialogStudent(null)} maxWidth="md" fullWidth>
@@ -240,27 +242,34 @@ const ShowStudent: React.FC = () => {
                 <Chip label={`ID: ${dialogStudent.studentId}`} size="small" />
               </Box>
             </Box>
-            <Grid container spacing={2}>
-              <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">ACADEMIC</Typography></Divider></Grid>
-              <Grid item xs={12} sm={4}><Typography><b>Class:</b> {dialogStudent.class}</Typography></Grid>
-              <Grid item xs={12} sm={4}><Typography><b>Section:</b> {dialogStudent.section}</Typography></Grid>
-              <Grid item xs={12} sm={4}><Typography><b>Roll No:</b> {dialogStudent.rollNo}</Typography></Grid>
-              
-              <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">PERSONAL</Typography></Divider></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>DOB:</b> {dialogStudent.dob}</Typography></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>Aadhar:</b> {dialogStudent.aadhar}</Typography></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>APAAR ID:</b> {dialogStudent.apaar}</Typography></Grid>
-              <Grid item xs={12}><Typography><b>Address:</b> {dialogStudent.address}</Typography></Grid>
-
-              <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">GUARDIAN</Typography></Divider></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>Father:</b> {dialogStudent.fatherName}</Typography></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>Mother:</b> {dialogStudent.motherName}</Typography></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>Mobile:</b> {dialogStudent.fatherMobile}</Typography></Grid>
-              <Grid item xs={12} sm={6}><Typography><b>Email:</b> {dialogStudent.email}</Typography></Grid>
-              <Grid item xs={12}><Typography><b>Note:</b> {dialogStudent.note}</Typography></Grid>
-
-              <Grid item xs={12}><Divider sx={{ my: 1 }}><Typography variant="caption">FINANCIAL</Typography></Divider></Grid>
-              <Grid item xs={12}>
+            <Box>
+              {/* Academic Section */}
+              <Divider sx={{ my: 1 }}><Typography variant="caption">ACADEMIC</Typography></Divider>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Typography sx={{ minWidth: 120 }}><b>Class:</b> {dialogStudent.class}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Section:</b> {dialogStudent.section}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Roll No:</b> {dialogStudent.rollNo}</Typography>
+              </Box>
+              {/* Personal Section */}
+              <Divider sx={{ my: 1 }}><Typography variant="caption">PERSONAL</Typography></Divider>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Typography sx={{ minWidth: 120 }}><b>DOB:</b> {dialogStudent.dob}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Aadhar:</b> {dialogStudent.aadhar}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>APAAR ID:</b> {dialogStudent.apaar}</Typography>
+              </Box>
+              <Typography sx={{ mt: 1 }}><b>Address:</b> {dialogStudent.address}</Typography>
+              {/* Guardian Section */}
+              <Divider sx={{ my: 1 }}><Typography variant="caption">GUARDIAN</Typography></Divider>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Typography sx={{ minWidth: 120 }}><b>Father:</b> {dialogStudent.fatherName}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Mother:</b> {dialogStudent.motherName}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Mobile:</b> {dialogStudent.fatherMobile}</Typography>
+                <Typography sx={{ minWidth: 120 }}><b>Email:</b> {dialogStudent.email}</Typography>
+              </Box>
+              <Typography sx={{ mt: 1 }}><b>Note:</b> {dialogStudent.note}</Typography>
+              {/* Financial Section */}
+              <Divider sx={{ my: 1 }}><Typography variant="caption">FINANCIAL</Typography></Divider>
+              <Box>
                 <Typography variant="h6">Current Dues: <Chip label={`₹${dialogStudent.dues || 0}`} color={dialogStudent.dues > 0 ? 'error' : 'success'} /></Typography>
                 <Typography variant="subtitle1" sx={{ mt: 2, mb: 1 }}>Payment History:</Typography>
                 {(dialogStudent.feeHistory && dialogStudent.feeHistory.length > 0) ? (
@@ -275,8 +284,8 @@ const ShowStudent: React.FC = () => {
                     </Table>
                   </TableContainer>
                 ) : <Typography sx={{ fontStyle: 'italic', color: 'text.secondary' }}>No fee payments recorded.</Typography>}
-              </Grid>
-            </Grid>
+              </Box>
+            </Box>
           </DialogContent>
           <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
             <Box>
@@ -304,22 +313,22 @@ const ShowStudent: React.FC = () => {
         <DialogTitle>Edit Student Information</DialogTitle>
         <DialogContent>
           {editData && (
-            <Grid container spacing={2} sx={{pt: 1}}>
-              <Grid item xs={12} sm={6}><TextField label="Student ID" value={editData.studentId} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Roll No" value={editData.rollNo} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12}><TextField label="Name" value={editData.name} onChange={e => handleEditChange('name', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><FormControl fullWidth margin="dense"><InputLabel>Class</InputLabel><Select value={editData.class} label="Class" onChange={e => handleEditChange('class', e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl></Grid>
-              <Grid item xs={12} sm={6}><FormControl fullWidth margin="dense"><InputLabel>Section</InputLabel><Select value={editData.section} label="Section" onChange={e => handleEditChange('section', e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Father's Name" value={editData.fatherName} onChange={e => handleEditChange('fatherName', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Mother's Name" value={editData.motherName} onChange={e => handleEditChange('motherName', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12}><TextField label="Address" value={editData.address} onChange={e => handleEditChange('address', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Aadhar No" value={editData.aadhar} onChange={e => handleEditChange('aadhar', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="DOB" type="date" value={editData.dob} onChange={e => handleEditChange('dob', e.target.value)} fullWidth margin="dense" InputLabelProps={{ shrink: true }} sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Father's Mobile" value={editData.fatherMobile} onChange={e => handleEditChange('fatherMobile', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Email" value={editData.email} onChange={e => handleEditChange('email', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="APAAR ID" value={editData.apaar} onChange={e => handleEditChange('apaar', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-              <Grid item xs={12} sm={6}><TextField label="Note" value={editData.note} onChange={e => handleEditChange('note', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} /></Grid>
-            </Grid>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, pt: 1 }}>
+              <TextField label="Student ID" value={editData.studentId} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} />
+              <TextField label="Roll No" value={editData.rollNo} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} />
+              <TextField label="Name" value={editData.name} onChange={e => handleEditChange('name', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <FormControl fullWidth margin="dense"><InputLabel>Class</InputLabel><Select value={editData.class} label="Class" onChange={e => handleEditChange('class', e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
+              <FormControl fullWidth margin="dense"><InputLabel>Section</InputLabel><Select value={editData.section} label="Section" onChange={e => handleEditChange('section', e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl>
+              <TextField label="Father's Name" value={editData.fatherName} onChange={e => handleEditChange('fatherName', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="Mother's Name" value={editData.motherName} onChange={e => handleEditChange('motherName', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="Address" value={editData.address} onChange={e => handleEditChange('address', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="Aadhar No" value={editData.aadhar} onChange={e => handleEditChange('aadhar', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="DOB" type="date" value={editData.dob} onChange={e => handleEditChange('dob', e.target.value)} fullWidth margin="dense" InputLabelProps={{ shrink: true }} sx={commonTextFieldStyles} />
+              <TextField label="Father's Mobile" value={editData.fatherMobile} onChange={e => handleEditChange('fatherMobile', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="Email" value={editData.email} onChange={e => handleEditChange('email', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="APAAR ID" value={editData.apaar} onChange={e => handleEditChange('apaar', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <TextField label="Note" value={editData.note} onChange={e => handleEditChange('note', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+            </Box>
           )}
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
