@@ -20,7 +20,7 @@ interface StatCardProps {
 
 const StatCard = ({ title, value, icon, color, percentage, mode }: StatCardProps) => (
   <Card sx={{ 
-    p: 3, 
+    p: { xs: 2, sm: 3 }, 
     borderRadius: 3, 
     background: `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`,
     border: `1px solid ${color}40`,
@@ -46,14 +46,16 @@ const StatCard = ({ title, value, icon, color, percentage, mode }: StatCardProps
       <Box>
         <Typography variant="h4" fontWeight="bold" sx={{ 
           color: color, 
-          textShadow: '0 1px 2px rgba(0,0,0,0.1)' 
+          textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
         }}>
           {value}
         </Typography>
         <Typography variant="subtitle1" sx={{ 
           mt: 0.5, 
           color: mode === 'dark' ? '#ffffff' : '#1a202c', 
-          fontWeight: 600 
+          fontWeight: 600,
+          fontSize: { xs: '0.875rem', sm: '1rem' }
         }}>
           {title}
         </Typography>
@@ -83,7 +85,11 @@ const StatCard = ({ title, value, icon, color, percentage, mode }: StatCardProps
           </Box>
         )}
       </Box>
-      <Box sx={{ color: color, opacity: 0.7 }}>
+      <Box sx={{ 
+        color: color, 
+        opacity: 0.7,
+        display: { xs: 'none', sm: 'block' }
+      }}>
         {icon}
       </Box>
     </Box>
@@ -95,7 +101,7 @@ const ClassChart = ({ classData, mode }: { classData: any[], mode: 'light' | 'da
   
   return (
     <Card sx={{ 
-      p: 3, 
+      p: { xs: 2, sm: 3 }, 
       borderRadius: 3,
       backgroundColor: mode === 'dark' 
         ? 'rgba(30, 30, 30, 0.8)' 
@@ -207,14 +213,15 @@ const Statistics = ({ mode }: StatisticsProps) => {
 
   return (
     <Box sx={{ 
-      p: 3, 
+      p: { xs: 2, sm: 3 }, 
       maxWidth: 1200, 
       mx: 'auto',
       color: mode === 'dark' ? '#ffffff' : '#1a202c'
     }}>
       <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
         mb: 3,
-        color: mode === 'dark' ? '#ffffff' : '#1a202c' 
+        color: mode === 'dark' ? '#ffffff' : '#1a202c',
+        fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' }
       }}>
         📊 School Statistics Dashboard
       </Typography>
@@ -288,7 +295,7 @@ const Statistics = ({ mode }: StatisticsProps) => {
             
             <Box>
               <Card sx={{ 
-                p: 3, 
+                p: { xs: 2, sm: 3 }, 
                 borderRadius: 3,
                 backgroundColor: mode === 'dark' 
                   ? 'rgba(30, 30, 30, 0.8)' 
@@ -377,7 +384,7 @@ const Statistics = ({ mode }: StatisticsProps) => {
             gap: 3 
           }}>
             <Card sx={{ 
-              p: 3, 
+              p: { xs: 2, sm: 3 }, 
               borderRadius: 3, 
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
               color: 'white',
@@ -386,12 +393,17 @@ const Statistics = ({ mode }: StatisticsProps) => {
                 : '0 4px 12px rgba(0,0,0,0.1)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <School sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
+                <School sx={{ fontSize: { xs: 36, sm: 48 }, mr: 2, opacity: 0.8 }} />
                 <Box>
-                  <Typography variant="h5" fontWeight="bold">
+                  <Typography variant="h5" fontWeight="bold" sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                  }}>
                     {stats.classData.length} Classes
                   </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  <Typography variant="body2" sx={{ 
+                    opacity: 0.9,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
                     Active academic divisions
                   </Typography>
                 </Box>
@@ -399,7 +411,7 @@ const Statistics = ({ mode }: StatisticsProps) => {
             </Card>
             
             <Card sx={{ 
-              p: 3, 
+              p: { xs: 2, sm: 3 }, 
               borderRadius: 3, 
               background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 
               color: 'white',
@@ -408,12 +420,17 @@ const Statistics = ({ mode }: StatisticsProps) => {
                 : '0 4px 12px rgba(0,0,0,0.1)',
             }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <AttachMoney sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
+                <AttachMoney sx={{ fontSize: { xs: 36, sm: 48 }, mr: 2, opacity: 0.8 }} />
                 <Box>
-                  <Typography variant="h5" fontWeight="bold">
+                  <Typography variant="h5" fontWeight="bold" sx={{
+                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                  }}>
                     ₹{(stats.totalFee + stats.totalDues).toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  <Typography variant="body2" sx={{ 
+                    opacity: 0.9,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
                     Total fee structure
                   </Typography>
                 </Box>
@@ -423,7 +440,7 @@ const Statistics = ({ mode }: StatisticsProps) => {
         </Box>
       ) : (
         <Card sx={{ 
-          p: 4, 
+          p: { xs: 3, sm: 4 }, 
           textAlign: 'center',
           backgroundColor: mode === 'dark' 
             ? 'rgba(30, 30, 30, 0.8)' 

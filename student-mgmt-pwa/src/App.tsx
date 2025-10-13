@@ -6,7 +6,8 @@ import {
   Dialog, DialogTitle, DialogContent, 
   DialogActions, Button, Card, 
   Fade, CircularProgress, IconButton, Container, Tooltip,
-  Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton
+  Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton,
+  useTheme, useMediaQuery
 } from '@mui/material';
 
 import SchoolIcon from '@mui/icons-material/School';
@@ -28,6 +29,7 @@ import Brightness7Icon from '@mui/icons-material/Brightness7';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
 import Chatbot from './Chatbot';
 import './Chatbot.css';
 import StudentIdCard from './StudentIdCard';
@@ -54,8 +56,8 @@ const getStyles = (mode: 'light' | 'dark') => ({
     boxShadow: 'none',
     color: mode === 'dark' ? '#ffffff' : '#1a202c',
     zIndex: 1200,
-    width: `calc(100% - ${SIDEBAR_WIDTH}px)`,
-    ml: `${SIDEBAR_WIDTH}px`,
+    width: { sm: `calc(100% - ${SIDEBAR_WIDTH}px)`, xs: '100%' },
+    ml: { sm: `${SIDEBAR_WIDTH}px`, xs: 0 },
   },
   sidebar: {
     width: SIDEBAR_WIDTH,
@@ -113,7 +115,7 @@ const getStyles = (mode: 'light' | 'dark') => ({
     },
   },
   mainCard: {
-    padding: '40px',
+    padding: { xs: '16px', sm: '32px', md: '40px', lg: '48px' },
     borderRadius: '20px',
     background: mode === 'dark'
       ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
@@ -213,7 +215,10 @@ function App() {
   const [isDataReady, setIsDataReady] = useState(false);
   const [mode, setMode] = useState<'light' | 'dark'>('dark');
   const [formKey, setFormKey] = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const styles = useMemo(() => getStyles(mode), [mode]);
 
   useEffect(() => {
@@ -285,8 +290,82 @@ function App() {
     window.location.reload();
   };
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   // Student selection for ID card
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+
+  const drawerContent = (
+    <>
+      {/* Sidebar Header */}
+      <Box sx={styles.sidebarHeader}>
+        <SchoolIcon sx={{ mr: 2, fontSize: 28 }} />
+        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
+          {schoolName}
+        </Typography>
+      </Box>
+
+      {/* Navigation Menu */}
+      <List sx={{ pt: 2, pb: 1 }}>
+        {menuItems.map((item) => (
+          <ListItemButton
+            key={item.key}
+            onClick={() => {
+              setMenu(item.key as any);
+              // Close mobile drawer when item is selected
+              if (isMobile) {
+                setMobileOpen(false);
+              }
+            }}
+            sx={[
+              styles.sidebarItem,
+              menu === item.key && { '&.active': styles.sidebarItem['&.active'] }
+            ]}
+            className={menu === item.key ? 'active' : ''}
+          >
+            <ListItemIcon sx={styles.sidebarIcon}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.label} 
+              sx={styles.sidebarText}
+            />
+          </ListItemButton>
+        ))}
+      </List>
+
+      {/* Sidebar Footer */}
+      <Box sx={{ mt: 'auto', p: 2 }}>
+        <ListItemButton
+          onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
+          sx={[styles.sidebarItem, { mb: 1 }]}
+        >
+          <ListItemIcon sx={styles.sidebarIcon}>
+            {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+          </ListItemIcon>
+          <ListItemText 
+            primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} 
+            sx={styles.sidebarText}
+          />
+        </ListItemButton>
+        
+        <ListItemButton
+          onClick={handleLogout}
+          sx={styles.sidebarItem}
+        >
+          <ListItemIcon sx={styles.sidebarIcon}>
+            <LogoutIcon />
+          </ListItemIcon>
+          <ListItemText 
+            primary="Logout" 
+            sx={styles.sidebarText}
+          />
+        </ListItemButton>
+      </Box>
+    </>
+  );
 
   return (
     <Box sx={styles.mainContainer}>
@@ -296,76 +375,69 @@ function App() {
         <Fade in={loggedIn} timeout={1000}>
           <Box sx={{ display: 'flex', width: '100%' }}>
             {/* Sidebar */}
-            <Drawer
-              variant="permanent"
-              sx={styles.sidebar}
+            <Box
+              component="nav"
+              sx={{ width: { sm: SIDEBAR_WIDTH }, flexShrink: { sm: 0 } }}
             >
-              {/* Sidebar Header */}
-              <Box sx={styles.sidebarHeader}>
-                <SchoolIcon sx={{ mr: 2, fontSize: 28 }} />
-                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
-                  {schoolName}
-                </Typography>
-              </Box>
-
-              {/* Navigation Menu */}
-              <List sx={{ pt: 2, pb: 1 }}>
-                {menuItems.map((item) => (
-                  <ListItemButton
-                    key={item.key}
-                    onClick={() => setMenu(item.key as any)}
-                    sx={[
-                      styles.sidebarItem,
-                      menu === item.key && { '&.active': styles.sidebarItem['&.active'] }
-                    ]}
-                    className={menu === item.key ? 'active' : ''}
-                  >
-                    <ListItemIcon sx={styles.sidebarIcon}>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={item.label} 
-                      sx={styles.sidebarText}
-                    />
-                  </ListItemButton>
-                ))}
-              </List>
-
-              {/* Sidebar Footer */}
-              <Box sx={{ mt: 'auto', p: 2 }}>
-                <ListItemButton
-                  onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
-                  sx={[styles.sidebarItem, { mb: 1 }]}
-                >
-                  <ListItemIcon sx={styles.sidebarIcon}>
-                    {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} 
-                    sx={styles.sidebarText}
-                  />
-                </ListItemButton>
-                
-                <ListItemButton
-                  onClick={handleLogout}
-                  sx={styles.sidebarItem}
-                >
-                  <ListItemIcon sx={styles.sidebarIcon}>
-                    <LogoutIcon />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="Logout" 
-                    sx={styles.sidebarText}
-                  />
-                </ListItemButton>
-              </Box>
-            </Drawer>
+              {/* Mobile drawer */}
+              <Drawer
+                variant="temporary"
+                open={mobileOpen}
+                onClose={handleDrawerToggle}
+                ModalProps={{
+                  keepMounted: true, // Better open performance on mobile.
+                }}
+                sx={{
+                  display: { xs: 'block', sm: 'none' },
+                  '& .MuiDrawer-paper': {
+                    width: SIDEBAR_WIDTH,
+                    boxSizing: 'border-box',
+                    background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
+                      : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                    borderRight: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+                    color: mode === 'dark' ? '#ffffff' : '#1a202c',
+                  },
+                }}
+              >
+                {drawerContent}
+              </Drawer>
+              
+              {/* Desktop drawer */}
+              <Drawer
+                variant="permanent"
+                sx={{
+                  display: { xs: 'none', sm: 'block' },
+                  '& .MuiDrawer-paper': {
+                    width: SIDEBAR_WIDTH,
+                    boxSizing: 'border-box',
+                    background: mode === 'dark' 
+                      ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
+                      : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                    borderRight: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+                    color: mode === 'dark' ? '#ffffff' : '#1a202c',
+                  },
+                }}
+                open
+              >
+                {drawerContent}
+              </Drawer>
+            </Box>
 
             {/* Main Content */}
             <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Top App Bar */}
               <AppBar position="fixed" sx={styles.appBar}>
                 <Toolbar>
+                  <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    edge="start"
+                    onClick={handleDrawerToggle}
+                    sx={{ mr: 2, display: { sm: 'none' } }}
+                  >
+                    <MenuIcon />
+                  </IconButton>
                   <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                     {menuItems.find(item => item.key === menu)?.label || 'School Management'}
                   </Typography>
@@ -373,9 +445,17 @@ function App() {
               </AppBar>
 
               {/* Main Content Area */}
-              <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+              <Box 
+                component="main" 
+                sx={{ 
+                  flexGrow: 1, 
+                  p: { xs: 2, sm: 3 }, 
+                  mt: 8,
+                  width: { sm: `calc(100% - ${SIDEBAR_WIDTH}px)`, xs: '100%' }
+                }}
+              >
                 {isDataReady ? (
-                  <Container maxWidth="xl">
+                  <Container maxWidth="xl" sx={{ px: { xs: 0.5, sm: 2, md: 3 } }}>
                     {menu === 'student' ? (
                       <Card sx={styles.mainCard}>
                         <AdmissionForm key={formKey} onPreview={handlePreview} getNextRollNo={async (cls: string, section: string) => await getNextRollNoForClass(cls, section)} styles={styles} />

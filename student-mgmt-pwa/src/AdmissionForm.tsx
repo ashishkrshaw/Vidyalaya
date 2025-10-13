@@ -164,7 +164,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
       width: '100%', 
       maxWidth: '1200px', 
       mx: 'auto',
-      px: { xs: 1, sm: 2, md: 3 } // Responsive padding
+      px: 0 // Remove extra padding as mainCard already has padding
     }}>
       {/* Header Section */}
       <Box sx={{ mb: { xs: 2, md: 4 }, textAlign: 'center' }}>
