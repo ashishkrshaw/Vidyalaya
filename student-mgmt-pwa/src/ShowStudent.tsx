@@ -200,7 +200,7 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
                     <Box>
                       <Typography variant="h6" fontWeight={600}>{student.name}</Typography>
                       <Typography variant="body2">Class: {student.class} - {student.section}</Typography>
-                      <Typography variant="body2">Roll No: {student.rollNo}</Typography>
+                      <Typography variant="body2">Roll No: {student.rollNo} | Gender: {student.gender || 'N/A'}</Typography>
                       <Typography variant="body2">ID: {student.studentId}</Typography>
                     </Box>
                   </Box>
@@ -253,6 +253,7 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
               {/* Personal Section */}
               <Divider sx={{ my: 1 }}><Typography variant="caption">PERSONAL</Typography></Divider>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                <Typography sx={{ minWidth: 120 }}><b>Gender:</b> {dialogStudent.gender || 'N/A'}</Typography>
                 <Typography sx={{ minWidth: 120 }}><b>DOB:</b> {dialogStudent.dob}</Typography>
                 <Typography sx={{ minWidth: 120 }}><b>Aadhar:</b> {dialogStudent.aadhar}</Typography>
                 <Typography sx={{ minWidth: 120 }}><b>APAAR ID:</b> {dialogStudent.apaar}</Typography>
@@ -317,6 +318,7 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
               <TextField label="Student ID" value={editData.studentId} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} />
               <TextField label="Roll No" value={editData.rollNo} fullWidth margin="dense" InputProps={{ readOnly: true }} sx={commonTextFieldStyles} />
               <TextField label="Name" value={editData.name} onChange={e => handleEditChange('name', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />
+              <FormControl fullWidth margin="dense"><InputLabel>Gender</InputLabel><Select value={editData.gender || ''} label="Gender" onChange={e => handleEditChange('gender', e.target.value)} sx={commonTextFieldStyles}><MenuItem value="Male">Male</MenuItem><MenuItem value="Female">Female</MenuItem><MenuItem value="Other">Other</MenuItem></Select></FormControl>
               <FormControl fullWidth margin="dense"><InputLabel>Class</InputLabel><Select value={editData.class} label="Class" onChange={e => handleEditChange('class', e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
               <FormControl fullWidth margin="dense"><InputLabel>Section</InputLabel><Select value={editData.section} label="Section" onChange={e => handleEditChange('section', e.target.value)} sx={commonTextFieldStyles}>{sectionOptions.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}</Select></FormControl>
               <TextField label="Father's Name" value={editData.fatherName} onChange={e => handleEditChange('fatherName', e.target.value)} fullWidth margin="dense" sx={commonTextFieldStyles} />

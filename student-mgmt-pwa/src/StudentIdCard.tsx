@@ -16,6 +16,7 @@ interface StudentIdCardProps {
     parentMobile: string;
     photo?: string;
     id?: string;
+    gender?: string;
   };
   onUpdatePhoto?: (photo: string) => void;
   onGenerateId?: () => void;
@@ -99,7 +100,7 @@ const StudentIdCard: React.FC<StudentIdCardProps> = ({ student, onUpdatePhoto, o
             <Box>
               <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>{student.name}</Typography>
               <Typography variant="body2" sx={{ fontWeight: 500 }}>Student ID: <span style={{ fontWeight: 700 }}>{student.id || '0123456789'}</span></Typography>
-              <Typography variant="body2">Class: {student.class}</Typography>
+              <Typography variant="body2">Class: {student.class} | {student.gender || 'N/A'}</Typography>
               <Typography variant="body2">Father: {student.fatherName}</Typography>
               <Typography variant="body2">Phone: {student.parentMobile}</Typography>
               <Typography variant="body2">Session: {new Date().getFullYear()}-{new Date().getFullYear()+1}</Typography>
@@ -123,7 +124,8 @@ const StudentIdCard: React.FC<StudentIdCardProps> = ({ student, onUpdatePhoto, o
                   name: student.name,
                   class: student.class,
                   section: student.section,
-                  rollNo: student.rollNo
+                  rollNo: student.rollNo,
+                  gender: student.gender || 'N/A'
                 })
               }
               size={64}

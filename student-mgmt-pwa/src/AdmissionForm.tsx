@@ -37,7 +37,8 @@ import {
   ContactMail as ContactIcon,
   PhotoCamera as PhotoIcon,
   CardMembership as CardMembershipIcon,
-  Download as DownloadIcon
+  Download as DownloadIcon,
+  Wc as GenderIcon
 } from '@mui/icons-material';
 
 const classOptions = [
@@ -65,6 +66,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
     email: '',
     apaar: '',
     note: '',
+    gender: '',
   });
   const [rollNo, setRollNo] = useState<number | '' >('');
   const [activeStep, setActiveStep] = useState(0);
@@ -145,7 +147,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
   const isStepValid = (step: number) => {
     switch (step) {
       case 0:
-        return form.name.trim() && form.fatherName.trim() && form.motherName.trim() && form.address.trim() && form.dob;
+        return form.name.trim() && form.fatherName.trim() && form.motherName.trim() && form.address.trim() && form.dob && form.gender;
       case 1:
         return form.class && form.section && form.dob;
       case 2:
@@ -418,6 +420,74 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
                     />
                   </Box>
                 </Box>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ flex: 1, minWidth: '300px' }}>
+                    <FormControl 
+                      fullWidth 
+                      required 
+                      variant="outlined"
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          color: 'rgba(0, 0, 0, 0.6)',
+                          backgroundColor: 'white',
+                          padding: '0 8px',
+                          '&.Mui-focused': {
+                            color: '#2196F3',
+                          },
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          backgroundColor: 'white',
+                          '& .MuiSelect-select': {
+                            color: '#000000 !important',
+                            fontSize: '16px',
+                          },
+                        }
+                      }}
+                    >
+                      <InputLabel>Gender *</InputLabel>
+                      <Select
+                        name="gender"
+                        value={form.gender}
+                        label="Gender *"
+                        onChange={handleChange}
+                        startAdornment={
+                          <InputAdornment position="start">
+                            <GenderIcon color="action" />
+                          </InputAdornment>
+                        }
+                      >
+                        <MenuItem value="Male">
+                          <Chip 
+                            label="♂" 
+                            size="small" 
+                            color="primary" 
+                            sx={{ mr: 1 }}
+                          />
+                          Male
+                        </MenuItem>
+                        <MenuItem value="Female">
+                          <Chip 
+                            label="♀" 
+                            size="small" 
+                            sx={{ mr: 1, bgcolor: '#E91E63', color: 'white' }}
+                          />
+                          Female
+                        </MenuItem>
+                        <MenuItem value="Other">
+                          <Chip 
+                            label="⚧" 
+                            size="small" 
+                            sx={{ mr: 1, bgcolor: '#9C27B0', color: 'white' }}
+                          />
+                          Other
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: '300px' }}>
+                    {/* Empty box for spacing */}
+                  </Box>
+                </Box>
                 <Box>
                   <TextField
                     label="Address *"
@@ -584,9 +654,17 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
                   </Box>
                   <Box sx={{ flex: 1, minWidth: '250px' }}>
                     <TextField
-                      label="Roll Number"
+                      label="Roll Number (1-50)"
                       name="rollNo"
                       value={rollNo}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || (Number(value) >= 1 && Number(value) <= 50)) {
+                          setRollNo(value === '' ? '' : Number(value));
+                        }
+                      }}
+                      type="number"
+                      inputProps={{ min: 1, max: 50, step: 1 }}
                       fullWidth
                       variant="outlined"
                       sx={{
@@ -604,14 +682,13 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
                         }
                       }}
                       InputProps={{
-                        readOnly: true,
                         startAdornment: (
                           <InputAdornment position="start">
                             <BadgeIcon color="action" />
                           </InputAdornment>
                         ),
                       }}
-                      helperText="Auto-generated based on class and section"
+                      helperText="Enter roll number (1-50) or leave blank for auto-generation"
                     />
                   </Box>
                 </Box>
@@ -1060,7 +1137,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo,
                     opacity: 0.9,
                     fontSize: { xs: '0.75rem', md: '0.875rem' }
                   }}>
-                    Roll No: {rollNo || 'N/A'}
+                    Roll No: {rollNo || 'N/A'} | {form.gender || 'N/A'}
                   </Typography>
                 </Box>
               </Box>

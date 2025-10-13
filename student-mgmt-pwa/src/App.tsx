@@ -5,7 +5,8 @@ import {
   Box, CssBaseline, Toolbar, AppBar, Typography, 
   Dialog, DialogTitle, DialogContent, 
   DialogActions, Button, Card, 
-  Fade, CircularProgress, IconButton, Container, Tooltip
+  Fade, CircularProgress, IconButton, Container, Tooltip,
+  Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton
 } from '@mui/material';
 
 import SchoolIcon from '@mui/icons-material/School';
@@ -21,13 +22,17 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AcademicSettings from './AcademicSettings';
 import PaymentIcon from '@mui/icons-material/Payment';
 import FeeManagement from './FeeManagement';
-import { addAdmission, getAdmissions, getNextStudentSeq, addHistoryEntry } from './db';
+import { addAdmission, getAdmissions, addHistoryEntry, getNextRollNoForClass } from './db';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import CardMembershipIcon from '@mui/icons-material/CardMembership';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import LogoutIcon from '@mui/icons-material/Logout';
 import Chatbot from './Chatbot';
 import './Chatbot.css';
 import StudentIdCard from './StudentIdCard';
+
+const SIDEBAR_WIDTH = 280;
 
 const getStyles = (mode: 'light' | 'dark') => ({
   mainContainer: {
@@ -48,6 +53,64 @@ const getStyles = (mode: 'light' | 'dark') => ({
     borderBottom: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
     boxShadow: 'none',
     color: mode === 'dark' ? '#ffffff' : '#1a202c',
+    zIndex: 1200,
+    width: `calc(100% - ${SIDEBAR_WIDTH}px)`,
+    ml: `${SIDEBAR_WIDTH}px`,
+  },
+  sidebar: {
+    width: SIDEBAR_WIDTH,
+    flexShrink: 0,
+    '& .MuiDrawer-paper': {
+      width: SIDEBAR_WIDTH,
+      boxSizing: 'border-box',
+      background: mode === 'dark' 
+        ? 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
+        : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+      borderRight: `1px solid ${mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.12)'}`,
+      color: mode === 'dark' ? '#ffffff' : '#1a202c',
+    },
+  },
+  sidebarHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '16px 20px',
+    background: mode === 'dark' 
+      ? 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
+      : 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+    color: '#ffffff',
+    minHeight: '64px',
+    boxSizing: 'border-box',
+  },
+  sidebarItem: {
+    margin: '4px 12px',
+    borderRadius: '12px',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      background: mode === 'dark' 
+        ? 'rgba(33, 150, 243, 0.1)'
+        : 'rgba(33, 150, 243, 0.08)',
+      transform: 'translateX(4px)',
+    },
+    '&.active': {
+      background: mode === 'dark' 
+        ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.2) 0%, rgba(33, 203, 243, 0.2) 100%)'
+        : 'linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(33, 203, 243, 0.15) 100%)',
+      color: '#2196F3',
+      fontWeight: 600,
+      '& .MuiListItemIcon-root': {
+        color: '#2196F3',
+      },
+    },
+  },
+  sidebarIcon: {
+    minWidth: '40px',
+    color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
+  },
+  sidebarText: {
+    '& .MuiTypography-root': {
+      fontSize: '14px',
+      fontWeight: 500,
+    },
   },
   mainCard: {
     padding: '40px',
@@ -134,10 +197,10 @@ const menuItems = [
   { key: 'student', label: 'New Admission', icon: <PersonAddIcon /> },
   { key: 'show', label: 'Show Student', icon: <SearchIcon /> },
   { key: 'idcard', label: 'Student ID Card', icon: <CardMembershipIcon /> },
+  { key: 'fee', label: 'Fee Management', icon: <PaymentIcon /> },
+  { key: 'stats', label: 'Statistics', icon: <BarChartIcon /> },
   { key: 'history', label: 'History', icon: <HistoryIcon /> },
   { key: 'updateDelete', label: 'Update/Delete', icon: <EditNoteIcon /> },
-  { key: 'fee', label: 'Fee Management', icon: <PaymentIcon /> },
-  { key: 'stats', label: 'Statistics', icon: <HistoryIcon /> },
   { key: 'settings', label: 'Settings', icon: <SettingsIcon /> },
 ];
 
@@ -171,14 +234,33 @@ function App() {
     autoLogin();
   }, []);
 
+  useEffect(() => {
+    // Listen for chatbot navigation events
+    const handleChatbotNavigation = (event: CustomEvent) => {
+      const section = event.detail;
+      if (section && menuItems.find(item => item.key === section)) {
+        setMenu(section);
+        // Reset selected student when navigating away from ID card
+        if (section !== 'idcard') {
+          setSelectedStudent(null);
+        }
+      }
+    };
+
+    window.addEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
+    return () => {
+      window.removeEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
+    };
+  }, []);
+
   const handlePreview = async (data: any) => {
     try {
       const year = new Date().getFullYear();
-      const rollNo = await getNextStudentSeq();
       const admissions = await getAdmissions();
       const seq = admissions.length + 1;
-      const studentId = generateStudentId(schoolName, year, rollNo, seq);
-      setPreviewData({ ...data, rollNo, studentId, createdAt: new Date().toISOString() });
+      // Use rollNo from form data instead of generating new one
+      const studentId = generateStudentId(schoolName, year, data.rollNo, seq);
+      setPreviewData({ ...data, studentId, createdAt: new Date().toISOString() });
       setConfirmOpen(true);
     } catch (error) {
       console.error("Error in handlePreview:", error);
@@ -212,64 +294,124 @@ function App() {
       <CssBaseline />
       {loggedIn && (
         <Fade in={loggedIn} timeout={1000}>
-          <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column' }}>
-            <AppBar position="fixed" sx={styles.appBar}>
-              <Toolbar>
-                <SchoolIcon sx={{ mr: 2 }} />
-                <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', width: '100%' }}>
+            {/* Sidebar */}
+            <Drawer
+              variant="permanent"
+              sx={styles.sidebar}
+            >
+              {/* Sidebar Header */}
+              <Box sx={styles.sidebarHeader}>
+                <SchoolIcon sx={{ mr: 2, fontSize: 28 }} />
+                <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
                   {schoolName}
                 </Typography>
-                {menuItems.map(item => (
-                  <Tooltip title={item.label} key={item.key}>
-                    <IconButton color={menu === item.key ? 'primary' : 'inherit'} onClick={() => setMenu(item.key as any)}>
+              </Box>
+
+              {/* Navigation Menu */}
+              <List sx={{ pt: 2, pb: 1 }}>
+                {menuItems.map((item) => (
+                  <ListItemButton
+                    key={item.key}
+                    onClick={() => setMenu(item.key as any)}
+                    sx={[
+                      styles.sidebarItem,
+                      menu === item.key && { '&.active': styles.sidebarItem['&.active'] }
+                    ]}
+                    className={menu === item.key ? 'active' : ''}
+                  >
+                    <ListItemIcon sx={styles.sidebarIcon}>
                       {item.icon}
-                    </IconButton>
-                  </Tooltip>
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={item.label} 
+                      sx={styles.sidebarText}
+                    />
+                  </ListItemButton>
                 ))}
-                <IconButton sx={{ ml: 2 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
-                  {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-                </IconButton>
-                <Button color="inherit" onClick={handleLogout}>Logout</Button>
-              </Toolbar>
-            </AppBar>
-            <Box component="main" sx={{ flexGrow: 1, p: 3, width: '100%' }}>
-              <Toolbar />
-              {isDataReady ? (
-                <Container maxWidth="xl">
-                  {menu === 'student' ? (
-                    <Card sx={styles.mainCard}>
-                      <AdmissionForm key={formKey} onPreview={handlePreview} getNextRollNo={async () => await getNextStudentSeq()} styles={styles} />
-                    </Card>
-                  ) : menu === 'show' ? (
-                    <ShowStudent />
-                  ) : menu === 'idcard' ? (
-                    <Box>
-                      {!selectedStudent ? (
-                        <ShowStudent
-                          onSelectStudent={setSelectedStudent}
-                          idCardMode={true}
-                        />
-                      ) : (
-                        <StudentIdCard student={selectedStudent} onUpdatePhoto={(photo) => setSelectedStudent((s: any) => ({ ...s, photo }))} onGenerateId={() => {}} />
-                      )}
-                    </Box>
-                  ) : menu === 'history' ? (
-                    <HistorySection />
-                  ) : menu === 'updateDelete' ? (
-                    <UpdateDeleteStudent />
-                  ) : menu === 'settings' ? (
-                    <AcademicSettings />
-                  ) : menu === 'fee' ? (
-                    <FeeManagement />
-                  ) : menu === 'stats' ? (
-                    <Statistics />
-                  ) : null}
-                </Container>
-              ) : <CircularProgress />}
+              </List>
+
+              {/* Sidebar Footer */}
+              <Box sx={{ mt: 'auto', p: 2 }}>
+                <ListItemButton
+                  onClick={() => setMode(mode === 'light' ? 'dark' : 'light')}
+                  sx={[styles.sidebarItem, { mb: 1 }]}
+                >
+                  <ListItemIcon sx={styles.sidebarIcon}>
+                    {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary={mode === 'dark' ? 'Light Mode' : 'Dark Mode'} 
+                    sx={styles.sidebarText}
+                  />
+                </ListItemButton>
+                
+                <ListItemButton
+                  onClick={handleLogout}
+                  sx={styles.sidebarItem}
+                >
+                  <ListItemIcon sx={styles.sidebarIcon}>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Logout" 
+                    sx={styles.sidebarText}
+                  />
+                </ListItemButton>
+              </Box>
+            </Drawer>
+
+            {/* Main Content */}
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              {/* Top App Bar */}
+              <AppBar position="fixed" sx={styles.appBar}>
+                <Toolbar>
+                  <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+                    {menuItems.find(item => item.key === menu)?.label || 'School Management'}
+                  </Typography>
+                </Toolbar>
+              </AppBar>
+
+              {/* Main Content Area */}
+              <Box component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+                {isDataReady ? (
+                  <Container maxWidth="xl">
+                    {menu === 'student' ? (
+                      <Card sx={styles.mainCard}>
+                        <AdmissionForm key={formKey} onPreview={handlePreview} getNextRollNo={async (cls: string, section: string) => await getNextRollNoForClass(cls, section)} styles={styles} />
+                      </Card>
+                    ) : menu === 'show' ? (
+                      <ShowStudent />
+                    ) : menu === 'idcard' ? (
+                      <Box>
+                        {!selectedStudent ? (
+                          <ShowStudent
+                            onSelectStudent={setSelectedStudent}
+                            idCardMode={true}
+                          />
+                        ) : (
+                          <StudentIdCard student={selectedStudent} onUpdatePhoto={(photo) => setSelectedStudent((s: any) => ({ ...s, photo }))} onGenerateId={() => {}} />
+                        )}
+                      </Box>
+                    ) : menu === 'history' ? (
+                      <HistorySection />
+                    ) : menu === 'updateDelete' ? (
+                      <UpdateDeleteStudent />
+                    ) : menu === 'settings' ? (
+                      <AcademicSettings />
+                    ) : menu === 'fee' ? (
+                      <FeeManagement />
+                    ) : menu === 'stats' ? (
+                      <Statistics />
+                    ) : null}
+                  </Container>
+                ) : <CircularProgress />}
+              </Box>
             </Box>
           </Box>
         </Fade>
       )}
+      
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Confirm Admission</DialogTitle>
         <DialogContent>

@@ -111,6 +111,49 @@ export async function getNextStudentSeq() {
   return maxSeq + 1;
 }
 
+export async function getNextRollNoForClass(className: string, section: string) {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const classStudents = await db.getAllFromIndex(STORE_NAME, 'by-class-section', [schoolId, className, section]);
+  
+  if (!classStudents.length) return 1;
+  
+  // Find all used roll numbers for this class-section
+  const usedRollNos = classStudents
+    .map(student => parseInt(student.rollNo, 10))
+    .filter(rollNo => !isNaN(rollNo))
+    .sort((a, b) => a - b);
+  
+  // Find the first available roll number from 1 to 50
+  for (let i = 1; i <= 50; i++) {
+    if (!usedRollNos.includes(i)) {
+      return i;
+    }
+  }
+  
+  // If all numbers 1-50 are used, return the next sequential number
+  return Math.max(...usedRollNos) + 1;
+}
+
+export async function getAvailableRollNumbers(className: string, section: string) {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const classStudents = await db.getAllFromIndex(STORE_NAME, 'by-class-section', [schoolId, className, section]);
+  
+  const usedRollNos = classStudents
+    .map(student => parseInt(student.rollNo, 10))
+    .filter(rollNo => !isNaN(rollNo));
+  
+  const availableNumbers = [];
+  for (let i = 1; i <= 50; i++) {
+    if (!usedRollNos.includes(i)) {
+      availableNumbers.push(i);
+    }
+  }
+  
+  return availableNumbers;
+}
+
 export async function addHistoryEntry(entry: any) {
   const db = await getDb();
   const schoolId = getSchoolId();

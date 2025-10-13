@@ -1,5 +1,115 @@
 import { useState, useEffect } from 'react';
-import { Box, Card, Typography, Divider } from '@mui/material';
+import { Box, Card, Typography, LinearProgress, CircularProgress } from '@mui/material';
+import { 
+  School, 
+  Payment, 
+  AccountBalanceWallet, 
+  TrendingUp,
+  Group,
+  AttachMoney
+} from '@mui/icons-material';
+
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: string;
+  percentage?: number;
+}
+
+const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
+  <Card sx={{ 
+    p: 3, 
+    borderRadius: 3, 
+    background: `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`,
+    border: `1px solid ${color}40`,
+    position: 'relative',
+    overflow: 'hidden',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '4px',
+      background: color,
+    }
+  }}>
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Box>
+        <Typography variant="h4" fontWeight="bold" sx={{ color: color, textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+          {value}
+        </Typography>
+        <Typography variant="subtitle1" sx={{ mt: 0.5, color: 'text.primary', fontWeight: 600 }}>
+          {title}
+        </Typography>
+        {percentage !== undefined && (
+          <Box sx={{ mt: 2 }}>
+            <LinearProgress 
+              variant="determinate" 
+              value={isNaN(percentage) ? 0 : Math.min(Math.max(percentage, 0), 100)} 
+              sx={{ 
+                height: 8, 
+                borderRadius: 4,
+                backgroundColor: `${color}20`,
+                '& .MuiLinearProgress-bar': {
+                  backgroundColor: color,
+                  borderRadius: 4
+                }
+              }} 
+            />
+            <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.primary', fontWeight: 500 }}>
+              {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}% of target
+            </Typography>
+          </Box>
+        )}
+      </Box>
+      <Box sx={{ color: color, opacity: 0.7 }}>
+        {icon}
+      </Box>
+    </Box>
+  </Card>
+);
+
+const ClassChart = ({ classData }: { classData: any[] }) => {
+  const maxStudents = Math.max(...classData.map(c => c.count));
+  
+  return (
+    <Card sx={{ p: 3, borderRadius: 3 }}>
+      <Typography variant="h6" fontWeight="bold" gutterBottom>
+        📊 Class-wise Distribution
+      </Typography>
+      <Box sx={{ mt: 2 }}>
+        {classData.map((classItem, index) => (
+          <Box key={index} sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" fontWeight="medium">
+                {classItem.class}
+              </Typography>
+              <Typography variant="body2" color="primary">
+                {classItem.count} students
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={(classItem.count / maxStudents) * 100} 
+              sx={{ 
+                height: 8, 
+                borderRadius: 4,
+                backgroundColor: '#f0f0f0',
+                '& .MuiLinearProgress-bar': {
+                  background: `linear-gradient(45deg, #2196F3 ${index * 20}%, #21CBF3 ${100 - index * 10}%)`,
+                  borderRadius: 4
+                }
+              }} 
+            />
+          </Box>
+        ))}
+      </Box>
+    </Card>
+  );
+};
 
 const Statistics = () => {
   const [stats, setStats] = useState<any>(null);
@@ -10,19 +120,48 @@ const Statistics = () => {
       try {
         // Get admissions and fee map from local storage
         const admissions = await (await import('./db')).getAdmissions();
-  // Removed unused feeMap
+        
         let totalStudents = admissions.length;
         let totalFee = 0;
         let totalDues = 0;
+        let classStats: { [key: string]: number } = {};
+        let maleCount = 0;
+        let femaleCount = 0;
+        
         admissions.forEach(student => {
           // Sum all payments
           if (Array.isArray(student.feeHistory)) {
             totalFee += student.feeHistory.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
           }
           totalDues += Number(student.dues) || 0;
+          
+          // Class statistics
+          const className = student.class || 'Unknown';
+          classStats[className] = (classStats[className] || 0) + 1;
+          
+          // Gender statistics
+          if (student.gender?.toLowerCase() === 'male') maleCount++;
+          else if (student.gender?.toLowerCase() === 'female') femaleCount++;
         });
-        setStats({ totalStudents, totalFee, totalDues });
+        
+        const classData = Object.entries(classStats).map(([className, count]) => ({
+          class: className,
+          count: count
+        })).sort((a, b) => b.count - a.count);
+        
+        const collectionRate = (totalFee + totalDues) > 0 ? ((totalFee / (totalFee + totalDues)) * 100) : 0;
+        
+        setStats({ 
+          totalStudents, 
+          totalFee, 
+          totalDues,
+          classData,
+          maleCount,
+          femaleCount,
+          collectionRate
+        });
       } catch (e) {
+        console.error('Error fetching statistics:', e);
         setStats(null);
       } finally {
         setLoading(false);
@@ -32,23 +171,179 @@ const Statistics = () => {
   }, []);
 
   return (
-    <Box sx={{ mt: 4, mb: 4, width: '100%', maxWidth: 700, mx: 'auto' }}>
-      <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-        <Typography variant="h5" fontWeight={700} gutterBottom>School Statistics</Typography>
-        <Divider sx={{ my: 2 }} />
-        {loading ? (
-          <Typography variant="body2">Loading statistics...</Typography>
-        ) : stats ? (
-          <Box>
-            <Typography variant="body1">Total Students: {stats.totalStudents}</Typography>
-            <Typography variant="body1">Total Fee Collected: ₹{stats.totalFee}</Typography>
-            <Typography variant="body1">Outstanding Dues: ₹{stats.totalDues}</Typography>
-            {/* Add more stats as needed */}
+    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+        📊 School Statistics Dashboard
+      </Typography>
+      
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ ml: 2 }}>Loading statistics...</Typography>
+        </Box>
+      ) : stats ? (
+        <Box>
+          {/* Main Statistics Cards */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { 
+              xs: '1fr', 
+              sm: 'repeat(2, 1fr)', 
+              md: 'repeat(4, 1fr)' 
+            },
+            gap: 3,
+            mb: 4 
+          }}>
+            <StatCard
+              title="Total Students"
+              value={stats.totalStudents}
+              icon={<Group sx={{ fontSize: 48 }} />}
+              color="#2196F3"
+              percentage={Math.min((stats.totalStudents / 1000) * 100, 100)}
+            />
+            
+            <StatCard
+              title="Fee Collected"
+              value={`₹${stats.totalFee.toLocaleString()}`}
+              icon={<Payment sx={{ fontSize: 48 }} />}
+              color="#4CAF50"
+              percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
+            />
+            
+            <StatCard
+              title="Outstanding Dues"
+              value={`₹${stats.totalDues.toLocaleString()}`}
+              icon={<AccountBalanceWallet sx={{ fontSize: 48 }} />}
+              color="#FF9800"
+              percentage={isNaN(stats.collectionRate) ? 0 : Math.max(100 - stats.collectionRate, 0)}
+            />
+            
+            <StatCard
+              title="Collection Rate"
+              value={`${isNaN(stats.collectionRate) ? '0.0' : stats.collectionRate.toFixed(1)}%`}
+              icon={<TrendingUp sx={{ fontSize: 48 }} />}
+              color="#9C27B0"
+              percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
+            />
           </Box>
-        ) : (
-          <Typography variant="body2" color="error">Failed to load statistics.</Typography>
-        )}
-      </Card>
+
+          {/* Charts Section */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+            gap: 3,
+            mb: 4 
+          }}>
+            <ClassChart classData={stats.classData} />
+            
+            <Box>
+              <Card sx={{ p: 3, borderRadius: 3 }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom>
+                  👥 Gender Distribution
+                </Typography>
+                <Box sx={{ mt: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Box sx={{ 
+                      width: 20, 
+                      height: 20, 
+                      borderRadius: '50%', 
+                      background: '#2196F3',
+                      mr: 2 
+                    }} />
+                    <Typography variant="body2" sx={{ flex: 1 }}>Male Students</Typography>
+                    <Typography variant="h6" color="primary">{stats.maleCount}</Typography>
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                    <Box sx={{ 
+                      width: 20, 
+                      height: 20, 
+                      borderRadius: '50%', 
+                      background: '#E91E63',
+                      mr: 2 
+                    }} />
+                    <Typography variant="body2" sx={{ flex: 1 }}>Female Students</Typography>
+                    <Typography variant="h6" sx={{ color: '#E91E63' }}>{stats.femaleCount}</Typography>
+                  </Box>
+
+                  {/* Simple Pie Chart Visualization */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    height: 20, 
+                    borderRadius: 10,
+                    overflow: 'hidden',
+                    background: '#f0f0f0'
+                  }}>
+                    <Box sx={{ 
+                      width: `${(stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100}%`,
+                      background: '#2196F3',
+                      transition: 'width 1s ease'
+                    }} />
+                    <Box sx={{ 
+                      width: `${(stats.femaleCount / (stats.maleCount + stats.femaleCount)) * 100}%`,
+                      background: '#E91E63',
+                      transition: 'width 1s ease'
+                    }} />
+                  </Box>
+                  
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                    <Typography variant="caption">
+                      {((stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
+                    </Typography>
+                    <Typography variant="caption">
+                      {((stats.femaleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
+                    </Typography>
+                  </Box>
+                </Box>
+              </Card>
+            </Box>
+          </Box>
+
+          {/* Summary Cards */}
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+            gap: 3 
+          }}>
+            <Card sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <School sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
+                <Box>
+                  <Typography variant="h5" fontWeight="bold">
+                    {stats.classData.length} Classes
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Active academic divisions
+                  </Typography>
+                </Box>
+              </Box>
+            </Card>
+            
+            <Card sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <AttachMoney sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
+                <Box>
+                  <Typography variant="h5" fontWeight="bold">
+                    ₹{(stats.totalFee + stats.totalDues).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Total fee structure
+                  </Typography>
+                </Box>
+              </Box>
+            </Card>
+          </Box>
+        </Box>
+      ) : (
+        <Card sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            ⚠️ Failed to load statistics
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please check your connection and try again.
+          </Typography>
+        </Card>
+      )}
     </Box>
   );
 };
