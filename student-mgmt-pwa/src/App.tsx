@@ -402,7 +402,7 @@ function App() {
                     ) : menu === 'fee' ? (
                       <FeeManagement />
                     ) : menu === 'stats' ? (
-                      <Statistics />
+                      <Statistics mode={mode} />
                     ) : null}
                   </Container>
                 ) : <CircularProgress />}

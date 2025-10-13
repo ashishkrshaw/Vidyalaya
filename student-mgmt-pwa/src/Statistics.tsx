@@ -15,9 +15,10 @@ interface StatCardProps {
   icon: React.ReactNode;
   color: string;
   percentage?: number;
+  mode: 'light' | 'dark';
 }
 
-const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
+const StatCard = ({ title, value, icon, color, percentage, mode }: StatCardProps) => (
   <Card sx={{ 
     p: 3, 
     borderRadius: 3, 
@@ -25,7 +26,12 @@ const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
     border: `1px solid ${color}40`,
     position: 'relative',
     overflow: 'hidden',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    boxShadow: mode === 'dark' 
+      ? '0 4px 12px rgba(0,0,0,0.3)' 
+      : '0 4px 12px rgba(0,0,0,0.1)',
+    backgroundColor: mode === 'dark' 
+      ? 'rgba(30, 30, 30, 0.8)' 
+      : 'rgba(255, 255, 255, 0.9)',
     '&::before': {
       content: '""',
       position: 'absolute',
@@ -38,10 +44,17 @@ const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
   }}>
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <Box>
-        <Typography variant="h4" fontWeight="bold" sx={{ color: color, textShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+        <Typography variant="h4" fontWeight="bold" sx={{ 
+          color: color, 
+          textShadow: '0 1px 2px rgba(0,0,0,0.1)' 
+        }}>
           {value}
         </Typography>
-        <Typography variant="subtitle1" sx={{ mt: 0.5, color: 'text.primary', fontWeight: 600 }}>
+        <Typography variant="subtitle1" sx={{ 
+          mt: 0.5, 
+          color: mode === 'dark' ? '#ffffff' : '#1a202c', 
+          fontWeight: 600 
+        }}>
           {title}
         </Typography>
         {percentage !== undefined && (
@@ -59,7 +72,12 @@ const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
                 }
               }} 
             />
-            <Typography variant="caption" sx={{ mt: 0.5, display: 'block', color: 'text.primary', fontWeight: 500 }}>
+            <Typography variant="caption" sx={{ 
+              mt: 0.5, 
+              display: 'block', 
+              color: mode === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(26, 32, 44, 0.8)', 
+              fontWeight: 500 
+            }}>
               {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}% of target
             </Typography>
           </Box>
@@ -72,19 +90,32 @@ const StatCard = ({ title, value, icon, color, percentage }: StatCardProps) => (
   </Card>
 );
 
-const ClassChart = ({ classData }: { classData: any[] }) => {
+const ClassChart = ({ classData, mode }: { classData: any[], mode: 'light' | 'dark' }) => {
   const maxStudents = Math.max(...classData.map(c => c.count));
   
   return (
-    <Card sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" fontWeight="bold" gutterBottom>
+    <Card sx={{ 
+      p: 3, 
+      borderRadius: 3,
+      backgroundColor: mode === 'dark' 
+        ? 'rgba(30, 30, 30, 0.8)' 
+        : 'rgba(255, 255, 255, 0.9)',
+      boxShadow: mode === 'dark' 
+        ? '0 4px 12px rgba(0,0,0,0.3)' 
+        : '0 4px 12px rgba(0,0,0,0.1)',
+    }}>
+      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{
+        color: mode === 'dark' ? '#ffffff' : '#1a202c'
+      }}>
         📊 Class-wise Distribution
       </Typography>
       <Box sx={{ mt: 2 }}>
         {classData.map((classItem, index) => (
           <Box key={index} sx={{ mb: 2 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" fontWeight="medium">
+              <Typography variant="body2" fontWeight="medium" sx={{
+                color: mode === 'dark' ? '#ffffff' : '#1a202c'
+              }}>
                 {classItem.class}
               </Typography>
               <Typography variant="body2" color="primary">
@@ -97,7 +128,7 @@ const ClassChart = ({ classData }: { classData: any[] }) => {
               sx={{ 
                 height: 8, 
                 borderRadius: 4,
-                backgroundColor: '#f0f0f0',
+                backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
                 '& .MuiLinearProgress-bar': {
                   background: `linear-gradient(45deg, #2196F3 ${index * 20}%, #21CBF3 ${100 - index * 10}%)`,
                   borderRadius: 4
@@ -111,7 +142,11 @@ const ClassChart = ({ classData }: { classData: any[] }) => {
   );
 };
 
-const Statistics = () => {
+interface StatisticsProps {
+  mode: 'light' | 'dark';
+}
+
+const Statistics = ({ mode }: StatisticsProps) => {
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -171,15 +206,26 @@ const Statistics = () => {
   }, []);
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+    <Box sx={{ 
+      p: 3, 
+      maxWidth: 1200, 
+      mx: 'auto',
+      color: mode === 'dark' ? '#ffffff' : '#1a202c'
+    }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
+        mb: 3,
+        color: mode === 'dark' ? '#ffffff' : '#1a202c' 
+      }}>
         📊 School Statistics Dashboard
       </Typography>
       
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
           <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ ml: 2 }}>Loading statistics...</Typography>
+          <Typography variant="h6" sx={{ 
+            ml: 2,
+            color: mode === 'dark' ? '#ffffff' : '#1a202c'
+          }}>Loading statistics...</Typography>
         </Box>
       ) : stats ? (
         <Box>
@@ -200,6 +246,7 @@ const Statistics = () => {
               icon={<Group sx={{ fontSize: 48 }} />}
               color="#2196F3"
               percentage={Math.min((stats.totalStudents / 1000) * 100, 100)}
+              mode={mode}
             />
             
             <StatCard
@@ -208,6 +255,7 @@ const Statistics = () => {
               icon={<Payment sx={{ fontSize: 48 }} />}
               color="#4CAF50"
               percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
+              mode={mode}
             />
             
             <StatCard
@@ -216,6 +264,7 @@ const Statistics = () => {
               icon={<AccountBalanceWallet sx={{ fontSize: 48 }} />}
               color="#FF9800"
               percentage={isNaN(stats.collectionRate) ? 0 : Math.max(100 - stats.collectionRate, 0)}
+              mode={mode}
             />
             
             <StatCard
@@ -224,6 +273,7 @@ const Statistics = () => {
               icon={<TrendingUp sx={{ fontSize: 48 }} />}
               color="#9C27B0"
               percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
+              mode={mode}
             />
           </Box>
 
@@ -234,11 +284,22 @@ const Statistics = () => {
             gap: 3,
             mb: 4 
           }}>
-            <ClassChart classData={stats.classData} />
+            <ClassChart classData={stats.classData} mode={mode} />
             
             <Box>
-              <Card sx={{ p: 3, borderRadius: 3 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
+              <Card sx={{ 
+                p: 3, 
+                borderRadius: 3,
+                backgroundColor: mode === 'dark' 
+                  ? 'rgba(30, 30, 30, 0.8)' 
+                  : 'rgba(255, 255, 255, 0.9)',
+                boxShadow: mode === 'dark' 
+                  ? '0 4px 12px rgba(0,0,0,0.3)' 
+                  : '0 4px 12px rgba(0,0,0,0.1)',
+              }}>
+                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{
+                  color: mode === 'dark' ? '#ffffff' : '#1a202c'
+                }}>
                   👥 Gender Distribution
                 </Typography>
                 <Box sx={{ mt: 3 }}>
@@ -250,7 +311,10 @@ const Statistics = () => {
                       background: '#2196F3',
                       mr: 2 
                     }} />
-                    <Typography variant="body2" sx={{ flex: 1 }}>Male Students</Typography>
+                    <Typography variant="body2" sx={{ 
+                      flex: 1,
+                      color: mode === 'dark' ? '#ffffff' : '#1a202c'
+                    }}>Male Students</Typography>
                     <Typography variant="h6" color="primary">{stats.maleCount}</Typography>
                   </Box>
                   
@@ -262,7 +326,10 @@ const Statistics = () => {
                       background: '#E91E63',
                       mr: 2 
                     }} />
-                    <Typography variant="body2" sx={{ flex: 1 }}>Female Students</Typography>
+                    <Typography variant="body2" sx={{ 
+                      flex: 1,
+                      color: mode === 'dark' ? '#ffffff' : '#1a202c'
+                    }}>Female Students</Typography>
                     <Typography variant="h6" sx={{ color: '#E91E63' }}>{stats.femaleCount}</Typography>
                   </Box>
 
@@ -272,7 +339,7 @@ const Statistics = () => {
                     height: 20, 
                     borderRadius: 10,
                     overflow: 'hidden',
-                    background: '#f0f0f0'
+                    background: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0'
                   }}>
                     <Box sx={{ 
                       width: `${(stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100}%`,
@@ -287,10 +354,14 @@ const Statistics = () => {
                   </Box>
                   
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                    <Typography variant="caption">
+                    <Typography variant="caption" sx={{
+                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
+                    }}>
                       {((stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
                     </Typography>
-                    <Typography variant="caption">
+                    <Typography variant="caption" sx={{
+                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
+                    }}>
                       {((stats.femaleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
                     </Typography>
                   </Box>
@@ -305,7 +376,15 @@ const Statistics = () => {
             gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
             gap: 3 
           }}>
-            <Card sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+            <Card sx={{ 
+              p: 3, 
+              borderRadius: 3, 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+              color: 'white',
+              boxShadow: mode === 'dark' 
+                ? '0 4px 12px rgba(0,0,0,0.3)' 
+                : '0 4px 12px rgba(0,0,0,0.1)',
+            }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <School sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
                 <Box>
@@ -319,7 +398,15 @@ const Statistics = () => {
               </Box>
             </Card>
             
-            <Card sx={{ p: 3, borderRadius: 3, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+            <Card sx={{ 
+              p: 3, 
+              borderRadius: 3, 
+              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 
+              color: 'white',
+              boxShadow: mode === 'dark' 
+                ? '0 4px 12px rgba(0,0,0,0.3)' 
+                : '0 4px 12px rgba(0,0,0,0.1)',
+            }}>
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <AttachMoney sx={{ fontSize: 48, mr: 2, opacity: 0.8 }} />
                 <Box>
@@ -335,11 +422,22 @@ const Statistics = () => {
           </Box>
         </Box>
       ) : (
-        <Card sx={{ p: 4, textAlign: 'center' }}>
+        <Card sx={{ 
+          p: 4, 
+          textAlign: 'center',
+          backgroundColor: mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.8)' 
+            : 'rgba(255, 255, 255, 0.9)',
+          boxShadow: mode === 'dark' 
+            ? '0 4px 12px rgba(0,0,0,0.3)' 
+            : '0 4px 12px rgba(0,0,0,0.1)',
+        }}>
           <Typography variant="h6" color="error" gutterBottom>
             ⚠️ Failed to load statistics
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
+          }}>
             Please check your connection and try again.
           </Typography>
         </Card>
