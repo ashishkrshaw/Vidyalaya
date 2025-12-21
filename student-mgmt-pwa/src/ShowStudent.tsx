@@ -39,6 +39,42 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
 
+  // Password protection state
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [pendingAction, setPendingAction] = useState<'edit' | 'delete' | null>(null);
+  const [pendingStudent, setPendingStudent] = useState<any | null>(null);
+
+  // Request password for sensitive actions
+  const requestPassword = (action: 'edit' | 'delete', student: any) => {
+    setPendingAction(action);
+    setPendingStudent(student);
+    setPasswordDialogOpen(true);
+    setPasswordInput('');
+    setPasswordError('');
+  };
+
+  // Verify password and execute action
+  const handlePasswordConfirm = () => {
+    const storedPassword = localStorage.getItem('actionPassword') || '123456';
+    if (passwordInput === storedPassword) {
+      setPasswordDialogOpen(false);
+      if (pendingAction === 'edit' && pendingStudent) {
+        setEditMode(true);
+        setEditData(pendingStudent);
+      } else if (pendingAction === 'delete' && pendingStudent) {
+        setDeleteConfirm(true);
+        setDialogStudent(pendingStudent);
+      }
+      setPendingAction(null);
+      setPendingStudent(null);
+      setPasswordInput('');
+    } else {
+      setPasswordError('Incorrect password');
+    }
+  };
+
   const handleSearch = async () => {
     setLoading(true);
     let found: any[] = [];
@@ -173,8 +209,8 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
                 <div key={student.studentId} className="student-card">
                   <div className="student-card-header">
                     <div className="student-avatar">
-                      {student.photo ? (
-                        <img src={student.photo} alt={student.name} />
+                      {(student.photoData || student.photo) ? (
+                        <img src={student.photoData || student.photo} alt={student.name} />
                       ) : (
                         <PersonIcon style={{ fontSize: 24 }} />
                       )}

@@ -1,13 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-// @ts-ignore
-// Removed Perplexity API key
+import { getAdmissions, loadFeeMap } from './db';
 import './Chatbot.css';
+
+// ========================================
+// 🔧 CONFIGURE YOUR AWS LAMBDA URL HERE
+// ========================================
+// After deploying your Lambda function with API Gateway,
+// replace this URL with your actual API Gateway invoke URL
+// Example: 'https://abc123.execute-api.us-east-1.amazonaws.com/chat'
+const LAMBDA_API_URL = ''; // Leave empty to use local responses
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>([]);
   const [input, setInput] = useState('');
   const [context, setContext] = useState({ lastTopic: '', userPreferences: [] as string[] });
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -36,13 +44,81 @@ const Chatbot = () => {
     setIsOpen(!isOpen);
   };
 
+  // Fetch school context for Lambda
+  const getSchoolContext = async () => {
+    try {
+      const students = await getAdmissions();
+      const feeMap = await loadFeeMap();
+
+      let totalFee = 0;
+      let totalDues = 0;
+
+      students.forEach((student: any) => {
+        const classFee = Number(feeMap[student.class]) || 0;
+        const paidTotal = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+        totalFee += paidTotal;
+        totalDues += Math.max(0, (classFee * 12) - paidTotal);
+      });
+
+      return {
+        schoolName: localStorage.getItem('schoolName') || 'My School',
+        totalStudents: students.length,
+        totalFeeCollected: totalFee,
+        pendingDues: totalDues,
+        classesAvailable: ['Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+        sections: ['A', 'B', 'C']
+      };
+    } catch (e) {
+      return {
+        schoolName: localStorage.getItem('schoolName') || 'My School',
+        totalStudents: 0,
+        totalFeeCollected: 0,
+        pendingDues: 0
+      };
+    }
+  };
+
+  // Call AWS Lambda API
+  const callLambdaAPI = async (userInput: string) => {
+    if (!LAMBDA_API_URL) return null;
+
+    try {
+      const schoolContext = await getSchoolContext();
+
+      const response = await fetch(LAMBDA_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userInput, schoolContext })
+      });
+
+      if (!response.ok) throw new Error('Lambda API error');
+
+      const data = await response.json();
+      return data.reply || null;
+    } catch (error) {
+      console.error('Lambda API error:', error);
+      return null;
+    }
+  };
+
   // Enhanced bot response logic with context understanding
-  const getBotResponse = async (userInput: string) => {
+  const getBotResponse = async (userInput: string): Promise<string> => {
     const input = userInput.toLowerCase().trim();
-    
+
+    // Try Lambda API first if configured
+    if (LAMBDA_API_URL) {
+      setIsLoading(true);
+      const lambdaResponse = await callLambdaAPI(userInput);
+      setIsLoading(false);
+      if (lambdaResponse) {
+        return lambdaResponse;
+      }
+      // Fall back to local responses if Lambda fails
+    }
+
     // Update context based on user input
     let newContext = { ...context };
-    
+
     // Greetings with contextual responses
     if (/^(hi|hello|hey|good morning|good afternoon|good evening)/i.test(input)) {
       const greetings = [
@@ -140,22 +216,22 @@ const Chatbot = () => {
       if (/what.*this|what.*app|what.*system|what.*do/i.test(input)) {
         return '🎓 This is a **School Management System** that helps you:\n\n📚 **Manage Students:**\n• Register new admissions\n• Search and view student records\n• Update student information\n\n💰 **Handle Finances:**\n• Collect fees and payments\n• Generate receipts\n• Track payment history\n\n📊 **Generate Reports:**\n• View school statistics\n• Export student data\n• Monitor academic performance\n\n🆔 **Create ID Cards:**\n• Professional student ID cards\n• QR codes for verification\n\nTry saying "add student" or "show statistics" to get started!';
       }
-      
+
       if (/how.*add|how.*register|how.*enroll/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'student' }));
         return '📝 **To add a new student:**\n\n1️⃣ Fill out the admission form\n2️⃣ Upload student photo (optional)\n3️⃣ Select class and section\n4️⃣ Add parent/guardian details\n5️⃣ Review and confirm\n\n✨ The system automatically generates:\n• Student ID number\n• Roll number\n• Admission date\n\nOpening the admission form for you now!';
       }
-      
+
       if (/how.*search|how.*find|where.*student/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'show' }));
         return '� **To find students:**\n\n🎯 **Search Methods:**\n• Student ID (exact match)\n• Name (partial search works)\n• Class/section filter\n• Roll number lookup\n\n📋 **Search Tips:**\n• Use partial names for broad results\n• Filter by class for specific groups\n• Export results for offline use\n\nOpening student search now!';
       }
-      
+
       if (/how.*pay|how.*fee|where.*payment/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'fee' }));
         return '💰 **To collect fees:**\n\n💳 **Payment Process:**\n1️⃣ Search for student\n2️⃣ Select fee type\n3️⃣ Enter amount\n4️⃣ Choose payment method\n5️⃣ Generate receipt\n\n📊 **Features:**\n• Track pending payments\n• View payment history\n• Print receipts\n• Send payment reminders\n\nOpening fee management now!';
       }
-      
+
       if (/can.*help|will you help|what.*can.*do/i.test(input)) {
         return '🤖 **Absolutely! I can help you with:**\n\n📝 **Student Management:**\n• "Add new student" - Register admissions\n• "Find student records" - Search database\n• "Update student info" - Modify records\n\n💰 **Financial Operations:**\n• "Collect fees" - Process payments\n• "View payment history" - Check records\n• "Generate receipts" - Print documents\n\n📊 **Reports & Analytics:**\n• "Show statistics" - View school data\n• "Generate ID cards" - Create student cards\n• "Export data" - Download records\n\n**Just tell me what you want to do in plain English!**';
       }
@@ -167,17 +243,17 @@ const Chatbot = () => {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'student' }));
         return '📝 Perfect! Taking you to add a new student. Fill out the form with student details and I\'ll help you through the process!';
       }
-      
+
       if (/want.*find|want.*search|need.*find|show me.*student/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'show' }));
         return '🔍 Great! Opening student search. You can look up students by name, ID, or class. What are you looking for?';
       }
-      
+
       if (/want.*fee|need.*payment|want.*collect/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'fee' }));
         return '💰 Excellent! Opening fee management. You can collect payments, view history, and generate receipts here.';
       }
-      
+
       if (/show me.*stats|want.*report|need.*data/i.test(input)) {
         window.dispatchEvent(new CustomEvent('chatbot-navigate', { detail: 'stats' }));
         return '📊 Coming right up! Here are your school statistics with real-time data from your database.';
@@ -226,7 +302,7 @@ const Chatbot = () => {
         'fee-management': '💰 After collecting fees, you might want to generate receipts or view statistics.',
         'statistics': '📊 Want to dive deeper? Check individual student records or update academic settings.'
       };
-      
+
       if (suggestions[context.lastTopic as keyof typeof suggestions]) {
         return suggestions[context.lastTopic as keyof typeof suggestions];
       }
@@ -236,7 +312,7 @@ const Chatbot = () => {
     if (/student|pupils|kids|children/i.test(input) && !/add|find|search|show|update|delete/.test(input)) {
       return '👥 **Student-related task?** I can help you:\n\n📝 **Add Students:** "Add new student" or "Register admission"\n🔍 **Find Students:** "Show student records" or "Search by name"\n✏️ **Update Students:** "Update student info" or "Edit records"\n🆔 **ID Cards:** "Generate ID cards" or "Print student cards"\n\n**What would you like to do with students?**';
     }
-    
+
     if (/fee|money|payment|cash/i.test(input) && !/collect|pay|manage|show/.test(input)) {
       return '💰 **Fee-related task?** I can help you:\n\n💳 **Collect Fees:** "Collect student fees" or "Process payments"\n📊 **View History:** "Show payment history" or "Fee reports"\n� **Receipts:** "Generate receipts" or "Print payment slips"\n📈 **Analytics:** "Fee statistics" or "Payment trends"\n\n**What do you need to do with fees?**';
     }
@@ -267,7 +343,7 @@ const Chatbot = () => {
   // Enhanced default prompts with better context
   const defaultPrompts = [
     "📝 Add a new student",
-    "🔍 Search student records", 
+    "🔍 Search student records",
     "💰 Collect student fees",
     "🆔 Generate ID cards",
     "📊 View school statistics",
