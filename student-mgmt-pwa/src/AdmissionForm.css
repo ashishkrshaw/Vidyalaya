@@ -1,0 +1,622 @@
+/* AdmissionForm.css - Modern Creative Design */
+
+/* ============================================
+   PAGE LAYOUT
+   ============================================ */
+.admission-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+    animation: admissionFadeIn 0.4s ease;
+}
+
+@keyframes admissionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.admission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.admission-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #172B4D;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.admission-title svg {
+    color: #00875A;
+    font-size: 36px;
+}
+
+.admission-subtitle {
+    font-size: 14px;
+    color: #6B778C;
+    margin: 6px 0 0 0;
+}
+
+/* ============================================
+   PROGRESS STEPPER
+   ============================================ */
+.admission-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, #0052CC 0%, #6554C0 100%);
+    border-radius: 16px;
+    margin-bottom: 32px;
+    overflow-x: auto;
+}
+
+.admission-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.admission-step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.admission-step.active .admission-step-number {
+    background: white;
+    color: #0052CC;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.admission-step.completed .admission-step-number {
+    background: #36B37E;
+    color: white;
+}
+
+.admission-step-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.admission-step.active .admission-step-label {
+    color: white;
+    font-weight: 600;
+}
+
+.admission-step.completed .admission-step-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.admission-step-connector {
+    width: 40px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.admission-step-connector.completed {
+    background: #36B37E;
+}
+
+/* ============================================
+   FORM SECTIONS
+   ============================================ */
+.admission-form-content {
+    animation: contentSlide 0.3s ease;
+}
+
+@keyframes contentSlide {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.admission-section {
+    background: #FFFFFF;
+    border: 1px solid #DFE1E6;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(9, 30, 66, 0.08);
+    margin-bottom: 24px;
+}
+
+.admission-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #F4F5F7 0%, #EBECF0 100%);
+    border-bottom: 1px solid #DFE1E6;
+}
+
+.admission-section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.admission-section-icon.personal {
+    background: linear-gradient(135deg, #0052CC, #0065FF);
+}
+
+.admission-section-icon.academic {
+    background: linear-gradient(135deg, #00875A, #36B37E);
+}
+
+.admission-section-icon.guardian {
+    background: linear-gradient(135deg, #6554C0, #8777D9);
+}
+
+.admission-section-icon.contact {
+    background: linear-gradient(135deg, #FF8B00, #FFAB00);
+}
+
+.admission-section-icon.photo {
+    background: linear-gradient(135deg, #00B8D9, #00C7E6);
+}
+
+.admission-section-icon.review {
+    background: linear-gradient(135deg, #DE350B, #FF5630);
+}
+
+.admission-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #172B4D;
+    margin: 0;
+}
+
+.admission-section-desc {
+    font-size: 13px;
+    color: #6B778C;
+    margin: 4px 0 0 0;
+}
+
+.admission-section-body {
+    padding: 24px;
+}
+
+/* ============================================
+   FORM GRID
+   ============================================ */
+.admission-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.admission-form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.admission-form-field.full-width {
+    grid-column: 1 / -1;
+}
+
+.admission-form-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #42526E;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.admission-form-field label .required {
+    color: #DE350B;
+}
+
+.admission-form-field input,
+.admission-form-field select,
+.admission-form-field textarea {
+    padding: 14px 16px;
+    font-size: 15px;
+    border: 2px solid #DFE1E6;
+    border-radius: 10px;
+    background: #FAFBFC;
+    color: #172B4D;
+    transition: all 0.2s;
+}
+
+.admission-form-field input:hover,
+.admission-form-field select:hover,
+.admission-form-field textarea:hover {
+    border-color: #B3BAC5;
+    background: #F4F5F7;
+}
+
+.admission-form-field input:focus,
+.admission-form-field select:focus,
+.admission-form-field textarea:focus {
+    outline: none;
+    border-color: #0052CC;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.15);
+}
+
+.admission-form-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ============================================
+   PHOTO UPLOAD
+   ============================================ */
+.admission-photo-upload {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.admission-photo-preview {
+    width: 140px;
+    height: 170px;
+    border: 3px dashed #DFE1E6;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #F4F5F7;
+    transition: all 0.2s;
+}
+
+.admission-photo-preview.has-photo {
+    border-style: solid;
+    border-color: #00875A;
+}
+
+.admission-photo-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.admission-photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: #6B778C;
+}
+
+.admission-photo-placeholder svg {
+    font-size: 40px;
+    opacity: 0.5;
+}
+
+.admission-photo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.admission-photo-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: 2px solid #DFE1E6;
+    border-radius: 10px;
+    background: #FFFFFF;
+    color: #42526E;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admission-photo-btn:hover {
+    border-color: #0052CC;
+    background: #DEEBFF;
+    color: #0052CC;
+}
+
+.admission-photo-btn.primary {
+    background: linear-gradient(135deg, #0052CC, #0065FF);
+    border-color: transparent;
+    color: white;
+}
+
+.admission-photo-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 82, 204, 0.35);
+}
+
+/* ============================================
+   REVIEW SECTION
+   ============================================ */
+.admission-review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.admission-review-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: #F4F5F7;
+    border-radius: 8px;
+}
+
+.admission-review-label {
+    font-size: 13px;
+    color: #6B778C;
+}
+
+.admission-review-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #172B4D;
+}
+
+/* ============================================
+   FORM ACTIONS
+   ============================================ */
+.admission-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+}
+
+.admission-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 32px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.admission-btn-secondary {
+    background: #F4F5F7;
+    color: #42526E;
+    border: 2px solid #DFE1E6;
+}
+
+.admission-btn-secondary:hover {
+    background: #EBECF0;
+    border-color: #B3BAC5;
+}
+
+.admission-btn-primary {
+    background: linear-gradient(135deg, #00875A 0%, #36B37E 100%);
+    color: white;
+}
+
+.admission-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 135, 90, 0.4);
+}
+
+.admission-btn-primary:disabled {
+    background: #B3BAC5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ============================================
+   STUDENT ID PREVIEW
+   ============================================ */
+.admission-id-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #DEEBFF 0%, #B3D4FF 100%);
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.admission-id-preview span {
+    font-size: 15px;
+    color: #0052CC;
+}
+
+.admission-id-preview strong {
+    font-family: 'Consolas', monospace;
+    font-size: 18px;
+    color: #172B4D;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .admission-page {
+        padding: 16px;
+    }
+
+    .admission-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .admission-stepper {
+        padding: 16px;
+        gap: 4px;
+    }
+
+    .admission-step-label {
+        display: none;
+    }
+
+    .admission-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admission-photo-upload {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .admission-actions {
+        flex-direction: column;
+    }
+
+    .admission-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+[data-theme="dark"] .admission-page,
+.dark .admission-page {
+    background: transparent;
+}
+
+[data-theme="dark"] .admission-title,
+.dark .admission-title {
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .admission-subtitle,
+.dark .admission-subtitle {
+    color: #8C9BAB;
+}
+
+[data-theme="dark"] .admission-section,
+.dark .admission-section {
+    background: #1D2125;
+    border-color: #2C333A;
+}
+
+[data-theme="dark"] .admission-section-header,
+.dark .admission-section-header {
+    background: linear-gradient(135deg, #22272B 0%, #2C333A 100%);
+    border-color: #3D4750;
+}
+
+[data-theme="dark"] .admission-section-title,
+.dark .admission-section-title {
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .admission-section-desc,
+.dark .admission-section-desc {
+    color: #8C9BAB;
+}
+
+[data-theme="dark"] .admission-form-field label,
+.dark .admission-form-field label {
+    color: #9FADBC;
+}
+
+[data-theme="dark"] .admission-form-field input,
+[data-theme="dark"] .admission-form-field select,
+[data-theme="dark"] .admission-form-field textarea,
+.dark .admission-form-field input,
+.dark .admission-form-field select,
+.dark .admission-form-field textarea {
+    background: #22272B;
+    border-color: #3D4750;
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .admission-form-field input:focus,
+[data-theme="dark"] .admission-form-field select:focus,
+[data-theme="dark"] .admission-form-field textarea:focus,
+.dark .admission-form-field input:focus,
+.dark .admission-form-field select:focus,
+.dark .admission-form-field textarea:focus {
+    border-color: #4C9AFF;
+}
+
+[data-theme="dark"] .admission-photo-preview,
+.dark .admission-photo-preview {
+    background: #22272B;
+    border-color: #3D4750;
+}
+
+[data-theme="dark"] .admission-review-item,
+.dark .admission-review-item {
+    background: #22272B;
+}
+
+[data-theme="dark"] .admission-review-label,
+.dark .admission-review-label {
+    color: #8C9BAB;
+}
+
+[data-theme="dark"] .admission-review-value,
+.dark .admission-review-value {
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .admission-btn-secondary,
+.dark .admission-btn-secondary {
+    background: #22272B;
+    color: #B6C2CF;
+    border-color: #3D4750;
+}
+
+[data-theme="dark"] .admission-id-preview,
+.dark .admission-id-preview {
+    background: linear-gradient(135deg, rgba(0, 82, 204, 0.2) 0%, rgba(76, 154, 255, 0.2) 100%);
+}
+
+[data-theme="dark"] .admission-id-preview span,
+.dark .admission-id-preview span {
+    color: #4C9AFF;
+}
+
+[data-theme="dark"] .admission-id-preview strong,
+.dark .admission-id-preview strong {
+    color: #B6C2CF;
+}

@@ -1,0 +1,523 @@
+/* FeeManagement.css - Complete Fresh Redesign */
+
+/* ============================================
+   PAGE LAYOUT - INDEPENDENT FULL WIDTH
+   ============================================ */
+.fee-page {
+    width: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    animation: feePageFadeIn 0.3s ease;
+}
+
+@keyframes feePageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.fee-page-header {
+    margin-bottom: 24px;
+}
+
+.fee-page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #172B4D;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.fee-page-title svg {
+    color: #0052CC;
+}
+
+/* ============================================
+   GRID LAYOUT - FULL WIDTH CARDS
+   ============================================ */
+.fee-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    width: 100%;
+}
+
+@media (min-width: 992px) {
+    .fee-grid-two-col {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* ============================================
+   CARD STYLING
+   ============================================ */
+.fee-card {
+    background: #FFFFFF;
+    border: 1px solid #DFE1E6;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(9, 30, 66, 0.13);
+    transition: box-shadow 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fee-card:hover {
+    box-shadow: 0 8px 16px rgba(9, 30, 66, 0.15);
+}
+
+.fee-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #172B4D;
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #DFE1E6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fee-card-title svg {
+    color: #0052CC;
+    font-size: 20px;
+}
+
+/* ============================================
+   FORM STYLES
+   ============================================ */
+.fee-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.fee-form-field {
+    width: 100%;
+}
+
+.fee-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6B778C;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fee-form-input,
+.fee-form-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid #DFE1E6;
+    border-radius: 4px;
+    background: #FAFBFC;
+    color: #172B4D;
+    box-sizing: border-box;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.fee-form-input:hover,
+.fee-form-select:hover {
+    background: #F4F5F7;
+    border-color: #B3BAC5;
+}
+
+.fee-form-input:focus,
+.fee-form-select:focus {
+    outline: none;
+    border-color: #0052CC;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.fee-btn {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.fee-btn:active {
+    transform: scale(0.98);
+}
+
+.fee-btn-primary {
+    background: #0052CC;
+    color: #FFFFFF;
+}
+
+.fee-btn-primary:hover {
+    background: #0065FF;
+}
+
+.fee-btn-primary:disabled {
+    background: #B3BAC5;
+    cursor: not-allowed;
+}
+
+.fee-btn-secondary {
+    background: #F4F5F7;
+    color: #42526E;
+    border: 1px solid #DFE1E6;
+}
+
+.fee-btn-secondary:hover {
+    background: #EBECF0;
+}
+
+.fee-btn-full {
+    width: 100%;
+}
+
+/* ============================================
+   STUDENT INFO DISPLAY
+   ============================================ */
+.fee-student-info {
+    margin-bottom: 20px;
+}
+
+.fee-student-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #172B4D;
+    margin: 0 0 4px 0;
+}
+
+.fee-student-id {
+    font-size: 14px;
+    color: #6B778C;
+    margin: 0 0 12px 0;
+}
+
+.fee-student-details {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: #42526E;
+}
+
+.fee-student-details strong {
+    color: #172B4D;
+}
+
+/* ============================================
+   PAYMENT SUMMARY
+   ============================================ */
+.fee-summary {
+    background: #F4F5F7;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px 0;
+}
+
+.fee-summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: 1px solid #DFE1E6;
+}
+
+.fee-summary-row:last-child {
+    border-bottom: none;
+}
+
+.fee-summary-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: #172B4D;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 2px solid #172B4D;
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+.fee-table-container {
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #DFE1E6;
+}
+
+.fee-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.fee-table th {
+    background: #F4F5F7;
+    color: #42526E;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid #DFE1E6;
+}
+
+.fee-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #DFE1E6;
+    color: #172B4D;
+}
+
+.fee-table tr:hover {
+    background: #F4F5F7;
+}
+
+/* ============================================
+   FILTER ROW
+   ============================================ */
+.fee-filters {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    align-items: flex-end;
+}
+
+.fee-filter-field {
+    min-width: 180px;
+}
+
+/* ============================================
+   ALERT / MESSAGE
+   ============================================ */
+.fee-alert {
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.fee-alert-success {
+    background: #E3FCEF;
+    color: #006644;
+    border: 1px solid #ABF5D1;
+}
+
+/* ============================================
+   DIALOG / MODAL STYLES
+   ============================================ */
+.fee-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.fee-dialog {
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.fee-dialog-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #172B4D;
+    margin: 0 0 16px 0;
+}
+
+.fee-dialog-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .fee-page {
+        padding: 16px;
+    }
+
+    .fee-page-title {
+        font-size: 20px;
+    }
+
+    .fee-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .fee-filters {
+        flex-direction: column;
+    }
+
+    .fee-filter-field {
+        width: 100%;
+    }
+
+    .fee-student-details {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+[data-theme="dark"] .fee-page,
+.dark .fee-page {
+    background: transparent;
+}
+
+[data-theme="dark"] .fee-page-title,
+.dark .fee-page-title {
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .fee-card,
+.dark .fee-card {
+    background: #1D2125;
+    border-color: #2C333A;
+}
+
+[data-theme="dark"] .fee-card-title,
+.dark .fee-card-title {
+    color: #B6C2CF;
+    border-bottom-color: #2C333A;
+}
+
+[data-theme="dark"] .fee-form-input,
+[data-theme="dark"] .fee-form-select,
+.dark .fee-form-input,
+.dark .fee-form-select {
+    background: #22272B;
+    border-color: #3D4750;
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .fee-form-input:hover,
+[data-theme="dark"] .fee-form-select:hover,
+.dark .fee-form-input:hover,
+.dark .fee-form-select:hover {
+    background: #2C333A;
+    border-color: #596773;
+}
+
+[data-theme="dark"] .fee-form-input:focus,
+[data-theme="dark"] .fee-form-select:focus,
+.dark .fee-form-input:focus,
+.dark .fee-form-select:focus {
+    border-color: #4C9AFF;
+    background: #1D2125;
+}
+
+[data-theme="dark"] .fee-form-label,
+.dark .fee-form-label {
+    color: #8C9BAB;
+}
+
+[data-theme="dark"] .fee-student-name,
+.dark .fee-student-name {
+    color: #B6C2CF;
+}
+
+[data-theme="dark"] .fee-student-id,
+[data-theme="dark"] .fee-student-details,
+.dark .fee-student-id,
+.dark .fee-student-details {
+    color: #8C9BAB;
+}
+
+[data-theme="dark"] .fee-summary,
+.dark .fee-summary {
+    background: #22272B;
+}
+
+[data-theme="dark"] .fee-summary-row,
+.dark .fee-summary-row {
+    border-color: #2C333A;
+    color: #9FADBC;
+}
+
+[data-theme="dark"] .fee-summary-total,
+.dark .fee-summary-total {
+    color: #B6C2CF;
+    border-color: #4C9AFF;
+}
+
+[data-theme="dark"] .fee-table-container,
+.dark .fee-table-container {
+    border-color: #2C333A;
+}
+
+[data-theme="dark"] .fee-table th,
+.dark .fee-table th {
+    background: #22272B;
+    color: #8C9BAB;
+    border-color: #2C333A;
+}
+
+[data-theme="dark"] .fee-table td,
+.dark .fee-table td {
+    color: #B6C2CF;
+    border-color: #2C333A;
+}
+
+[data-theme="dark"] .fee-table tr:hover,
+.dark .fee-table tr:hover {
+    background: #22272B;
+}
+
+[data-theme="dark"] .fee-btn-secondary,
+.dark .fee-btn-secondary {
+    background: #22272B;
+    color: #B6C2CF;
+    border-color: #3D4750;
+}
+
+[data-theme="dark"] .fee-btn-secondary:hover,
+.dark .fee-btn-secondary:hover {
+    background: #2C333A;
+}
+
+[data-theme="dark"] .fee-dialog,
+.dark .fee-dialog {
+    background: #1D2125;
+}
+
+[data-theme="dark"] .fee-dialog-title,
+.dark .fee-dialog-title {
+    color: #B6C2CF;
+}

@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, Card, Typography, Avatar, Button, Stack } from '@mui/material';
-import PhotoIcon from '@mui/icons-material/Photo';
-import CardMembershipIcon from '@mui/icons-material/CardMembership';
+import BadgeIcon from '@mui/icons-material/Badge';
+import PersonIcon from '@mui/icons-material/Person';
+import SearchIcon from '@mui/icons-material/Search';
+import DownloadIcon from '@mui/icons-material/Download';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import PrintIcon from '@mui/icons-material/Print';
 import { QRCodeCanvas } from 'qrcode.react';
-import { loadPrincipalSignature } from './db';
+import { loadPrincipalSignature, getAdmissions, getAdmissionsByClassSection } from './db';
+import './StudentIdCard.css';
 
 interface StudentIdCardProps {
-  student: {
+  student?: {
     name: string;
     class: string;
     section: string;
@@ -15,141 +19,260 @@ interface StudentIdCardProps {
     address: string;
     parentMobile: string;
     photo?: string;
-    id?: string;
+    studentId?: string;
     gender?: string;
   };
   onUpdatePhoto?: (photo: string) => void;
   onGenerateId?: () => void;
 }
 
-const StudentIdCard: React.FC<StudentIdCardProps> = ({ student, onUpdatePhoto, onGenerateId }) => {
-  const [photo, setPhoto] = useState<string | undefined>(student.photo);
+const classOptions = ['Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+const sectionOptions = ['A', 'B', 'C'];
+
+const StudentIdCard: React.FC<StudentIdCardProps> = ({ student: propStudent, onUpdatePhoto }) => {
+  const [cls, setCls] = useState('');
+  const [section, setSection] = useState('');
+  const [studentsList, setStudentsList] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(propStudent || null);
+  const [photo, setPhoto] = useState<string | undefined>(propStudent?.photo);
   const [signatureUrl, setSignatureUrl] = useState<string>('');
+  const [loading, setLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function fetchSignature() {
-      const sig = await loadPrincipalSignature();
-      if (sig) {
-        if (typeof sig !== 'string' && sig.type?.startsWith('image/')) {
-          setSignatureUrl(URL.createObjectURL(sig));
-        } else if (typeof sig === 'string') {
-          setSignatureUrl(sig);
-        }
-      }
-    }
     fetchSignature();
   }, []);
+
+  useEffect(() => {
+    if (cls && section) {
+      fetchStudents();
+    }
+  }, [cls, section]);
+
+  const fetchSignature = async () => {
+    const sig = await loadPrincipalSignature();
+    if (sig) {
+      if (typeof sig !== 'string' && sig.type?.startsWith('image/')) {
+        setSignatureUrl(URL.createObjectURL(sig));
+      } else if (typeof sig === 'string') {
+        setSignatureUrl(sig);
+      }
+    }
+  };
+
+  const fetchStudents = async () => {
+    setLoading(true);
+    try {
+      const list = await getAdmissionsByClassSection(cls, section);
+      setStudentsList(list.sort((a: any, b: any) => Number(a.rollNo) - Number(b.rollNo)));
+    } catch (e) {
+      setStudentsList([]);
+    }
+    setLoading(false);
+  };
+
+  const handleStudentSelect = (student: any) => {
+    setSelectedStudent(student);
+    setPhoto(student.photo || student.photoData);
+  };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
-        setPhoto(ev.target?.result as string);
-        onUpdatePhoto?.(ev.target?.result as string);
+        const photoData = ev.target?.result as string;
+        setPhoto(photoData);
+        onUpdatePhoto?.(photoData);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  // Download card as PNG
   const handleDownload = async () => {
     if (!cardRef.current) return;
-    const node = cardRef.current;
-    // Use html2canvas for rendering
     const html2canvas = (await import('html2canvas')).default;
-    const canvas = await html2canvas(node, { scale: 2 });
+    const canvas = await html2canvas(cardRef.current, { scale: 2 });
     const link = document.createElement('a');
-    link.download = `student-id-${student.id || 'card'}.png`;
+    link.download = `ID_Card_${selectedStudent?.name?.replace(/\s+/g, '_') || 'student'}.png`;
     link.href = canvas.toDataURL();
     link.click();
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const currentYear = new Date().getFullYear();
+  const session = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 4 }}>
-      <Card ref={cardRef}
-        elevation={6}
-        sx={{
-          width: { xs: 320, sm: 506, md: 506 },
-          height: { xs: 200, sm: 319, md: 319 },
-          maxWidth: 506,
-          maxHeight: 319,
-          aspectRatio: '1.586',
-          borderRadius: 4,
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%)',
-          color: '#222',
-          position: 'relative',
-          overflow: 'hidden',
-          p: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Box sx={{ px: 3, pt: 2, pb: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-            <CardMembershipIcon sx={{ fontSize: 32, color: '#3b4cca' }} />
-            <Typography variant="h6" fontWeight={700} sx={{ color: '#3b4cca', letterSpacing: 1 }}>Student ID Card</Typography>
-          </Stack>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar src={photo} sx={{ width: 80, height: 80, border: '2px solid #3b4cca', bgcolor: photo ? 'transparent' : '#e0e7ef' }}>
-              {!photo && <PhotoIcon sx={{ fontSize: 40, color: '#3b4cca' }} />}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>{student.name}</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>Student ID: <span style={{ fontWeight: 700 }}>{student.id || '0123456789'}</span></Typography>
-              <Typography variant="body2">Class: {student.class} | {student.gender || 'N/A'}</Typography>
-              <Typography variant="body2">Father: {student.fatherName}</Typography>
-              <Typography variant="body2">Phone: {student.parentMobile}</Typography>
-              <Typography variant="body2">Session: {new Date().getFullYear()}-{new Date().getFullYear()+1}</Typography>
-            </Box>
-          </Box>
-        </Box>
-        <Box sx={{ px: 3, pb: 1, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-            <Typography variant="caption" sx={{ fontWeight: 500, color: '#3b4cca', mb: 0.5 }}>Authorized Signature</Typography>
-            <Box sx={{ width: 80, height: 24, borderBottom: '1px solid #3b4cca', mb: 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {signatureUrl ? (
-                <img src={signatureUrl} alt="Principal Signature" style={{ maxHeight: 24, maxWidth: 80, objectFit: 'contain' }} />
-              ) : null}
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <QRCodeCanvas
-              value={
-                JSON.stringify({
-                  id: student.id || '0123456789',
-                  name: student.name,
-                  class: student.class,
-                  section: student.section,
-                  rollNo: student.rollNo,
-                  gender: student.gender || 'N/A'
-                })
-              }
-              size={64}
-              bgColor="#f8fafc"
-              fgColor="#3b4cca"
-              style={{ borderRadius: 8 }}
-            />
-            <Typography variant="caption" sx={{ fontSize: 10, color: '#3b4cca', mt: 0.5 }}>Scan for details</Typography>
-          </Box>
-        </Box>
-      </Card>
-      <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-        <Button variant="outlined" component="label" sx={{ borderRadius: 2 }}>
-          {photo ? 'Change Photo' : 'Upload Photo'}
-          <input type="file" accept="image/*" hidden onChange={handlePhotoUpload} />
-        </Button>
-        <Button variant="contained" color="primary" sx={{ borderRadius: 2 }} onClick={onGenerateId} disabled={!photo}>
-          Generate/Update Student ID
-        </Button>
-        <Button variant="contained" color="secondary" sx={{ borderRadius: 2 }} onClick={handleDownload}>
-          Download Card
-        </Button>
-      </Box>
-    </Box>
+    <div className="idcard-page">
+      {/* Header */}
+      <div className="idcard-header">
+        <h1 className="idcard-title">
+          <BadgeIcon />
+          Student ID Card
+        </h1>
+        <p className="idcard-subtitle">Generate and download student ID cards</p>
+      </div>
+
+      {/* Search Section */}
+      <div className="idcard-search">
+        <div className="idcard-search-row">
+          <div className="idcard-search-field">
+            <label>Class</label>
+            <select value={cls} onChange={(e) => { setCls(e.target.value); setSelectedStudent(null); }}>
+              <option value="">Select Class</option>
+              {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="idcard-search-field">
+            <label>Section</label>
+            <select value={section} onChange={(e) => { setSection(e.target.value); setSelectedStudent(null); }}>
+              <option value="">Select Section</option>
+              {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="idcard-search-field" style={{ flex: 2 }}>
+            <label>Student</label>
+            <select
+              value={selectedStudent?.studentId || ''}
+              onChange={(e) => {
+                const student = studentsList.find(s => s.studentId === e.target.value);
+                if (student) handleStudentSelect(student);
+              }}
+              disabled={!cls || !section || loading}
+            >
+              <option value="">
+                {loading ? 'Loading...' : studentsList.length === 0 ? 'No students' : 'Select Student'}
+              </option>
+              {studentsList.map(s => (
+                <option key={s.studentId} value={s.studentId}>
+                  {s.rollNo}. {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ID Card Display */}
+      <div className="idcard-container">
+        {selectedStudent ? (
+          <>
+            {/* ID Card */}
+            <div className="idcard-card" ref={cardRef}>
+              <div className="idcard-card-inner">
+                {/* Top Bar */}
+                <div className="idcard-card-top">
+                  <span className="idcard-school-name">Vidyalaya School</span>
+                  <span className="idcard-session">{session}</span>
+                </div>
+
+                {/* Body */}
+                <div className="idcard-card-body">
+                  {/* Photo */}
+                  <div className="idcard-photo-frame">
+                    {photo ? (
+                      <img src={photo} alt={selectedStudent.name} />
+                    ) : (
+                      <div className="idcard-photo-placeholder">
+                        <PersonIcon style={{ fontSize: 32 }} />
+                        <span>No Photo</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="idcard-info">
+                    <h2 className="idcard-student-name">{selectedStudent.name}</h2>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">ID:</span>
+                      <span className="idcard-info-value" style={{ fontSize: 10 }}>{selectedStudent.studentId}</span>
+                    </div>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">Class:</span>
+                      <span className="idcard-info-value">{selectedStudent.class} - {selectedStudent.section}</span>
+                    </div>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">Roll No:</span>
+                      <span className="idcard-info-value">{selectedStudent.rollNo}</span>
+                    </div>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">Father:</span>
+                      <span className="idcard-info-value">{selectedStudent.fatherName || '-'}</span>
+                    </div>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">Mobile:</span>
+                      <span className="idcard-info-value">{selectedStudent.fatherMobile || '-'}</span>
+                    </div>
+                    <div className="idcard-info-row">
+                      <span className="idcard-info-label">Address:</span>
+                      <span className="idcard-info-value" style={{ fontSize: 9 }}>{selectedStudent.address || '-'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="idcard-card-bottom">
+                  {/* QR Code - Real scannable with complete student data */}
+                  <div className="idcard-qr">
+                    <QRCodeCanvas
+                      value={JSON.stringify({
+                        id: selectedStudent.studentId,
+                        name: selectedStudent.name,
+                        class: selectedStudent.class,
+                        section: selectedStudent.section,
+                        rollNo: selectedStudent.rollNo,
+                        father: selectedStudent.fatherName || '',
+                        mobile: selectedStudent.fatherMobile || '',
+                        address: (selectedStudent.address || '').slice(0, 50)
+                      })}
+                      size={55}
+                      bgColor="#ffffff"
+                      fgColor="#172B4D"
+                      level="M"
+                    />
+                  </div>
+
+                  {/* Signature */}
+                  <div className="idcard-signature">
+                    <div className="idcard-signature-line">
+                      {signatureUrl && <img src={signatureUrl} alt="Signature" />}
+                    </div>
+                    <span className="idcard-signature-label">Principal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="idcard-actions">
+              <label className="idcard-btn idcard-btn-secondary">
+                <CameraAltIcon />
+                {photo ? 'Change Photo' : 'Upload Photo'}
+                <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
+              </label>
+              <button className="idcard-btn idcard-btn-primary" onClick={handleDownload}>
+                <DownloadIcon />
+                Download Card
+              </button>
+              <button className="idcard-btn idcard-btn-success" onClick={handlePrint}>
+                <PrintIcon />
+                Print
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="idcard-empty">
+            <BadgeIcon />
+            <h3>No Student Selected</h3>
+            <p>Select a class, section, and student to generate ID card</p>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

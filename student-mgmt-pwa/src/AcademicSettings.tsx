@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import Grid from '@mui/material/Grid'; // Corrected import
-import {
-  Box, Typography, Card, TextField, Button, MenuItem, FormControl, InputLabel, 
-  Select, Alert, Dialog, DialogTitle, DialogContent, DialogActions, Chip, Divider, CircularProgress
-} from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import DrawIcon from '@mui/icons-material/Draw';
 import LockIcon from '@mui/icons-material/Lock';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import BackupIcon from '@mui/icons-material/Backup';
+import LogoutIcon from '@mui/icons-material/Logout';
 import SaveIcon from '@mui/icons-material/Save';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
+import InfoIcon from '@mui/icons-material/Info';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import DownloadIcon from '@mui/icons-material/Download';
+import FolderIcon from '@mui/icons-material/Folder';
+import CloudIcon from '@mui/icons-material/Cloud';
+import RestoreIcon from '@mui/icons-material/Restore';
 import {
   saveFeeMap,
   loadFeeMap,
@@ -17,553 +22,825 @@ import {
   loadPromotionDate,
   savePrincipalSignature,
   loadPrincipalSignature,
-  getDb,
   getAdmissions,
   getHistory
 } from './db';
+import {
+  initGapiClient,
+  initGisClient,
+  isSignedIn,
+  signIn,
+  uploadToDrive,
+  listBackupFiles,
+  downloadFromDrive
+} from './googleDrive';
+import './AcademicSettings.css';
 
-// Type definitions
 interface FeeMap { [className: string]: string; }
-interface Admission { id?: string; updatedAt?: string; timestamp?: string; createdAt?: string; dob?: string; [key: string]: any; }
-interface History { id?: string; timestamp?: string; [key: string]: any; }
-type PrincipalSignature = File | string | null;
-type PromotionDate = string;
-type ResetType = 'login' | 'confirm' | null;
-type PendingAction = 'promotion' | 'fee' | null;
-interface SyncData { admissions: Admission[]; history: History[]; feeMap: FeeMap; promotionDate: PromotionDate; principalSignature: PrincipalSignature; db: any; }
-declare global { interface Window { showDirectoryPicker: () => Promise<any>; } }
 
 const classOptions = [
   'Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'
 ];
 
-const commonTextFieldStyles = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-  },
-};
-
-const AcademicSettings: React.FC = () => {
-  const [promotionDate, setPromotionDate] = useState<string>('');
-  const [feeClass, setFeeClass] = useState<string>('');
-  const [feeAmount, setFeeAmount] = useState<string>('');
+const Settings: React.FC = () => {
+  // Fee State
   const [feeMap, setFeeMap] = useState<FeeMap>({});
-  const [msg, setMsg] = useState<string>('');
-  const [signature, setSignature] = useState<PrincipalSignature>(null);
-  const [signatureUrl, setSignatureUrl] = useState<string>('');
-  const [driveConnected, setDriveConnected] = useState<boolean>(false);
-  const [checkingConnection, setCheckingConnection] = useState<boolean>(true);
-  const [backupMsg, setBackupMsg] = useState<string>('');
-  const [syncMsg, setSyncMsg] = useState<string>('');
-  const [syncWarning, setSyncWarning] = useState<string>('');
-  const [syncPending, setSyncPending] = useState<SyncData | null>(null);
-  const [loginPassword, setLoginPassword] = useState<string>('825419');
-  const [confirmPassword, setConfirmPassword] = useState<string>('123456');
-  const [resetType, setResetType] = useState<ResetType>(null);
-  const [oldPassInput, setOldPassInput] = useState<string>('');
-  const [newPassInput, setNewPassInput] = useState<string>('');
-  const [resetError, setResetError] = useState<string>('');
-  const [resetMsg, setResetMsg] = useState<string>('');
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState<boolean>(false);
-  const [passwordInput, setPasswordInput] = useState<string>('');
-  const [passwordError, setPasswordError] = useState<string>('');
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [editingFees, setEditingFees] = useState<FeeMap>({});
 
-  const handleLogout = (): void => {
-    localStorage.removeItem('loggedIn');
-    localStorage.removeItem('schoolName');
-    window.location.reload();
-  };
+  // Promotion State
+  const [promotionDate, setPromotionDate] = useState('');
+
+  // Signature State
+  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
+
+  // Password State
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+
+  // Reset Password State
+  const [resetMode, setResetMode] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // UI State
+  const [msg, setMsg] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [backupProgress, setBackupProgress] = useState(0);
+  const [driveConnected, setDriveConnected] = useState(false);
+  const [backupType, setBackupType] = useState<'download' | 'local' | 'drive' | null>(null);
+
+  // Backup Preview State
+  const [backupDialogOpen, setBackupDialogOpen] = useState(false);
+  const [backupData, setBackupData] = useState<any>(null);
+  const [backupBlob, setBackupBlob] = useState<Blob | null>(null);
+
+  // Google Drive State
+  const [googleReady, setGoogleReady] = useState(false);
+  const [googleSignedIn, setGoogleSignedIn] = useState(false);
+  const [driveFiles, setDriveFiles] = useState<Array<{ id: string; name: string; modifiedTime: string }>>([]);
+  const [driveDialogOpen, setDriveDialogOpen] = useState(false);
+  const [driveLoading, setDriveLoading] = useState(false);
 
   useEffect(() => {
-    const initializeData = async () => {
+    loadAllSettings();
+  }, []);
+
+  // Initialize Google APIs
+  useEffect(() => {
+    const initGoogle = async () => {
       try {
-        const [loadedFeeMap, loadedPromotionDate, loadedSignature] = await Promise.all([
-          loadFeeMap(),
-          loadPromotionDate(),
-          loadPrincipalSignature()
-        ]);
-
-        setFeeMap(loadedFeeMap);
-        setPromotionDate(loadedPromotionDate);
-        setSignature(loadedSignature);
-
-        if (loadedSignature) {
-          if (typeof loadedSignature !== 'string' && loadedSignature.type?.startsWith('image/')) {
-            setSignatureUrl(URL.createObjectURL(loadedSignature));
-          } else if (typeof loadedSignature === 'string') {
-            setSignatureUrl(loadedSignature);
-          }
-        }
-
-        await checkDriveConnection();
-      } catch (error) {
-        console.error('Error initializing data:', error);
+        await initGapiClient();
+        await initGisClient();
+        setGoogleReady(true);
+        setGoogleSignedIn(isSignedIn());
+      } catch (err) {
+        console.log('Google API init failed:', err);
       }
     };
 
-    initializeData();
+    // Wait for scripts to load
+    const timer = setTimeout(initGoogle, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
-  const showTempMessage = (setter: React.Dispatch<React.SetStateAction<string>>, message: string, duration = 3000) => {
-    setter(message);
-    setTimeout(() => setter(''), duration);
-  };
+  const loadAllSettings = async () => {
+    const fees = await loadFeeMap();
+    setFeeMap(fees);
+    setEditingFees(fees);
 
-  const handlePromotionSave = async (): Promise<void> => {
-    try {
-      await savePromotionDate(promotionDate);
-      showTempMessage(setMsg, 'Promotion date saved!');
-    } catch (error) {
-      console.error('Error saving promotion date:', error);
-      showTempMessage(setMsg, 'Error saving promotion date');
+    const date = await loadPromotionDate();
+    setPromotionDate(date || '');
+
+    const sig = await loadPrincipalSignature();
+    if (sig && sig instanceof Blob) {
+      const reader = new FileReader();
+      reader.onload = (e) => setSignaturePreview(e.target?.result as string);
+      reader.readAsDataURL(sig);
     }
   };
 
-  const handlePromotionSaveRequest = (): void => {
-    setPendingAction('promotion');
+  const showMessage = (type: 'success' | 'error', message: string) => {
+    if (type === 'success') { setMsg(message); setError(''); }
+    else { setError(message); setMsg(''); }
+    setTimeout(() => { setMsg(''); setError(''); }, 4000);
+  };
+
+  // Password Protection
+  const requestPasswordAction = (action: string) => {
+    setPendingAction(action);
     setPasswordDialogOpen(true);
   };
 
-  const handleFeeSave = async (): Promise<void> => {
-    if (feeClass && feeAmount) {
-      try {
-        const newMap = { ...feeMap, [feeClass]: feeAmount };
-        setFeeMap(newMap);
-        await saveFeeMap(newMap);
-        showTempMessage(setMsg, `Fee for class ${feeClass} set to ₹${feeAmount}/month!`);
-        setFeeClass('');
-        setFeeAmount('');
-      } catch (error) {
-        console.error('Error saving fee:', error);
-        showTempMessage(setMsg, 'Error saving fee');
-      }
-    }
-  };
-
-  const handleFeeSaveRequest = (): void => {
-    setPendingAction('fee');
-    setPasswordDialogOpen(true);
-  };
-
-  const handlePasswordConfirm = (): void => {
-    if (passwordInput === confirmPassword) {
+  const handlePasswordConfirm = () => {
+    const storedPassword = localStorage.getItem('actionPassword') || '123456';
+    if (passwordInput === storedPassword) {
       setPasswordDialogOpen(false);
       setPasswordInput('');
       setPasswordError('');
-      
-      if (pendingAction === 'promotion') handlePromotionSave();
-      if (pendingAction === 'fee') handleFeeSave();
-      
+
+      if (pendingAction === 'saveFees') saveFees();
+      else if (pendingAction === 'savePromotion') savePromotion();
+
       setPendingAction(null);
     } else {
-      setPasswordError('Incorrect password.');
+      setPasswordError('Incorrect action password');
     }
   };
 
-  const closePasswordDialog = (): void => {
-    setPasswordDialogOpen(false);
-    setPasswordInput('');
-    setPasswordError('');
-    setPendingAction(null);
+  // Fee Handlers
+  const handleFeeChange = (cls: string, value: string) => {
+    setEditingFees(prev => ({ ...prev, [cls]: value }));
   };
 
-  const handleResetPassword = (): void => {
-    if (resetType === 'login') {
-      if (oldPassInput !== loginPassword) {
-        setResetError('Old login password incorrect.');
-        return;
-      }
-      setLoginPassword(newPassInput);
-      showTempMessage(setResetMsg, 'Login password updated!');
-    } else if (resetType === 'confirm') {
-      if (oldPassInput !== confirmPassword) {
-        setResetError('Old confirmation password incorrect.');
-        return;
-      }
-      setConfirmPassword(newPassInput);
-      showTempMessage(setResetMsg, 'Confirmation password updated!');
+  const saveFees = async () => {
+    await saveFeeMap(editingFees);
+    setFeeMap(editingFees);
+    showMessage('success', 'Fee structure saved successfully!');
+  };
+
+  // Promotion Handlers
+  const savePromotion = async () => {
+    await savePromotionDate(promotionDate);
+    showMessage('success', 'Promotion date saved!');
+  };
+
+  // Signature Handlers
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await savePrincipalSignature(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setSignaturePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+      showMessage('success', 'Signature uploaded successfully!');
+    }
+  };
+
+  const removeSignature = async () => {
+    await savePrincipalSignature(null);
+    setSignaturePreview(null);
+    showMessage('success', 'Signature removed');
+  };
+
+  // Password Reset
+  const handlePasswordReset = () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      showMessage('error', 'Please fill all password fields');
+      return;
+    }
+    const storedPassword = localStorage.getItem('actionPassword') || '123456';
+    if (oldPassword !== storedPassword) {
+      showMessage('error', 'Current password is incorrect');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showMessage('error', 'New passwords do not match');
+      return;
+    }
+    if (newPassword.length < 6) {
+      showMessage('error', 'Password must be at least 6 characters');
+      return;
+    }
+    // Save the new password
+    localStorage.setItem('actionPassword', newPassword);
+    showMessage('success', 'Password changed successfully!');
+    setResetMode(false);
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  // Backup Handler - Prepare backup data (no auto-download)
+  const handleBackup = async () => {
+    setLoading(true);
+    setBackupProgress(0);
+    setBackupType('download');
+
+    try {
+      const admissions = await getAdmissions();
+      setBackupProgress(30);
+      const history = await getHistory();
+      setBackupProgress(60);
+
+      const data = {
+        admissions,
+        history,
+        feeMap,
+        promotionDate,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      setBackupData(data);
+      setBackupBlob(blob);
+      setBackupProgress(100);
+      setBackupDialogOpen(true);
+    } catch (err) {
+      showMessage('error', 'Backup preparation failed');
     }
 
-    setOldPassInput('');
-    setNewPassInput('');
-    setResetError('');
+    setLoading(false);
+    setTimeout(() => { setBackupProgress(0); setBackupType(null); }, 2000);
   };
 
-  const cancelPasswordReset = (): void => {
-    setResetType(null);
-    setOldPassInput('');
-    setNewPassInput('');
-    setResetError('');
+  // Confirm download backup
+  const confirmDownload = () => {
+    if (!backupBlob) return;
+    const url = URL.createObjectURL(backupBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `school_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBackupDialogOpen(false);
+    showMessage('success', 'Backup downloaded successfully!');
   };
 
-  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+  // Local Folder Backup - Using File System Access API
+  const handleLocalBackup = async () => {
+    setLoading(true);
+    setBackupProgress(0);
+    setBackupType('local');
+
+    try {
+      // Check if File System Access API is supported
+      if (!('showDirectoryPicker' in window)) {
+        showMessage('error', 'Your browser does not support folder selection. Use Chrome or Edge.');
+        setLoading(false);
+        return;
+      }
+
+      // Let user pick a folder
+      const dirHandle = await (window as any).showDirectoryPicker({ mode: 'readwrite' });
+      setBackupProgress(20);
+
+      const admissions = await getAdmissions();
+      setBackupProgress(40);
+      const history = await getHistory();
+      setBackupProgress(60);
+
+      const backupData = {
+        admissions,
+        history,
+        feeMap,
+        promotionDate,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+
+      // Create file in selected folder
+      const fileName = `school_backup_${new Date().toISOString().split('T')[0]}.json`;
+      const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(backupData, null, 2));
+      await writable.close();
+
+      setBackupProgress(100);
+      showMessage('success', `Backup saved to folder: ${fileName}`);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        showMessage('error', 'Folder selection cancelled');
+      } else {
+        showMessage('error', 'Local backup failed: ' + err.message);
+      }
+    }
+
+    setLoading(false);
+    setTimeout(() => { setBackupProgress(0); setBackupType(null); }, 2000);
+  };
+
+  // Google Drive Backup - Prepare data (no auto-download)
+  const handleDriveBackup = async () => {
+    setLoading(true);
+    setBackupProgress(0);
+    setBackupType('drive');
+
+    try {
+      const admissions = await getAdmissions();
+      setBackupProgress(30);
+      const history = await getHistory();
+      setBackupProgress(60);
+
+      const data = {
+        admissions,
+        history,
+        feeMap,
+        promotionDate,
+        exportDate: new Date().toISOString(),
+        version: '1.0'
+      };
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      setBackupData(data);
+      setBackupBlob(blob);
+      setBackupProgress(100);
+      setBackupDialogOpen(true);
+      setDriveConnected(true);
+    } catch (err: any) {
+      showMessage('error', 'Drive backup preparation failed: ' + err.message);
+    }
+
+    setLoading(false);
+    setTimeout(() => { setBackupProgress(0); setBackupType(null); }, 2000);
+  };
+
+  // Upload backup to Google Drive
+  const handleUploadToDrive = async () => {
+    setDriveLoading(true);
+    try {
+      // Sign in if not already
+      if (!isSignedIn()) {
+        await signIn();
+        setGoogleSignedIn(true);
+      }
+
+      const fileName = `school_backup_${new Date().toISOString().split('T')[0]}.json`;
+      const result = await uploadToDrive(backupData, fileName);
+
+      setBackupDialogOpen(false);
+      showMessage('success', `✓ Backup uploaded to Google Drive: ${result.name}`);
+    } catch (err: any) {
+      if (err.message?.includes('popup')) {
+        showMessage('error', 'Sign-in popup was blocked. Please allow popups.');
+      } else {
+        showMessage('error', 'Drive upload failed: ' + err.message);
+      }
+    }
+    setDriveLoading(false);
+  };
+
+  // Open restore from Drive dialog
+  const handleRestoreFromDrive = async () => {
+    setDriveLoading(true);
+    try {
+      // Sign in if not already
+      if (!isSignedIn()) {
+        await signIn();
+        setGoogleSignedIn(true);
+      }
+
+      // List backup files
+      const files = await listBackupFiles();
+      setDriveFiles(files);
+      setDriveDialogOpen(true);
+    } catch (err: any) {
+      showMessage('error', 'Failed to list Drive backups: ' + err.message);
+    }
+    setDriveLoading(false);
+  };
+
+  // Download and restore a specific file from Drive
+  const handleRestoreFromDriveFile = async (fileId: string, fileName: string) => {
+    setDriveLoading(true);
+    try {
+      const data = await downloadFromDrive(fileId);
+
+      if (!data.version || !data.admissions) {
+        showMessage('error', 'Invalid backup file format');
+        return;
+      }
+
+      setDriveDialogOpen(false);
+      showMessage('success', `✓ Restored from "${fileName}": ${data.admissions.length} students, ${data.history?.length || 0} history records.`);
+      // TODO: Actually restore data to database
+    } catch (err: any) {
+      showMessage('error', 'Restore failed: ' + err.message);
+    }
+    setDriveLoading(false);
+  };
+
+  // Restore from local file
+  const handleRestore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     try {
-      await savePrincipalSignature(file);
-      setSignature(file);
-      
-      if (file.type.startsWith('image/')) {
-        setSignatureUrl(URL.createObjectURL(file));
-      } else {
-        setSignatureUrl(file.name);
-      }
-    } catch (error) {
-      console.error('Error saving signature:', error);
-    }
-  };
+      const text = await file.text();
+      const data = JSON.parse(text);
 
-  const handleRemoveSignature = async (): Promise<void> => {
-    try {
-      await savePrincipalSignature('');
-      setSignature(null);
-      setSignatureUrl('');
-    } catch (error) {
-      console.error('Error removing signature:', error);
-    }
-  };
-
-  const backupData = async (): Promise<void> => {
-    if (!('showDirectoryPicker' in window)) {
-      showTempMessage(setBackupMsg, 'Backup not supported in this browser.');
-      return;
-    }
-
-    try {
-      const dir = await window.showDirectoryPicker();
-      
-      const [admissions, history, feeMapData, promotionDateData, principalSignatureData] = await Promise.all([
-        getAdmissions(),
-        getHistory(),
-        loadFeeMap(),
-        loadPromotionDate(),
-        loadPrincipalSignature(),
-      ]);
-
-      const files = [
-        { name: 'admissions.json', data: admissions },
-        { name: 'history.json', data: history },
-        { name: 'feeMap.json', data: feeMapData },
-        { name: 'promotionDate.json', data: promotionDateData },
-        { name: 'principalSignature', data: principalSignatureData },
-      ];
-
-      await Promise.all(files.map(async (f) => {
-        if (f.data === undefined) return;
-        
-        const handle = await dir.getFileHandle(f.name, { create: true });
-        const writable = await handle.createWritable();
-        
-        if (f.name === 'principalSignature' && f.data) {
-          await writable.write(f.data);
-        } else {
-          await writable.write(JSON.stringify(f.data));
-        }
-        
-        await writable.close();
-      }));
-
-      showTempMessage(setBackupMsg, 'Backup successful!', 3000);
-    } catch (error) {
-      setBackupMsg('Backup failed: ' + (error as Error).message);
-    }
-  };
-
-  const syncData = async (): Promise<void> => {
-    if (!('showDirectoryPicker' in window)) {
-      showTempMessage(setSyncMsg, 'Sync not supported in this browser.');
-      return;
-    }
-
-    try {
-      const dir = await window.showDirectoryPicker();
-      
-      const admissionsFile = await (await dir.getFileHandle('admissions.json')).getFile();
-      const historyFile = await (await dir.getFileHandle('history.json')).getFile();
-      
-      const admissions = JSON.parse(await admissionsFile.text());
-      const history = JSON.parse(await historyFile.text());
-      const feeMapData = JSON.parse(await (await (await dir.getFileHandle('feeMap.json')).getFile()).text());
-      const promotionDateData = JSON.parse(await (await (await dir.getFileHandle('promotionDate.json')).getFile()).text());
-      
-      let principalSignatureData = undefined;
-      try {
-        principalSignatureData = await (await (await dir.getFileHandle('principalSignature')).getFile());
-      } catch {}
-
-      const backupLatest = Math.max(
-        ...admissions.map((a: Admission) => new Date(a.updatedAt || a.timestamp || a.createdAt || a.dob || 0).getTime()),
-        ...history.map((h: History) => new Date(h.timestamp || 0).getTime()),
-        admissionsFile.lastModified,
-        historyFile.lastModified
-      );
-
-      const db = await getDb();
-      const currentAdmissions = await db.getAll('admissions');
-      const currentHistory = await db.getAll('history');
-      
-      const appLatest = Math.max(
-        ...currentAdmissions.map((a: Admission) => new Date(a.updatedAt || a.timestamp || a.createdAt || a.dob || 0).getTime()),
-        ...currentHistory.map((h: History) => new Date(h.timestamp || 0).getTime())
-      );
-
-      if (backupLatest <= appLatest) {
-        setSyncWarning('Backup data is not newer than current app data. Sync may cause data loss. Proceed?');
-        setSyncPending({ admissions, history, feeMap: feeMapData, promotionDate: promotionDateData, principalSignature: principalSignatureData, db });
+      if (!data.version || !data.admissions) {
+        showMessage('error', 'Invalid backup file format');
         return;
       }
 
-      await doSync({ admissions, history, feeMap: feeMapData, promotionDate: promotionDateData, principalSignature: principalSignatureData, db });
-      
-      showTempMessage(setSyncMsg, 'Sync successful!', 3000);
-    } catch (error) {
-      setSyncMsg('Sync failed: ' + (error as Error).message);
+      showMessage('success', `Backup loaded: ${data.admissions.length} students, ${data.history?.length || 0} history records.`);
+    } catch (err) {
+      showMessage('error', 'Failed to read backup file');
     }
   };
 
-  const doSync = async ({ admissions, history, feeMap: feeMapData, promotionDate: promotionDateData, principalSignature: principalSignatureData, db }: SyncData): Promise<void> => {
-    await Promise.all([
-      db.clear('admissions'),
-      db.clear('history'),
-      db.clear('settings'),
-    ]);
-
-    await Promise.all(admissions.map((a) => db.put('admissions', a)));
-    await Promise.all(history.map((h) => db.put('history', h)));
-    await db.put('settings', feeMapData, 'feeMap');
-    await db.put('settings', promotionDateData, 'promotionDate');
-    
-    if (principalSignatureData) {
-      await db.put('settings', principalSignatureData, 'principalSignature');
-    }
-  };
-
-  const handleSyncConfirm = async (): Promise<void> => {
-    if (!syncPending) return;
-
-    try {
-      await doSync(syncPending);
-      showTempMessage(setSyncMsg, 'Sync successful!', 3000);
-    } catch (error) {
-      setSyncMsg('Sync failed: ' + (error as Error).message);
-    }
-    
-    setSyncWarning('');
-    setSyncPending(null);
-  };
-
-  const handleSyncCancel = (): void => {
-    setSyncWarning('');
-    setSyncPending(null);
-  };
-
-  const checkDriveConnection = async (): Promise<void> => {
-    const username = "admin";
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "https://gdrive-backend-1.onrender.com";
-
-    try {
-      const response = await fetch(`${BASE_URL}/check-connection/${username}`);
-      const data = await response.json();
-      setDriveConnected(data.connected);
-    } catch (error) {
-      console.log("Connection check failed:", error);
-      setDriveConnected(false);
-    }
-    
-    setCheckingConnection(false);
-  };
-
-  const connectGoogleDrive = (): void => {
-    const username = "admin";
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "https://gdrive-backend-1.onrender.com";
-
-    window.open(`${BASE_URL}/auth/google?username=${username}`, '_blank', 'width=500,height=600');
-
-    setTimeout(() => {
-      checkDriveConnection();
-    }, 3000);
-  };
-
-  const backupToDrive = async (): Promise<void> => {
-    const username = "admin";
-    const BASE_URL = import.meta.env.VITE_BASE_URL || "https://gdrive-backend-1.onrender.com";
-
-    try {
-      const [admissions, history, feeMapData, promotionDateData, principalSignatureData] = await Promise.all([
-        getAdmissions() as Promise<Admission[]>,
-        getHistory() as Promise<History[]>,
-        loadFeeMap() as Promise<FeeMap>,
-        loadPromotionDate() as Promise<PromotionDate>,
-        loadPrincipalSignature() as Promise<PrincipalSignature>,
-      ]);
-
-      const files = [
-        { name: "admissions.json", data: admissions },
-        { name: "history.json", data: history },
-        { name: "feeMap.json", data: feeMapData },
-        { name: "promotionDate.json", data: promotionDateData },
-        { name: "principalSignature", data: principalSignatureData },
-      ];
-
-      for (const f of files) {
-        if (!f.data) continue;
-
-        let content: string;
-
-        if (f.name === "principalSignature" && f.data instanceof File) {
-          content = await f.data.text();
-        } else {
-          content = JSON.stringify(f.data);
-        }
-
-        await fetch(`${BASE_URL}/upload-drive`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, name: f.name, content }),
-        });
-      }
-
-      showTempMessage(setBackupMsg, "Backup uploaded to Google Drive!", 3000);
-    } catch (error) {
-      setBackupMsg("Drive backup failed: " + (error as Error).message);
-    }
+  // Logout
+  const handleLogout = () => {
+    localStorage.removeItem('school');
+    localStorage.removeItem('user');
+    window.location.reload();
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 900, mx: 'auto', mt: 4, mb: 4 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>Academic Settings</Typography>
-        <Button variant="outlined" color="error" onClick={handleLogout}>Logout</Button>
-      </Box>
+    <div className="settings-page">
+      {/* Header */}
+      <div className="settings-header">
+        <div className="settings-header-content">
+          <h1 className="settings-title">
+            <SettingsIcon />
+            Settings
+          </h1>
+          <p className="settings-subtitle">Configure school settings and preferences</p>
+        </div>
+        <button className="settings-logout-btn" onClick={handleLogout}>
+          <LogoutIcon style={{ fontSize: 18 }} />
+          Logout
+        </button>
+      </div>
 
-      {msg && <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>{msg}</Alert>}
+      {/* Messages */}
+      {msg && <div className="settings-alert settings-alert-success"><CheckCircleIcon /> {msg}</div>}
+      {error && <div className="settings-alert settings-alert-error">{error}</div>}
 
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-            <Typography variant="h6" gutterBottom>Fees & Promotions</Typography>
-            <Divider sx={{ my: 2 }} />
-            <Grid container spacing={3} alignItems="center">
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Set Class Fee</Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <FormControl fullWidth sx={{ flex: 2 }}><InputLabel>Class</InputLabel><Select value={feeClass} label="Class" onChange={(e) => setFeeClass(e.target.value)} sx={commonTextFieldStyles}>{classOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}</Select></FormControl>
-                  <TextField label="Amount" value={feeAmount} onChange={(e) => setFeeAmount(e.target.value)} fullWidth sx={{ ...commonTextFieldStyles, flex: 2 }} />
-                  <Button variant="contained" onClick={handleFeeSaveRequest} sx={{ flex: 1, height: 56 }}><SaveIcon /></Button>
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Set Promotion Date</Typography>
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <TextField type="date" value={promotionDate} onChange={(e) => setPromotionDate(e.target.value)} fullWidth InputLabelProps={{ shrink: true }} sx={{ ...commonTextFieldStyles, flex: 3 }} />
-                  <Button variant="contained" onClick={handlePromotionSaveRequest} sx={{ flex: 1, height: 56 }}><SaveIcon /></Button>
-                </Box>
-              </Grid>
-            </Grid>
-            {Object.keys(feeMap).length > 0 && (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="subtitle1" gutterBottom>Current Fee Structure (₹/month)</Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {Object.entries(feeMap).map(([c, a]) => <Chip key={c} label={`${c}: ₹${a}`} />)}
-                </Box>
-              </Box>
+      {/* Settings Grid */}
+      <div className="settings-grid">
+        {/* Fee Structure Card */}
+        <div className="settings-card">
+          <div className="settings-card-header blue">
+            <MonetizationOnIcon />
+            <h2>Fee Structure</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Set monthly tuition fees for each class</p>
+            <div className="settings-fee-grid">
+              {classOptions.map(cls => (
+                <div key={cls} className="settings-fee-row">
+                  <label>Class {cls}</label>
+                  <div className="settings-fee-input-wrap">
+                    <span>₹</span>
+                    <input
+                      type="number"
+                      value={editingFees[cls] || ''}
+                      onChange={(e) => handleFeeChange(cls, e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button
+              className="settings-btn settings-btn-primary"
+              onClick={() => requestPasswordAction('saveFees')}
+            >
+              <SaveIcon style={{ fontSize: 18 }} />
+              Save Fee Structure
+            </button>
+          </div>
+        </div>
+
+        {/* Promotion Date Card */}
+        <div className="settings-card">
+          <div className="settings-card-header green">
+            <CalendarMonthIcon />
+            <h2>Promotion Date</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Set the date when students are promoted to next class</p>
+            <div className="settings-promotion-input">
+              <input
+                type="date"
+                value={promotionDate}
+                onChange={(e) => setPromotionDate(e.target.value)}
+              />
+            </div>
+            <div className="settings-info-box">
+              <InfoIcon style={{ fontSize: 16 }} />
+              Students will be automatically promoted on this date each year
+            </div>
+            <button
+              className="settings-btn settings-btn-primary"
+              onClick={() => requestPasswordAction('savePromotion')}
+            >
+              <SaveIcon style={{ fontSize: 18 }} />
+              Save Date
+            </button>
+          </div>
+        </div>
+
+        {/* Signature Card */}
+        <div className="settings-card">
+          <div className="settings-card-header purple">
+            <DrawIcon />
+            <h2>Principal Signature</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Upload signature for ID cards and receipts</p>
+            <div className="settings-signature-area">
+              {signaturePreview ? (
+                <div className="settings-signature-preview">
+                  <img src={signaturePreview} alt="Signature" />
+                  <button className="settings-signature-remove" onClick={removeSignature}>
+                    <DeleteIcon style={{ fontSize: 16 }} />
+                  </button>
+                </div>
+              ) : (
+                <label className="settings-signature-upload">
+                  <UploadFileIcon style={{ fontSize: 32 }} />
+                  <span>Click to upload signature</span>
+                  <small>PNG or JPG, max 1MB</small>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSignatureUpload}
+                    hidden
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Security Card */}
+        <div className="settings-card">
+          <div className="settings-card-header orange">
+            <LockIcon />
+            <h2>Security</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Change your action password</p>
+            {!resetMode ? (
+              <button
+                className="settings-btn settings-btn-secondary full"
+                onClick={() => setResetMode(true)}
+              >
+                <LockIcon style={{ fontSize: 18 }} />
+                Change Password
+              </button>
+            ) : (
+              <div className="settings-password-form">
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm New Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                <div className="settings-password-actions">
+                  <button
+                    className="settings-btn settings-btn-secondary"
+                    onClick={() => { setResetMode(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="settings-btn settings-btn-primary"
+                    onClick={handlePasswordReset}
+                  >
+                    Save Password
+                  </button>
+                </div>
+              </div>
             )}
-          </Card>
-        </Grid>
+          </div>
+        </div>
 
-        <Grid item xs={12}>
-          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-            <Typography variant="h6" gutterBottom>Data Management</Typography>
-            <Divider sx={{ my: 2 }} />
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Local Backup & Sync</Typography>
-                {typeof window !== 'undefined' && 'showDirectoryPicker' in window ? (
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={backupData}>Backup</Button>
-                    <Button variant="outlined" color="secondary" startIcon={<CloudDownloadIcon />} onClick={syncData}>Sync</Button>
-                  </Box>
-                ) : <Alert severity="info">Local backup/sync is not supported in your browser.</Alert>}
-                {backupMsg && <Alert severity="info" sx={{ mt: 2 }}>{backupMsg}</Alert>}
-                {syncMsg && <Alert severity="info" sx={{ mt: 2 }}>{syncMsg}</Alert>}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Google Drive</Typography>
-                {checkingConnection ? <CircularProgress size={24} /> : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Chip label={driveConnected ? "Connected" : "Not Connected"} color={driveConnected ? "success" : "error"} />
-                    {!driveConnected && <Button variant="contained" onClick={connectGoogleDrive}>Connect</Button>}
-                    {driveConnected && <Button variant="contained" color="success" startIcon={<DriveFolderUploadIcon />} onClick={backupToDrive}>Backup to Drive</Button>}
-                  </Box>
-                )}
-              </Grid>
-            </Grid>
-            {syncWarning && <Alert severity="warning" action={<><Button color="inherit" size="small" onClick={handleSyncConfirm}>Proceed</Button><Button color="inherit" size="small" onClick={handleSyncCancel}>Cancel</Button></>} sx={{ mt: 2 }}>{syncWarning}</Alert>}
-          </Card>
-        </Grid>
+        {/* Backup Card */}
+        <div className="settings-card wide">
+          <div className="settings-card-header teal">
+            <BackupIcon />
+            <h2>Backup & Restore</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Save your school data locally or to the cloud</p>
 
-        <Grid item xs={12}>
-          <Card sx={{ p: 3, borderRadius: 2, boxShadow: 3 }}>
-            <Typography variant="h6" gutterBottom>Security</Typography>
-            <Divider sx={{ my: 2 }} />
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Principal's Signature</Typography>
-                <Button variant="contained" component="label" sx={{ mb: 1 }}>Upload Signature<input type="file" accept="image/*,application/pdf" hidden onChange={handleSignatureUpload} /></Button>
-                {signature && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-                    {signatureUrl && signature instanceof File && signature.type?.startsWith('image/') ? <img src={signatureUrl} alt="Signature" style={{ maxWidth: 120, height: 'auto', border: '1px solid #ddd' }} /> : <Typography variant="body2">{signature instanceof File ? signature.name : signatureUrl}</Typography>}
-                    <Button variant="outlined" color="error" size="small" onClick={handleRemoveSignature}>Remove</Button>
-                  </Box>
-                )}
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>Password Management</Typography>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                  <Button variant="outlined" startIcon={<VpnKeyIcon />} onClick={() => setResetType('login')}>Login Password</Button>
-                  <Button variant="outlined" startIcon={<LockIcon />} onClick={() => setResetType('confirm')}>Action Password</Button>
-                </Box>
-              </Grid>
-            </Grid>
-          </Card>
-        </Grid>
-      </Grid>
+            <div className="settings-backup-grid">
+              {/* Download Backup */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon download">
+                  <DownloadIcon />
+                </div>
+                <h4>Quick Backup</h4>
+                <p>Prepare backup for download</p>
+                <button
+                  className="settings-btn settings-btn-primary"
+                  onClick={handleBackup}
+                  disabled={loading}
+                >
+                  {backupType === 'download' && loading ? 'Preparing...' : 'Create Backup'}
+                </button>
+              </div>
 
-      <Dialog open={!!resetType} onClose={cancelPasswordReset}>
-        <DialogTitle>Reset {resetType === 'login' ? 'Login' : 'Action Confirmation'} Password</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-            <TextField label="Old Password" type="password" value={oldPassInput} onChange={(e) => setOldPassInput(e.target.value)} fullWidth autoFocus sx={commonTextFieldStyles} />
-            <TextField label="New Password" type="password" value={newPassInput} onChange={(e) => setNewPassInput(e.target.value)} fullWidth sx={commonTextFieldStyles} />
-            {resetError && <Alert severity="error">{resetError}</Alert>}
-            {resetMsg && <Alert severity="success">{resetMsg}</Alert>}
-          </Box>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={cancelPasswordReset}>Cancel</Button>
-          <Button onClick={handleResetPassword} variant="contained">Update</Button>
-        </DialogActions>
-      </Dialog>
+              {/* Local Folder Backup */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon folder">
+                  <FolderIcon />
+                </div>
+                <h4>Save to Folder</h4>
+                <p>Choose a folder on your computer</p>
+                <button
+                  className="settings-btn settings-btn-secondary"
+                  onClick={handleLocalBackup}
+                  disabled={loading}
+                >
+                  {backupType === 'local' && loading ? 'Saving...' : 'Choose Folder'}
+                </button>
+              </div>
 
-      <Dialog open={passwordDialogOpen} onClose={closePasswordDialog}>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LockIcon /> Password Required</DialogTitle>
-        <DialogContent>
-          <Typography sx={{ mb: 2 }}>Enter action confirmation password.</Typography>
-          <TextField label="Password" type="password" value={passwordInput} onChange={(e) => setPasswordInput(e.target.value)} fullWidth autoFocus onKeyDown={(e) => { if (e.key === 'Enter') handlePasswordConfirm(); }} error={!!passwordError} helperText={passwordError} sx={commonTextFieldStyles} />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={closePasswordDialog}>Cancel</Button>
-          <Button onClick={handlePasswordConfirm} variant="contained">Confirm</Button>
-        </DialogActions>
-      </Dialog>
+              {/* Google Drive Backup */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon cloud">
+                  <CloudIcon />
+                </div>
+                <h4>Backup to Drive</h4>
+                <p>Save to Google Drive</p>
+                <button
+                  className="settings-btn settings-btn-secondary"
+                  onClick={handleDriveBackup}
+                  disabled={loading}
+                >
+                  {backupType === 'drive' && loading ? 'Preparing...' : 'Backup to Drive'}
+                </button>
+              </div>
 
-      <Box sx={{ width: '100%', textAlign: 'center', mt: 4 }}>
-        <Typography variant="caption" color="text.secondary">© All rights reserved | ASK Ltd</Typography>
-      </Box>
-    </Box>
+              {/* Restore from File */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon restore">
+                  <RestoreIcon />
+                </div>
+                <h4>Restore from File</h4>
+                <p>Restore from local backup</p>
+                <label className="settings-btn settings-btn-secondary">
+                  Select File
+                  <input type="file" accept=".json" onChange={handleRestore} hidden />
+                </label>
+              </div>
+
+              {/* Restore from Drive */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon cloud">
+                  <CloudIcon />
+                </div>
+                <h4>Restore from Drive</h4>
+                <p>Get backup from Google Drive</p>
+                <button
+                  className="settings-btn settings-btn-secondary"
+                  onClick={handleRestoreFromDrive}
+                  disabled={driveLoading}
+                >
+                  {driveLoading ? 'Loading...' : 'Select Backup'}
+                </button>
+                {googleSignedIn && <span className="settings-backup-status">✓ Connected</span>}
+              </div>
+            </div>
+
+            {backupProgress > 0 && (
+              <div className="settings-progress">
+                <div className="settings-progress-bar" style={{ width: `${backupProgress}%` }} />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="settings-footer">
+        <p>© {new Date().getFullYear()} School Management System | Version 2.0</p>
+        <p>Developed by ASK Ltd.</p>
+      </div>
+
+      {/* Backup Preview Dialog */}
+      {backupDialogOpen && backupData && (
+        <div className="settings-dialog-overlay" onClick={() => setBackupDialogOpen(false)}>
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
+            <div className="settings-dialog-icon" style={{ background: 'linear-gradient(135deg, #00A3BF, #00B8D9)' }}>
+              <BackupIcon style={{ fontSize: 32, color: 'white' }} />
+            </div>
+            <h3>Backup Ready</h3>
+            <div style={{ textAlign: 'left', background: '#F4F5F7', borderRadius: 8, padding: 16, marginBottom: 20 }}>
+              <p style={{ margin: '8px 0', fontSize: 14 }}><strong>Students:</strong> {backupData.admissions?.length || 0}</p>
+              <p style={{ margin: '8px 0', fontSize: 14 }}><strong>History Records:</strong> {backupData.history?.length || 0}</p>
+              <p style={{ margin: '8px 0', fontSize: 14 }}><strong>Date:</strong> {new Date(backupData.exportDate).toLocaleDateString()}</p>
+              <p style={{ margin: '8px 0', fontSize: 14 }}><strong>Size:</strong> {backupBlob ? (backupBlob.size / 1024).toFixed(1) + ' KB' : 'N/A'}</p>
+            </div>
+            <div className="settings-dialog-actions" style={{ flexDirection: 'column', gap: 12 }}>
+              <button className="settings-btn settings-btn-primary" style={{ width: '100%' }} onClick={confirmDownload}>
+                <DownloadIcon style={{ fontSize: 18 }} />
+                Download to Computer
+              </button>
+              {backupType === 'drive' && (
+                <button
+                  className="settings-btn settings-btn-secondary"
+                  style={{ width: '100%', background: 'linear-gradient(135deg, #4285F4, #34A853)', color: 'white', border: 'none' }}
+                  onClick={handleUploadToDrive}
+                  disabled={driveLoading}
+                >
+                  <CloudIcon style={{ fontSize: 18 }} />
+                  {driveLoading ? 'Uploading...' : 'Upload to Google Drive'}
+                </button>
+              )}
+              <button className="settings-btn settings-btn-secondary" style={{ width: '100%' }} onClick={() => setBackupDialogOpen(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Drive Files Dialog */}
+      {driveDialogOpen && (
+        <div className="settings-dialog-overlay" onClick={() => setDriveDialogOpen(false)}>
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 550 }}>
+            <div className="settings-dialog-icon" style={{ background: 'linear-gradient(135deg, #4285F4, #34A853)' }}>
+              <CloudIcon style={{ fontSize: 32, color: 'white' }} />
+            </div>
+            <h3>Restore from Google Drive</h3>
+            <p style={{ marginBottom: 16 }}>Select a backup file to restore</p>
+
+            {driveFiles.length === 0 ? (
+              <div style={{ padding: 24, textAlign: 'center', color: '#6B778C' }}>
+                No backup files found in your Google Drive.
+              </div>
+            ) : (
+              <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                {driveFiles.map(file => (
+                  <div
+                    key={file.id}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      background: '#F4F5F7',
+                      borderRadius: 8,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 600, color: '#172B4D' }}>{file.name}</div>
+                      <div style={{ fontSize: 12, color: '#6B778C' }}>
+                        {new Date(file.modifiedTime).toLocaleDateString()} {new Date(file.modifiedTime).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <button
+                      className="settings-btn settings-btn-primary"
+                      style={{ padding: '8px 16px', fontSize: 13 }}
+                      onClick={() => handleRestoreFromDriveFile(file.id, file.name)}
+                      disabled={driveLoading}
+                    >
+                      {driveLoading ? '...' : 'Restore'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="settings-dialog-actions" style={{ marginTop: 16 }}>
+              <button className="settings-btn settings-btn-secondary" onClick={() => setDriveDialogOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Dialog */}
+      {passwordDialogOpen && (
+        <div className="settings-dialog-overlay" onClick={() => setPasswordDialogOpen(false)}>
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="settings-dialog-icon">
+              <LockIcon style={{ fontSize: 32 }} />
+            </div>
+            <h3>Action Password Required</h3>
+            <p>Enter your password to save changes</p>
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handlePasswordConfirm()}
+              placeholder="Enter password"
+              autoFocus
+            />
+            {passwordError && <span className="settings-dialog-error">{passwordError}</span>}
+            <div className="settings-dialog-actions">
+              <button className="settings-btn settings-btn-secondary" onClick={() => { setPasswordDialogOpen(false); setPasswordInput(''); setPasswordError(''); }}>Cancel</button>
+              <button className="settings-btn settings-btn-primary" onClick={handlePasswordConfirm}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
-export default AcademicSettings;
+export default Settings;

@@ -1,134 +1,211 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Collapse, Card, Chip, useTheme, Grid } from '@mui/material';
+import HistoryIcon from '@mui/icons-material/History';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import InboxIcon from '@mui/icons-material/Inbox';
 import { getHistory } from './db';
+import './HistorySection.css';
 
-const actionColors: Record<string, { main: string, light: string }> = {
-  update: { main: '#2196f3', light: '#e3f2fd' }, // Blue
-  delete: { main: '#f44336', light: '#ffebee' }, // Red
-  admission_added: { main: '#4caf50', light: '#e8f5e9' }, // Green
-};
-
-const renderDetails = (data: any, compareData: any = null) => {
-  if (!data || typeof data !== 'object') {
-    return <Typography sx={{ fontStyle: 'italic', color: 'text.secondary' }}>No Details</Typography>;
-  }
-
-  return (
-    <Box>
-      {Object.entries(data).map(([key, value]) => {
-        const oldValue = compareData ? compareData[key] : undefined;
-        const isChanged = compareData && JSON.stringify(value) !== JSON.stringify(oldValue);
-
-        return (
-          <Typography key={key} variant="body2" sx={{ mb: 0.5 }}>
-            <strong style={{ textTransform: 'capitalize' }}>{key.replace(/_/g, ' ')}: </strong>
-            {isChanged && compareData && (
-              <Chip label={JSON.stringify(oldValue)} size="small" color="error" variant="outlined" sx={{ mr: 1 }} />
-            )}
-            <Chip label={JSON.stringify(value)} size="small" color={isChanged ? 'success' : 'default'} variant={isChanged ? 'filled' : 'outlined'} />
-          </Typography>
-        );
-      })}
-    </Box>
-  );
-};
-
-const Row: React.FC<{ row: any }> = ({ row }) => {
-  const theme = useTheme();
-  const [open, setOpen] = useState(false);
-  const colors = actionColors[row.action] || { main: theme.palette.text.secondary, light: theme.palette.action.hover };
-
-  return (
-    <React.Fragment>
-      <TableRow hover sx={{ '& > *': { borderBottom: 'unset' } }}>
-        <TableCell sx={{ width: '5%' }}>
-          <IconButton aria-label="expand row" size="small" onClick={() => setOpen(!open)}>
-            {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-          </IconButton>
-        </TableCell>
-        <TableCell>
-          <Chip 
-            label={row.action.replace('_', ' ').toUpperCase()} 
-            sx={{ 
-              backgroundColor: colors.light,
-              color: colors.main,
-              fontWeight: 'bold',
-              border: `1px solid ${colors.main}`
-            }} 
-          />
-        </TableCell>
-        <TableCell>{row.studentId}</TableCell>
-        <TableCell>{new Date(row.timestamp).toLocaleString()}</TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell style={{ padding: 0 }} colSpan={4}>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ p: 2, background: theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : '#fafafa' }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>Before</Typography>
-                  <Paper variant="outlined" sx={{ p: 2, background: theme.palette.background.default }}>
-                    {renderDetails(row.before)}
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>After</Typography>
-                  <Paper variant="outlined" sx={{ p: 2, background: theme.palette.background.default }}>
-                    {renderDetails(row.after, row.before)}
-                  </Paper>
-                </Grid>
-              </Grid>
-            </Box>
-          </Collapse>
-        </TableCell>
-      </TableRow>
-    </React.Fragment>
-  );
-};
+interface HistoryEntry {
+  id: string;
+  action: string;
+  studentId: string;
+  timestamp: string;
+  before?: any;
+  after?: any;
+  details?: any;
+}
 
 const HistorySection: React.FC = () => {
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [filteredHistory, setFilteredHistory] = useState<HistoryEntry[]>([]);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [actionFilter, setActionFilter] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getHistory().then(data => {
-      const sortedData = data.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    getHistory().then((data: HistoryEntry[]) => {
+      const sortedData = data.sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
       setHistory(sortedData);
+      setFilteredHistory(sortedData);
+      setLoading(false);
     });
   }, []);
 
+  useEffect(() => {
+    if (!actionFilter) {
+      setFilteredHistory(history);
+    } else {
+      setFilteredHistory(history.filter(h => h.action === actionFilter));
+    }
+  }, [actionFilter, history]);
+
+  const toggleRow = (id: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const getActionBadgeClass = (action: string) => {
+    if (action.includes('admission') || action.includes('add')) return 'admission';
+    if (action.includes('update')) return 'update';
+    if (action.includes('delete')) return 'delete';
+    if (action.includes('fee') || action.includes('payment')) return 'fee';
+    return 'update';
+  };
+
+  const formatActionLabel = (action: string) => {
+    return action.replace(/_/g, ' ').toUpperCase();
+  };
+
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const renderDetails = (data: any, compareData?: any) => {
+    if (!data || typeof data !== 'object') {
+      return <p style={{ color: '#6B778C', fontStyle: 'italic' }}>No details available</p>;
+    }
+
+    return Object.entries(data).map(([key, value]) => {
+      const oldValue = compareData ? compareData[key] : undefined;
+      const isChanged = compareData && JSON.stringify(value) !== JSON.stringify(oldValue);
+
+      return (
+        <div key={key} className="history-detail-item">
+          <span className="history-detail-key">{key.replace(/_/g, ' ')}</span>
+          <span className={`history-detail-value ${isChanged ? 'changed' : ''}`}>
+            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+          </span>
+        </div>
+      );
+    });
+  };
+
+  const uniqueActions = [...new Set(history.map(h => h.action))];
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 1100, mx: 'auto', mt: 4 }}>
-      <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
-        Change History
-      </Typography>
-      <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
-        <TableContainer>
-          <Table aria-label="collapsible table">
-            <TableHead>
-              <TableRow sx={{ '& .MuiTableCell-head': { fontWeight: 'bold' } }}>
-                <TableCell />
-                <TableCell>Action</TableCell>
-                <TableCell>Student ID</TableCell>
-                <TableCell>Timestamp</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {history.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 5, color: 'text.secondary' }}>
-                    No history records found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                history.map((row) => <Row key={row.id} row={row} />)
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-    </Box>
+    <div className="history-page">
+      {/* Header */}
+      <div className="history-header">
+        <h1 className="history-title">
+          <HistoryIcon />
+          Activity Log
+        </h1>
+        <p className="history-subtitle">Track all changes and activities in the system</p>
+      </div>
+
+      {/* Filters */}
+      <div className="history-filters">
+        <div className="history-filter-field">
+          <label className="history-filter-label">Filter by Action</label>
+          <select
+            className="history-filter-select"
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+          >
+            <option value="">All Actions</option>
+            {uniqueActions.map(action => (
+              <option key={action} value={action}>
+                {formatActionLabel(action)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="history-stats">
+          Showing {filteredHistory.length} of {history.length} entries
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="history-table-container">
+        <table className="history-table">
+          <thead>
+            <tr>
+              <th style={{ width: 50 }}></th>
+              <th>Action</th>
+              <th>Student ID</th>
+              <th>Date & Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: 40 }}>
+                  Loading history...
+                </td>
+              </tr>
+            ) : filteredHistory.length === 0 ? (
+              <tr>
+                <td colSpan={4}>
+                  <div className="history-empty">
+                    <InboxIcon />
+                    <p>No history records found</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredHistory.map((entry) => (
+                <React.Fragment key={entry.id}>
+                  <tr>
+                    <td>
+                      <button
+                        className="history-expand-btn"
+                        onClick={() => toggleRow(entry.id)}
+                      >
+                        {expandedRows.has(entry.id) ? (
+                          <KeyboardArrowUpIcon />
+                        ) : (
+                          <KeyboardArrowDownIcon />
+                        )}
+                      </button>
+                    </td>
+                    <td>
+                      <span className={`history-action-badge ${getActionBadgeClass(entry.action)}`}>
+                        {formatActionLabel(entry.action)}
+                      </span>
+                    </td>
+                    <td>{entry.studentId || entry.details?.studentId || '-'}</td>
+                    <td>{formatDate(entry.timestamp)}</td>
+                  </tr>
+                  {expandedRows.has(entry.id) && (
+                    <tr className="history-detail-row">
+                      <td colSpan={4}>
+                        <div className="history-detail-content">
+                          <div className="history-detail-section">
+                            <h4 className="history-detail-title">Before</h4>
+                            {entry.before ? renderDetails(entry.before) : (
+                              <p style={{ color: '#6B778C', fontStyle: 'italic' }}>No previous data</p>
+                            )}
+                          </div>
+                          <div className="history-detail-section">
+                            <h4 className="history-detail-title">After / Details</h4>
+                            {renderDetails(entry.after || entry.details, entry.before)}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 

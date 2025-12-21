@@ -1,465 +1,324 @@
-import { useState, useEffect } from 'react';
-import { Box, Card, Typography, LinearProgress, CircularProgress } from '@mui/material';
-import { 
-  School, 
-  Payment, 
-  AccountBalanceWallet, 
-  TrendingUp,
-  Group,
-  AttachMoney
-} from '@mui/icons-material';
-
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: string;
-  percentage?: number;
-  mode: 'light' | 'dark';
-}
-
-const StatCard = ({ title, value, icon, color, percentage, mode }: StatCardProps) => (
-  <Card sx={{ 
-    p: { xs: 2, sm: 3 }, 
-    borderRadius: 3, 
-    background: `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`,
-    border: `1px solid ${color}40`,
-    position: 'relative',
-    overflow: 'hidden',
-    boxShadow: mode === 'dark' 
-      ? '0 4px 12px rgba(0,0,0,0.3)' 
-      : '0 4px 12px rgba(0,0,0,0.1)',
-    backgroundColor: mode === 'dark' 
-      ? 'rgba(30, 30, 30, 0.8)' 
-      : 'rgba(255, 255, 255, 0.9)',
-    '&::before': {
-      content: '""',
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '4px',
-      background: color,
-    }
-  }}>
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-      <Box>
-        <Typography variant="h4" fontWeight="bold" sx={{ 
-          color: color, 
-          textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-          fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
-        }}>
-          {value}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ 
-          mt: 0.5, 
-          color: mode === 'dark' ? '#ffffff' : '#1a202c', 
-          fontWeight: 600,
-          fontSize: { xs: '0.875rem', sm: '1rem' }
-        }}>
-          {title}
-        </Typography>
-        {percentage !== undefined && (
-          <Box sx={{ mt: 2 }}>
-            <LinearProgress 
-              variant="determinate" 
-              value={isNaN(percentage) ? 0 : Math.min(Math.max(percentage, 0), 100)} 
-              sx={{ 
-                height: 8, 
-                borderRadius: 4,
-                backgroundColor: `${color}20`,
-                '& .MuiLinearProgress-bar': {
-                  backgroundColor: color,
-                  borderRadius: 4
-                }
-              }} 
-            />
-            <Typography variant="caption" sx={{ 
-              mt: 0.5, 
-              display: 'block', 
-              color: mode === 'dark' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(26, 32, 44, 0.8)', 
-              fontWeight: 500 
-            }}>
-              {isNaN(percentage) ? '0.0' : percentage.toFixed(1)}% of target
-            </Typography>
-          </Box>
-        )}
-      </Box>
-      <Box sx={{ 
-        color: color, 
-        opacity: 0.7,
-        display: { xs: 'none', sm: 'block' }
-      }}>
-        {icon}
-      </Box>
-    </Box>
-  </Card>
-);
-
-const ClassChart = ({ classData, mode }: { classData: any[], mode: 'light' | 'dark' }) => {
-  const maxStudents = Math.max(...classData.map(c => c.count));
-  
-  return (
-    <Card sx={{ 
-      p: { xs: 2, sm: 3 }, 
-      borderRadius: 3,
-      backgroundColor: mode === 'dark' 
-        ? 'rgba(30, 30, 30, 0.8)' 
-        : 'rgba(255, 255, 255, 0.9)',
-      boxShadow: mode === 'dark' 
-        ? '0 4px 12px rgba(0,0,0,0.3)' 
-        : '0 4px 12px rgba(0,0,0,0.1)',
-    }}>
-      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{
-        color: mode === 'dark' ? '#ffffff' : '#1a202c'
-      }}>
-        📊 Class-wise Distribution
-      </Typography>
-      <Box sx={{ mt: 2 }}>
-        {classData.map((classItem, index) => (
-          <Box key={index} sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" fontWeight="medium" sx={{
-                color: mode === 'dark' ? '#ffffff' : '#1a202c'
-              }}>
-                {classItem.class}
-              </Typography>
-              <Typography variant="body2" color="primary">
-                {classItem.count} students
-              </Typography>
-            </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={(classItem.count / maxStudents) * 100} 
-              sx={{ 
-                height: 8, 
-                borderRadius: 4,
-                backgroundColor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0',
-                '& .MuiLinearProgress-bar': {
-                  background: `linear-gradient(45deg, #2196F3 ${index * 20}%, #21CBF3 ${100 - index * 10}%)`,
-                  borderRadius: 4
-                }
-              }} 
-            />
-          </Box>
-        ))}
-      </Box>
-    </Card>
-  );
-};
+import React, { useState, useEffect } from 'react';
+import SchoolIcon from '@mui/icons-material/School';
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import GroupIcon from '@mui/icons-material/Group';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PeopleIcon from '@mui/icons-material/People';
+import WarningIcon from '@mui/icons-material/Warning';
+import { getAdmissions, loadFeeMap } from './db';
+import './Statistics.css';
 
 interface StatisticsProps {
   mode: 'light' | 'dark';
 }
 
-const Statistics = ({ mode }: StatisticsProps) => {
-  const [stats, setStats] = useState<any>(null);
+interface StatCardData {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  color: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'teal';
+  trend?: { direction: 'up' | 'down' | 'neutral'; text: string };
+}
+
+interface ClassData {
+  class: string;
+  count: number;
+  percentage: number;
+}
+
+const Statistics: React.FC<StatisticsProps> = ({ mode }) => {
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    totalFeeCollected: 0,
+    thisMonthAdmissions: 0,
+    lastMonthAdmissions: 0,
+    totalDues: 0,
+    maleCount: 0,
+    femaleCount: 0,
+    avgFeePerStudent: 0,
+    collectionRate: 0,
+  });
+  const [classData, setClassData] = useState<ClassData[]>([]);
+  const [topClasses, setTopClasses] = useState<ClassData[]>([]);
 
   useEffect(() => {
-    async function fetchStats() {
-      try {
-        // Get admissions and fee map from local storage
-        const admissions = await (await import('./db')).getAdmissions();
-        
-        let totalStudents = admissions.length;
-        let totalFee = 0;
-        let totalDues = 0;
-        let classStats: { [key: string]: number } = {};
-        let maleCount = 0;
-        let femaleCount = 0;
-        
-        admissions.forEach(student => {
-          // Sum all payments
-          if (Array.isArray(student.feeHistory)) {
-            totalFee += student.feeHistory.reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
-          }
-          totalDues += Number(student.dues) || 0;
-          
-          // Class statistics
-          const className = student.class || 'Unknown';
-          classStats[className] = (classStats[className] || 0) + 1;
-          
-          // Gender statistics
-          if (student.gender?.toLowerCase() === 'male') maleCount++;
-          else if (student.gender?.toLowerCase() === 'female') femaleCount++;
-        });
-        
-        const classData = Object.entries(classStats).map(([className, count]) => ({
-          class: className,
-          count: count
-        })).sort((a, b) => b.count - a.count);
-        
-        const collectionRate = (totalFee + totalDues) > 0 ? ((totalFee / (totalFee + totalDues)) * 100) : 0;
-        
-        setStats({ 
-          totalStudents, 
-          totalFee, 
-          totalDues,
-          classData,
-          maleCount,
-          femaleCount,
-          collectionRate
-        });
-      } catch (e) {
-        console.error('Error fetching statistics:', e);
-        setStats(null);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchStats();
   }, []);
 
+  const fetchStats = async () => {
+    try {
+      const students = await getAdmissions();
+      const feeMap = await loadFeeMap();
+
+      const now = new Date();
+      const thisMonth = now.getMonth();
+      const thisYear = now.getFullYear();
+      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+
+      let totalFee = 0;
+      let totalDuesAmount = 0;
+      let thisMonthCount = 0;
+      let lastMonthCount = 0;
+      let maleCount = 0;
+      let femaleCount = 0;
+      const classCountMap: { [key: string]: number } = {};
+
+      students.forEach((student: any) => {
+        // Count by class
+        classCountMap[student.class] = (classCountMap[student.class] || 0) + 1;
+
+        // Count gender
+        if (student.gender?.toLowerCase() === 'male') maleCount++;
+        else if (student.gender?.toLowerCase() === 'female') femaleCount++;
+
+        // Count admissions by month
+        const admissionDate = new Date(student.createdAt || student.timestamp);
+        if (admissionDate.getMonth() === thisMonth && admissionDate.getFullYear() === thisYear) {
+          thisMonthCount++;
+        }
+        if (admissionDate.getMonth() === lastMonth && admissionDate.getFullYear() === lastMonthYear) {
+          lastMonthCount++;
+        }
+
+        // Calculate fees collected
+        if (student.feeHistory && Array.isArray(student.feeHistory)) {
+          student.feeHistory.forEach((payment: any) => {
+            totalFee += Number(payment.amount) || 0;
+          });
+        }
+
+        // Calculate pending dues
+        const classFee = Number(feeMap[student.class]) || 0;
+        const expectedTotal = classFee * 12; // Full year
+        const paidTotal = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+        totalDuesAmount += Math.max(0, expectedTotal - paidTotal);
+      });
+
+      // Calculate class data with percentages
+      const totalStudents = students.length;
+      const classDataArray: ClassData[] = Object.entries(classCountMap)
+        .map(([cls, count]) => ({
+          class: cls,
+          count,
+          percentage: totalStudents > 0 ? (count / totalStudents) * 100 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // Calculate collection rate
+      const expectedYearlyTotal = students.reduce((sum: number, s: any) => {
+        return sum + (Number(feeMap[s.class]) || 0) * 12;
+      }, 0);
+      const collectionRate = expectedYearlyTotal > 0 ? (totalFee / expectedYearlyTotal) * 100 : 0;
+
+      setStats({
+        totalStudents,
+        totalFeeCollected: totalFee,
+        thisMonthAdmissions: thisMonthCount,
+        lastMonthAdmissions: lastMonthCount,
+        totalDues: totalDuesAmount,
+        maleCount,
+        femaleCount,
+        avgFeePerStudent: totalStudents > 0 ? Math.round(totalFee / totalStudents) : 0,
+        collectionRate: Math.round(collectionRate),
+      });
+
+      setClassData(classDataArray);
+      setTopClasses(classDataArray.slice(0, 5));
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      setLoading(false);
+    }
+  };
+
+  const getAdmissionTrend = () => {
+    const diff = stats.thisMonthAdmissions - stats.lastMonthAdmissions;
+    if (diff > 0) return { direction: 'up' as const, text: `+${diff} from last month` };
+    if (diff < 0) return { direction: 'down' as const, text: `${diff} from last month` };
+    return { direction: 'neutral' as const, text: 'Same as last month' };
+  };
+
+  const statCards: StatCardData[] = [
+    {
+      title: 'Total Students',
+      value: stats.totalStudents,
+      icon: <SchoolIcon />,
+      color: 'blue',
+    },
+    {
+      title: 'This Month Admissions',
+      value: stats.thisMonthAdmissions,
+      icon: <CalendarTodayIcon />,
+      color: 'green',
+      trend: getAdmissionTrend(),
+    },
+    {
+      title: 'Total Fee Collected',
+      value: `₹${stats.totalFeeCollected.toLocaleString()}`,
+      icon: <MonetizationOnIcon />,
+      color: 'purple',
+    },
+    {
+      title: 'Pending Dues',
+      value: `₹${stats.totalDues.toLocaleString()}`,
+      icon: <WarningIcon />,
+      color: 'red',
+    },
+    {
+      title: 'Collection Rate',
+      value: `${stats.collectionRate}%`,
+      icon: <TrendingUpIcon />,
+      color: 'teal',
+    },
+    {
+      title: 'Avg. Fee / Student',
+      value: `₹${stats.avgFeePerStudent.toLocaleString()}`,
+      icon: <AssessmentIcon />,
+      color: 'orange',
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="stats-page">
+        <div className="stats-header">
+          <h1 className="stats-title">
+            <AssessmentIcon />
+            Statistics Dashboard
+          </h1>
+        </div>
+        <div style={{ textAlign: 'center', padding: 40, color: '#6B778C' }}>
+          Loading statistics...
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Box sx={{ 
-      p: { xs: 2, sm: 3 }, 
-      maxWidth: 1200, 
-      mx: 'auto',
-      color: mode === 'dark' ? '#ffffff' : '#1a202c'
-    }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
-        mb: 3,
-        color: mode === 'dark' ? '#ffffff' : '#1a202c',
-        fontSize: { xs: '1.75rem', sm: '2rem', md: '2.125rem' }
-      }}>
-        📊 School Statistics Dashboard
-      </Typography>
-      
-      {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300 }}>
-          <CircularProgress size={60} />
-          <Typography variant="h6" sx={{ 
-            ml: 2,
-            color: mode === 'dark' ? '#ffffff' : '#1a202c'
-          }}>Loading statistics...</Typography>
-        </Box>
-      ) : stats ? (
-        <Box>
-          {/* Main Statistics Cards */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { 
-              xs: '1fr', 
-              sm: 'repeat(2, 1fr)', 
-              md: 'repeat(4, 1fr)' 
-            },
-            gap: 3,
-            mb: 4 
-          }}>
-            <StatCard
-              title="Total Students"
-              value={stats.totalStudents}
-              icon={<Group sx={{ fontSize: 48 }} />}
-              color="#2196F3"
-              percentage={Math.min((stats.totalStudents / 1000) * 100, 100)}
-              mode={mode}
-            />
-            
-            <StatCard
-              title="Fee Collected"
-              value={`₹${stats.totalFee.toLocaleString()}`}
-              icon={<Payment sx={{ fontSize: 48 }} />}
-              color="#4CAF50"
-              percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
-              mode={mode}
-            />
-            
-            <StatCard
-              title="Outstanding Dues"
-              value={`₹${stats.totalDues.toLocaleString()}`}
-              icon={<AccountBalanceWallet sx={{ fontSize: 48 }} />}
-              color="#FF9800"
-              percentage={isNaN(stats.collectionRate) ? 0 : Math.max(100 - stats.collectionRate, 0)}
-              mode={mode}
-            />
-            
-            <StatCard
-              title="Collection Rate"
-              value={`${isNaN(stats.collectionRate) ? '0.0' : stats.collectionRate.toFixed(1)}%`}
-              icon={<TrendingUp sx={{ fontSize: 48 }} />}
-              color="#9C27B0"
-              percentage={isNaN(stats.collectionRate) ? 0 : stats.collectionRate}
-              mode={mode}
-            />
-          </Box>
+    <div className="stats-page">
+      {/* Header */}
+      <div className="stats-header">
+        <h1 className="stats-title">
+          <AssessmentIcon />
+          Statistics Dashboard
+        </h1>
+        <p className="stats-subtitle">Overview of school performance and metrics</p>
+      </div>
 
-          {/* Charts Section */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-            gap: 3,
-            mb: 4 
-          }}>
-            <ClassChart classData={stats.classData} mode={mode} />
-            
-            <Box>
-              <Card sx={{ 
-                p: { xs: 2, sm: 3 }, 
-                borderRadius: 3,
-                backgroundColor: mode === 'dark' 
-                  ? 'rgba(30, 30, 30, 0.8)' 
-                  : 'rgba(255, 255, 255, 0.9)',
-                boxShadow: mode === 'dark' 
-                  ? '0 4px 12px rgba(0,0,0,0.3)' 
-                  : '0 4px 12px rgba(0,0,0,0.1)',
-              }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom sx={{
-                  color: mode === 'dark' ? '#ffffff' : '#1a202c'
-                }}>
-                  👥 Gender Distribution
-                </Typography>
-                <Box sx={{ mt: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Box sx={{ 
-                      width: 20, 
-                      height: 20, 
-                      borderRadius: '50%', 
-                      background: '#2196F3',
-                      mr: 2 
-                    }} />
-                    <Typography variant="body2" sx={{ 
-                      flex: 1,
-                      color: mode === 'dark' ? '#ffffff' : '#1a202c'
-                    }}>Male Students</Typography>
-                    <Typography variant="h6" color="primary">{stats.maleCount}</Typography>
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Box sx={{ 
-                      width: 20, 
-                      height: 20, 
-                      borderRadius: '50%', 
-                      background: '#E91E63',
-                      mr: 2 
-                    }} />
-                    <Typography variant="body2" sx={{ 
-                      flex: 1,
-                      color: mode === 'dark' ? '#ffffff' : '#1a202c'
-                    }}>Female Students</Typography>
-                    <Typography variant="h6" sx={{ color: '#E91E63' }}>{stats.femaleCount}</Typography>
-                  </Box>
+      {/* Stat Cards Grid */}
+      <div className="stats-cards-grid">
+        {statCards.map((card, index) => (
+          <div key={index} className="stat-card">
+            <div className={`stat-card-icon ${card.color}`}>
+              {card.icon}
+            </div>
+            <div className="stat-card-content">
+              <p className="stat-card-label">{card.title}</p>
+              <h3 className="stat-card-value">{card.value}</h3>
+              {card.trend && (
+                <div className={`stat-card-trend ${card.trend.direction}`}>
+                  {card.trend.direction === 'up' && <TrendingUpIcon style={{ fontSize: 14 }} />}
+                  {card.trend.direction === 'down' && <TrendingDownIcon style={{ fontSize: 14 }} />}
+                  {card.trend.text}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
 
-                  {/* Simple Pie Chart Visualization */}
-                  <Box sx={{ 
-                    display: 'flex', 
-                    height: 20, 
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                    background: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#f0f0f0'
-                  }}>
-                    <Box sx={{ 
-                      width: `${(stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100}%`,
-                      background: '#2196F3',
-                      transition: 'width 1s ease'
-                    }} />
-                    <Box sx={{ 
-                      width: `${(stats.femaleCount / (stats.maleCount + stats.femaleCount)) * 100}%`,
-                      background: '#E91E63',
-                      transition: 'width 1s ease'
-                    }} />
-                  </Box>
-                  
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                    <Typography variant="caption" sx={{
-                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
-                    }}>
-                      {((stats.maleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
-                    </Typography>
-                    <Typography variant="caption" sx={{
-                      color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
-                    }}>
-                      {((stats.femaleCount / (stats.maleCount + stats.femaleCount)) * 100).toFixed(1)}%
-                    </Typography>
-                  </Box>
-                </Box>
-              </Card>
-            </Box>
-          </Box>
+      {/* Two Column Layout */}
+      <div className="stats-two-col">
+        {/* Students by Class */}
+        <div className="stats-section">
+          <h2 className="stats-section-title">
+            <GroupIcon />
+            Students by Class
+          </h2>
+          <div className="stats-chart">
+            {classData.map((item) => (
+              <div key={item.class} className="stats-bar">
+                <span className="stats-bar-label">{item.class}</span>
+                <div className="stats-bar-track">
+                  <div
+                    className="stats-bar-fill"
+                    style={{ width: `${Math.max(item.percentage, 5)}%` }}
+                  />
+                </div>
+                <span className="stats-bar-value">{item.count}</span>
+              </div>
+            ))}
+            {classData.length === 0 && (
+              <p style={{ color: '#6B778C', textAlign: 'center' }}>No data available</p>
+            )}
+          </div>
+        </div>
 
-          {/* Summary Cards */}
-          <Box sx={{ 
-            display: 'grid', 
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-            gap: 3 
-          }}>
-            <Card sx={{ 
-              p: { xs: 2, sm: 3 }, 
-              borderRadius: 3, 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
-              color: 'white',
-              boxShadow: mode === 'dark' 
-                ? '0 4px 12px rgba(0,0,0,0.3)' 
-                : '0 4px 12px rgba(0,0,0,0.1)',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <School sx={{ fontSize: { xs: 36, sm: 48 }, mr: 2, opacity: 0.8 }} />
-                <Box>
-                  <Typography variant="h5" fontWeight="bold" sx={{
-                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                  }}>
-                    {stats.classData.length} Classes
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    opacity: 0.9,
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                  }}>
-                    Active academic divisions
-                  </Typography>
-                </Box>
-              </Box>
-            </Card>
-            
-            <Card sx={{ 
-              p: { xs: 2, sm: 3 }, 
-              borderRadius: 3, 
-              background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', 
-              color: 'white',
-              boxShadow: mode === 'dark' 
-                ? '0 4px 12px rgba(0,0,0,0.3)' 
-                : '0 4px 12px rgba(0,0,0,0.1)',
-            }}>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <AttachMoney sx={{ fontSize: { xs: 36, sm: 48 }, mr: 2, opacity: 0.8 }} />
-                <Box>
-                  <Typography variant="h5" fontWeight="bold" sx={{
-                    fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                  }}>
-                    ₹{(stats.totalFee + stats.totalDues).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ 
-                    opacity: 0.9,
-                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                  }}>
-                    Total fee structure
-                  </Typography>
-                </Box>
-              </Box>
-            </Card>
-          </Box>
-        </Box>
-      ) : (
-        <Card sx={{ 
-          p: { xs: 3, sm: 4 }, 
-          textAlign: 'center',
-          backgroundColor: mode === 'dark' 
-            ? 'rgba(30, 30, 30, 0.8)' 
-            : 'rgba(255, 255, 255, 0.9)',
-          boxShadow: mode === 'dark' 
-            ? '0 4px 12px rgba(0,0,0,0.3)' 
-            : '0 4px 12px rgba(0,0,0,0.1)',
-        }}>
-          <Typography variant="h6" color="error" gutterBottom>
-            ⚠️ Failed to load statistics
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(26, 32, 44, 0.7)'
-          }}>
-            Please check your connection and try again.
-          </Typography>
-        </Card>
-      )}
-    </Box>
+        {/* Gender Distribution & Top Classes */}
+        <div className="stats-section">
+          <h2 className="stats-section-title">
+            <PeopleIcon />
+            Gender Distribution
+          </h2>
+          <div style={{ display: 'flex', gap: 40, marginBottom: 30 }}>
+            <div className="stats-progress-ring">
+              <div className="stats-ring-value" style={{ color: '#0052CC' }}>
+                {stats.maleCount}
+              </div>
+              <div className="stats-ring-label">Male Students</div>
+            </div>
+            <div className="stats-progress-ring">
+              <div className="stats-ring-value" style={{ color: '#6554C0' }}>
+                {stats.femaleCount}
+              </div>
+              <div className="stats-ring-label">Female Students</div>
+            </div>
+            <div className="stats-progress-ring">
+              <div className="stats-ring-value" style={{ color: '#6B778C' }}>
+                {stats.totalStudents - stats.maleCount - stats.femaleCount}
+              </div>
+              <div className="stats-ring-label">Not Specified</div>
+            </div>
+          </div>
+
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#42526E', marginBottom: 12 }}>
+            Top 5 Classes by Enrollment
+          </h3>
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Class</th>
+                <th>Students</th>
+                <th>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topClasses.map((item, index) => (
+                <tr key={item.class}>
+                  <td>#{index + 1}</td>
+                  <td>{item.class}</td>
+                  <td>{item.count}</td>
+                  <td>{item.percentage.toFixed(1)}%</td>
+                </tr>
+              ))}
+              {topClasses.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center', color: '#6B778C' }}>
+                    No data available
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 
