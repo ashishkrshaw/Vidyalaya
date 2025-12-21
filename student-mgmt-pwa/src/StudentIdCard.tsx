@@ -256,11 +256,7 @@ const StudentIdCard: React.FC<StudentIdCardProps> = ({ student: propStudent, onU
               </label>
               <button className="idcard-btn idcard-btn-primary" onClick={handleDownload}>
                 <DownloadIcon />
-                Download Card
-              </button>
-              <button className="idcard-btn idcard-btn-success" onClick={handlePrint}>
-                <PrintIcon />
-                Print
+                Download as PDF
               </button>
             </div>
           </>
