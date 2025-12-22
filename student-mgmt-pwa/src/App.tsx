@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import schools from "./Schools";
 
 import {
   Box, CssBaseline,
@@ -21,23 +20,23 @@ import AdmissionForm from './AdmissionForm';
 import ShowStudent from './ShowStudent';
 import HistoryIcon from '@mui/icons-material/History';
 import HistorySection from './HistorySection';
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import UpdateDeleteStudent from './UpdateDeleteStudent';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AcademicSettings from './AcademicSettings';
 import PaymentIcon from '@mui/icons-material/Payment';
 import FeeManagement from './FeeManagement';
-import { addAdmission, getAdmissions, addHistoryEntry, getNextRollNoForClass } from './db';
+import DownloadIcon from '@mui/icons-material/Download';
+import BadgeIcon from '@mui/icons-material/Badge';
+import { addAdmission, getAdmissions, addHistoryEntry, getNextRollNoForClass, loadSchoolInfo, loadSchoolLogo, loadPrincipalSignature } from './db';
+import jsPDF from 'jspdf';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import CardMembershipIcon from '@mui/icons-material/CardMembership';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import Chatbot from './Chatbot';
+import Login from './Login';
 import './Chatbot.css';
 import './App.css';
-import StudentIdCard from './StudentIdCard';
 import Statistics from './Statistics';
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
@@ -51,16 +50,14 @@ function generateStudentId(schoolName: string, year: number, rollNo: number, seq
 const menuItems = [
   { key: 'student', label: 'New Admission', icon: <PersonAddIcon /> },
   { key: 'show', label: 'Search Student', icon: <SearchIcon /> },
-  { key: 'idcard', label: 'Student ID Card', icon: <CardMembershipIcon /> },
   { key: 'fee', label: 'Fee Management', icon: <PaymentIcon /> },
   { key: 'stats', label: 'Statistics', icon: <BarChartIcon /> },
   { key: 'history', label: 'History', icon: <HistoryIcon /> },
-  { key: 'updateDelete', label: 'Manage Students', icon: <EditNoteIcon /> },
   { key: 'settings', label: 'Settings', icon: <SettingsIcon /> },
 ];
 
 function App() {
-  const [menu, setMenu] = useState<'student' | 'show' | 'idcard' | 'history' | 'updateDelete' | 'settings' | 'fee' | 'stats'>('student');
+  const [menu, setMenu] = useState<'student' | 'show' | 'history' | 'settings' | 'fee' | 'stats'>('student');
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [schoolName, setSchoolName] = useState('');
@@ -69,37 +66,35 @@ function App() {
   const [mode, setMode] = useState<'light' | 'dark'>('light');
   const [formKey, setFormKey] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [admissionSuccess, setAdmissionSuccess] = useState(false);
+  const [savedStudent, setSavedStudent] = useState<any | null>(null);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Check if already logged in
   useEffect(() => {
-    const autoLogin = () => {
-      const defaultUsername = "Test_User";
-      const defaultPassword = "Xy@123456";
-      const found = schools.find(s => s.username === defaultUsername && s.password === defaultPassword);
-      if (found) {
-        setLoggedIn(true);
-        setSchoolName(found.schoolName);
-        localStorage.setItem('schoolId', found.id.toString());
-        localStorage.setItem('loggedIn', 'true');
-        localStorage.setItem('schoolName', found.schoolName);
-        localStorage.setItem('currentUsername', found.username);
-        setIsDataReady(true);
-      }
-    };
-    autoLogin();
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const storedSchoolName = localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School';
+    if (isLoggedIn) {
+      setLoggedIn(true);
+      setSchoolName(storedSchoolName);
+      setIsDataReady(true);
+    }
   }, []);
+
+  // Handle login from Login component
+  const handleLogin = (name: string) => {
+    setLoggedIn(true);
+    setSchoolName(name);
+    setIsDataReady(true);
+  };
 
   useEffect(() => {
     const handleChatbotNavigation = (event: CustomEvent) => {
       const section = event.detail;
       if (section && menuItems.find(item => item.key === section)) {
         setMenu(section);
-        if (section !== 'idcard') {
-          setSelectedStudent(null);
-        }
       }
     };
     window.addEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
@@ -129,20 +124,312 @@ function App() {
     try {
       await addAdmission(previewData);
       await addHistoryEntry({ ...previewData, action: 'admission_added', timestamp: new Date().toISOString() });
+      setSavedStudent(previewData);
       setConfirmOpen(false);
+      setAdmissionSuccess(true);
       setFormKey(prevKey => prevKey + 1);
     } catch (error) {
       console.error("Error in handleConfirm:", error);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.reload();
+  const downloadAdmissionReceipt = async () => {
+    if (!savedStudent) return;
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pageWidth = 210;
+    const margin = 15;
+
+    // Load school info
+    const schoolInfo = await loadSchoolInfo();
+    const schoolLogo = await loadSchoolLogo();
+
+    // Header section
+    let y = 15;
+
+    // School Logo
+    if (schoolLogo && typeof schoolLogo === 'string' && schoolLogo.startsWith('data:')) {
+      try {
+        doc.addImage(schoolLogo, 'PNG', margin, y, 22, 22);
+      } catch (e) {
+        doc.setFillColor(30, 58, 138);
+        doc.rect(margin, y, 22, 22, 'F');
+      }
+    } else {
+      doc.setFillColor(30, 58, 138);
+      doc.rect(margin, y, 22, 22, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(8);
+      doc.text('LOGO', margin + 11, y + 12, { align: 'center' });
+    }
+
+    // School name
+    doc.setTextColor(30, 58, 138);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(schoolInfo.name.toUpperCase(), 105, y + 8, { align: 'center' });
+
+    doc.setTextColor(85, 85, 85);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(schoolInfo.address, 105, y + 14, { align: 'center' });
+    doc.text(`Ph: ${schoolInfo.phone} | Email: ${schoolInfo.email}`, 105, y + 19, { align: 'center' });
+
+    // Student Photo with proper border
+    const photoX = pageWidth - margin - 22;
+    const photoY = y;
+    const photoW = 22;
+    const photoH = 28;
+
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.5);
+    doc.rect(photoX, photoY, photoW, photoH);
+
+    if (savedStudent.photoData) {
+      try {
+        doc.addImage(savedStudent.photoData, 'JPEG', photoX + 1, photoY + 1, photoW - 2, photoH - 2);
+      } catch (e) { }
+    } else {
+      doc.setFillColor(243, 244, 246);
+      doc.rect(photoX + 1, photoY + 1, photoW - 2, photoH - 2, 'F');
+      doc.setTextColor(150, 150, 150);
+      doc.setFontSize(6);
+      doc.text('Photo', photoX + photoW / 2, photoY + photoH / 2, { align: 'center' });
+    }
+
+    // Blue separator
+    y = 45;
+    doc.setDrawColor(30, 58, 138);
+    doc.setLineWidth(0.8);
+    doc.line(margin, y, pageWidth - margin, y);
+
+    // Title
+    y = 53;
+    doc.setFillColor(229, 231, 235);
+    doc.roundedRect(70, y - 3, 70, 10, 2, 2, 'F');
+    doc.setTextColor(55, 65, 81);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ADMISSION RECEIPT', 105, y + 4, { align: 'center' });
+
+    // Admission details
+    y = 72;
+    const labelWidth = 45;
+    doc.setFontSize(10);
+
+    const details = [
+      { label: 'Admission Date', value: new Date().toLocaleDateString('en-IN') },
+      { label: 'Student ID', value: savedStudent.studentId },
+      { label: 'Student Name', value: savedStudent.name },
+      { label: 'Class / Section', value: `${savedStudent.class} - ${savedStudent.section}` },
+      { label: 'Roll Number', value: savedStudent.rollNo || '-' },
+      { label: 'Date of Birth', value: savedStudent.dob || '-' },
+      { label: "Father's Name", value: savedStudent.fatherName || '-' },
+      { label: "Mother's Name", value: savedStudent.motherName || '-' },
+      { label: 'Contact Number', value: savedStudent.fatherMobile || savedStudent.parentMobile || '-' },
+      { label: 'Address', value: savedStudent.address || '-' },
+      { label: 'Aadhar Number', value: savedStudent.aadhar || '-' },
+    ];
+
+    details.forEach((item) => {
+      doc.setTextColor(75, 85, 99);
+      doc.setFont('helvetica', 'bold');
+      doc.text(item.label + ':', margin, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont('helvetica', 'normal');
+      doc.text(item.value.toString(), margin + labelWidth, y);
+      y += 8;
+    });
+
+    // Footer - Only Principal (removed guardian)
+    y = 185;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineDashPattern([2, 2], 0);
+    doc.line(margin, y, pageWidth - margin, y);
+    doc.setLineDashPattern([], 0);
+
+    y += 15;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(pageWidth - margin - 55, y, pageWidth - margin - 5, y);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(51, 51, 51);
+    doc.text('Principal / Authorized Signatory', pageWidth - margin - 30, y + 6, { align: 'center' });
+
+    // Footer note
+    doc.setFontSize(8);
+    doc.setTextColor(156, 163, 175);
+    doc.text('This is a computer generated admission receipt.', 105, 220, { align: 'center' });
+
+    doc.save(`Admission_Receipt_${savedStudent.name}_${savedStudent.studentId}.pdf`);
   };
 
+  const downloadIdCardPDF = async () => {
+    if (!savedStudent) return;
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [85, 130] });
+    const pageWidth = 85;
+    const margin = 5;
+
+    // Load school info
+    const schoolInfo = await loadSchoolInfo();
+    const schoolLogo = await loadSchoolLogo();
+    const principalSig = await loadPrincipalSignature();
+
+    // Header background
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 35, 'F');
+
+    // Teal accent
+    doc.setFillColor(20, 184, 166);
+    doc.circle(pageWidth + 5, -5, 25, 'F');
+
+    // School logo box
+    if (schoolLogo && typeof schoolLogo === 'string' && schoolLogo.startsWith('data:')) {
+      try {
+        doc.addImage(schoolLogo, 'PNG', 8, 8, 8, 8);
+      } catch (e) {
+        doc.setFillColor(20, 184, 166);
+        doc.roundedRect(8, 8, 8, 8, 1, 1, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(6);
+        doc.text(schoolInfo.name.charAt(0), 12, 13, { align: 'center' });
+      }
+    } else {
+      doc.setFillColor(20, 184, 166);
+      doc.roundedRect(8, 8, 8, 8, 1, 1, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.text(schoolInfo.name.charAt(0), 12, 13, { align: 'center' });
+    }
+
+    // School name
+    doc.setTextColor(45, 212, 191);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    doc.text(schoolInfo.name.toUpperCase(), pageWidth / 2 + 5, 12, { align: 'center' });
+
+    // STUDENT ID text
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.text('STUDENT ID', pageWidth / 2, 22, { align: 'center' });
+
+    // Photo frame
+    const photoSize = 28;
+    const photoX = (pageWidth - photoSize) / 2;
+    const photoY = 30;
+
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(photoX - 2, photoY - 2, photoSize + 4, photoSize + 4, 2, 2, 'F');
+
+    if (savedStudent.photoData) {
+      try {
+        doc.addImage(savedStudent.photoData, 'JPEG', photoX, photoY, photoSize, photoSize);
+      } catch (e) {
+        doc.setFillColor(241, 245, 249);
+        doc.rect(photoX, photoY, photoSize, photoSize, 'F');
+        doc.setTextColor(148, 163, 184);
+        doc.setFontSize(6);
+        doc.text('Photo', photoX + photoSize / 2, photoY + photoSize / 2, { align: 'center' });
+      }
+    } else {
+      doc.setFillColor(241, 245, 249);
+      doc.rect(photoX, photoY, photoSize, photoSize, 'F');
+      doc.setTextColor(148, 163, 184);
+      doc.setFontSize(6);
+      doc.text('Photo', photoX + photoSize / 2, photoY + photoSize / 2, { align: 'center' });
+    }
+
+    // Student name
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(savedStudent.name, pageWidth / 2, 68, { align: 'center' });
+
+    // Class
+    doc.setTextColor(13, 148, 136);
+    doc.setFontSize(7);
+    doc.text(`Class ${savedStudent.class} - ${savedStudent.section}`, pageWidth / 2, 73, { align: 'center' });
+
+    // Data grid
+    let y = 80;
+    doc.setFontSize(5);
+
+    // Row 1
+    doc.setTextColor(148, 163, 184);
+    doc.text('STUDENT ID', margin + 2, y);
+    doc.text('ROLL NO', pageWidth - margin - 2, y, { align: 'right' });
+    y += 3;
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(7);
+    doc.text(savedStudent.studentId || '-', margin + 2, y);
+    doc.text(savedStudent.rollNo || '-', pageWidth - margin - 2, y, { align: 'right' });
+
+    // Row 2
+    y += 6;
+    doc.setFontSize(5);
+    doc.setTextColor(148, 163, 184);
+    doc.text('DATE OF BIRTH', margin + 2, y);
+    doc.text('VALID TILL', pageWidth - margin - 2, y, { align: 'right' });
+    y += 3;
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(7);
+    doc.text(savedStudent.dob || '-', margin + 2, y);
+    const expiryYear = new Date().getMonth() >= 3 ? new Date().getFullYear() + 1 : new Date().getFullYear();
+    doc.setTextColor(239, 68, 68);
+    doc.text(`Mar ${expiryYear}`, pageWidth - margin - 2, y, { align: 'right' });
+
+    // Emergency
+    y += 7;
+    doc.setDrawColor(241, 245, 249);
+    doc.line(margin, y - 2, pageWidth - margin, y - 2);
+    doc.setTextColor(100, 116, 139);
+    doc.setFontSize(5);
+    doc.text(`Emergency: ${savedStudent.fatherMobile || savedStudent.parentMobile || '-'}`, pageWidth / 2, y + 2, { align: 'center' });
+
+    // Footer with QR and signature
+    const footerY = 105;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, footerY, pageWidth, 25, 'F');
+
+    // QR Code - embedded as text placeholder (actual QR would need canvas)
+    doc.setFillColor(255, 255, 255);
+    doc.rect(margin, footerY + 3, 15, 15, 'F');
+    doc.setTextColor(100);
+    doc.setFontSize(4);
+    doc.text('QR', margin + 7.5, footerY + 11, { align: 'center' });
+
+    // Signature
+    if (principalSig && typeof principalSig === 'string') {
+      try {
+        doc.addImage(principalSig, 'PNG', pageWidth - margin - 25, footerY + 3, 22, 10);
+      } catch (e) { }
+    }
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(4);
+    doc.text('PRINCIPAL', pageWidth - margin - 12, footerY + 17, { align: 'center' });
+
+    // Bottom accent
+    doc.setFillColor(20, 184, 166);
+    doc.rect(0, 128, pageWidth, 2, 'F');
+
+    doc.save(`ID_Card_${savedStudent.name}_${savedStudent.studentId}.pdf`);
+  };
+
+  // Unified logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('loginTime');
+    localStorage.removeItem('schoolName');
+    setLoggedIn(false);
+    setIsDataReady(false);
+  };
+
+  // Show Login page if not logged in
   if (!loggedIn) {
-    return <div className="app-loading"><CircularProgress /></div>;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -232,19 +519,7 @@ function App() {
                 />
               )}
               {menu === 'show' && <ShowStudent />}
-              {menu === 'idcard' && (
-                !selectedStudent ? (
-                  <ShowStudent onSelectStudent={setSelectedStudent} idCardMode={true} />
-                ) : (
-                  <StudentIdCard
-                    student={selectedStudent}
-                    onUpdatePhoto={(photo) => setSelectedStudent((s: any) => ({ ...s, photo }))}
-                    onGenerateId={() => { }}
-                  />
-                )
-              )}
               {menu === 'history' && <HistorySection />}
-              {menu === 'updateDelete' && <UpdateDeleteStudent />}
               {menu === 'settings' && <AcademicSettings />}
               {menu === 'fee' && <FeeManagement />}
               {menu === 'stats' && <Statistics mode={mode} />}
@@ -358,6 +633,81 @@ function App() {
           </Button>
           <Button onClick={handleConfirm} variant="contained" sx={{ bgcolor: '#36B37E', '&:hover': { bgcolor: '#2D9A6B' } }}>
             ✓ Confirm & Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Admission Success Dialog */}
+      <Dialog open={admissionSuccess} onClose={() => setAdmissionSuccess(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{
+          background: 'linear-gradient(135deg, #36B37E 0%, #00A3BF 100%)',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          justifyContent: 'center'
+        }}>
+          <CheckCircleIcon /> Admission Successful!
+        </DialogTitle>
+        <DialogContent sx={{ p: 4, textAlign: 'center' }}>
+          {savedStudent && (
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+                {savedStudent.name}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                Class {savedStudent.class} - {savedStudent.section} | Roll No: {savedStudent.rollNo}
+              </Typography>
+              <Typography variant="caption" color="textSecondary" sx={{ mb: 3, display: 'block' }}>
+                Student ID: {savedStudent.studentId}
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mt: 2 }}>
+                <Button
+                  variant="contained"
+                  startIcon={<DownloadIcon />}
+                  onClick={downloadAdmissionReceipt}
+                  sx={{
+                    bgcolor: '#1e3a8a',
+                    '&:hover': { bgcolor: '#1e40af' },
+                    px: 2
+                  }}
+                >
+                  Admission Receipt
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<BadgeIcon />}
+                  onClick={downloadIdCardPDF}
+                  sx={{
+                    bgcolor: '#14b8a6',
+                    '&:hover': { bgcolor: '#0d9488' },
+                    px: 2
+                  }}
+                >
+                  ID Card
+                </Button>
+              </Box>
+
+              <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 2 }}>
+                Download admission receipt and student ID card
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, justifyContent: 'center', borderTop: '1px solid #eee' }}>
+          <Button
+            onClick={() => { setAdmissionSuccess(false); setSavedStudent(null); }}
+            variant="outlined"
+          >
+            Close
+          </Button>
+          <Button
+            onClick={() => { setAdmissionSuccess(false); setSavedStudent(null); setMenu('fee'); }}
+            variant="contained"
+            sx={{ bgcolor: '#36B37E' }}
+          >
+            Collect Fee Now
           </Button>
         </DialogActions>
       </Dialog>

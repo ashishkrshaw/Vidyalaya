@@ -50,6 +50,68 @@ export async function addAdmission(admission: any) {
   await db.put(STORE_NAME, newAdmission);
 }
 
+// Bulk restore admissions from backup - handles conflicts by merging/overwriting
+export async function bulkRestoreAdmissions(admissions: any[]): Promise<{ added: number; updated: number }> {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  let added = 0;
+  let updated = 0;
+  
+  for (const admission of admissions) {
+    const admissionWithSchoolId = {
+      ...admission,
+      schoolId,
+      feeHistory: admission.feeHistory || [],
+      dues: admission.dues || 0,
+    };
+    
+    // Check if exists
+    const existing = await db.get(STORE_NAME, [schoolId, admission.studentId]);
+    if (existing) {
+      // Merge: keep newer feeHistory, update other fields
+      const mergedFeeHistory = [...(existing.feeHistory || [])];
+      const existingDates = new Set(mergedFeeHistory.map((f: any) => f.date));
+      
+      // Add new fee payments not in existing
+      for (const fee of (admission.feeHistory || [])) {
+        if (!existingDates.has(fee.date)) {
+          mergedFeeHistory.push(fee);
+        }
+      }
+      
+      admissionWithSchoolId.feeHistory = mergedFeeHistory;
+      updated++;
+    } else {
+      added++;
+    }
+    
+    await db.put(STORE_NAME, admissionWithSchoolId);
+  }
+  
+  return { added, updated };
+}
+
+// Bulk restore history from backup - adds only new entries
+export async function bulkRestoreHistory(historyEntries: any[]): Promise<number> {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  let added = 0;
+  
+  // Get existing history to avoid duplicates
+  const existing = await db.getAllFromIndex(HISTORY_STORE, 'by-school', schoolId);
+  const existingTimestamps = new Set(existing.map((h: any) => h.timestamp));
+  
+  for (const entry of historyEntries) {
+    // Only add if timestamp doesn't exist (avoid duplicates)
+    if (!existingTimestamps.has(entry.timestamp)) {
+      await db.add(HISTORY_STORE, { ...entry, schoolId });
+      added++;
+    }
+  }
+  
+  return added;
+}
+
 export async function updateAdmission(admission: any, before?: any) {
   const db = await getDb();
   const schoolId = getSchoolId();
@@ -223,4 +285,40 @@ export async function savePrincipalSignature(file: Blob | string) {
 
 export async function loadPrincipalSignature() {
   return await loadSetting('principalSignature');
+}
+
+// School Logo
+export async function saveSchoolLogo(file: Blob | string) {
+  await saveSetting('schoolLogo', file);
+}
+
+export async function loadSchoolLogo() {
+  return await loadSetting('schoolLogo');
+}
+
+// School Info (stored in DB, fallback to env)
+export interface SchoolInfo {
+  name: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+}
+
+export async function saveSchoolInfo(info: SchoolInfo) {
+  await saveSetting('schoolInfo', info);
+}
+
+export async function loadSchoolInfo(): Promise<SchoolInfo> {
+  const stored = await loadSetting('schoolInfo');
+  if (stored) return stored;
+  
+  // Fallback to environment variables or defaults
+  return {
+    name: import.meta.env?.VITE_SCHOOL_NAME || 'Sunrise Public School',
+    address: import.meta.env?.VITE_SCHOOL_ADDRESS || '123 Main Road, Knowledge Park, City - 110001',
+    phone: import.meta.env?.VITE_SCHOOL_PHONE || '+91-9876543210',
+    email: import.meta.env?.VITE_SCHOOL_EMAIL || 'info@school.edu',
+    website: import.meta.env?.VITE_SCHOOL_WEBSITE || 'www.school.edu'
+  };
 }

@@ -53,27 +53,50 @@ const Chatbot = () => {
       let totalFee = 0;
       let totalDues = 0;
 
-      students.forEach((student: any) => {
+      // Build student details with fee info
+      const studentDetails = students.map((student: any) => {
         const classFee = Number(feeMap[student.class]) || 0;
         const paidTotal = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+        const annualFee = classFee * 12;
+        const dues = Math.max(0, annualFee - paidTotal);
+
         totalFee += paidTotal;
-        totalDues += Math.max(0, (classFee * 12) - paidTotal);
+        totalDues += dues;
+
+        return {
+          studentId: student.studentId,
+          name: student.name,
+          class: student.class,
+          section: student.section,
+          rollNo: student.rollNo,
+          dob: student.dob,
+          fatherName: student.fatherName,
+          motherName: student.motherName,
+          fatherMobile: student.fatherMobile || student.parentMobile,
+          address: student.address,
+          paidTotal,
+          dues,
+        };
       });
 
       return {
+        schoolId: localStorage.getItem('schoolId') || 'default',
         schoolName: localStorage.getItem('schoolName') || 'My School',
         totalStudents: students.length,
         totalFeeCollected: totalFee,
         pendingDues: totalDues,
         classesAvailable: ['Nursery', 'KG', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-        sections: ['A', 'B', 'C']
+        sections: ['A', 'B', 'C'],
+        students: studentDetails  // All student details for queries
       };
     } catch (e) {
       return {
+        schoolId: localStorage.getItem('schoolId') || 'default',
         schoolName: localStorage.getItem('schoolName') || 'My School',
         totalStudents: 0,
         totalFeeCollected: 0,
-        pendingDues: 0
+        pendingDues: 0,
+        students: []
       };
     }
   };
@@ -355,7 +378,7 @@ const Chatbot = () => {
   return (
     <div className="chatbot-container">
       <div className={`chatbot-icon ${isOpen ? 'open' : ''}`} onClick={toggleChat}>
-        🤖
+        {isOpen ? '✕' : '💬'}
       </div>
       {isOpen && (
         <div className="chatbot-window">

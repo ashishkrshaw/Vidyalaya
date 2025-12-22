@@ -23,8 +23,16 @@ import {
   savePrincipalSignature,
   loadPrincipalSignature,
   getAdmissions,
-  getHistory
+  getHistory,
+  saveSchoolLogo,
+  loadSchoolLogo,
+  saveSchoolInfo,
+  loadSchoolInfo,
+  bulkRestoreAdmissions,
+  bulkRestoreHistory,
+  saveFeeMap as saveFeeMapToDb
 } from './db';
+import type { SchoolInfo } from './db';
 import {
   initGapiClient,
   initGisClient,
@@ -85,6 +93,16 @@ const Settings: React.FC = () => {
   const [driveDialogOpen, setDriveDialogOpen] = useState(false);
   const [driveLoading, setDriveLoading] = useState(false);
 
+  // School Branding State
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>({
+    name: 'Sunrise Public School',
+    address: '123 Main Road, City - 110001',
+    phone: '+91-9876543210',
+    email: 'info@school.edu',
+    website: 'www.school.edu'
+  });
+  const [schoolLogoPreview, setSchoolLogoPreview] = useState<string | null>(null);
+
   useEffect(() => {
     loadAllSettings();
   }, []);
@@ -120,6 +138,19 @@ const Settings: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => setSignaturePreview(e.target?.result as string);
       reader.readAsDataURL(sig);
+    }
+
+    // Load school branding
+    const info = await loadSchoolInfo();
+    setSchoolInfo(info);
+
+    const logo = await loadSchoolLogo();
+    if (logo && typeof logo === 'string') {
+      setSchoolLogoPreview(logo);
+    } else if (logo instanceof Blob) {
+      const reader = new FileReader();
+      reader.onload = (e) => setSchoolLogoPreview(e.target?.result as string);
+      reader.readAsDataURL(logo);
     }
   };
 
@@ -181,9 +212,39 @@ const Settings: React.FC = () => {
   };
 
   const removeSignature = async () => {
-    await savePrincipalSignature(null);
+    await savePrincipalSignature(null as any);
     setSignaturePreview(null);
     showMessage('success', 'Signature removed');
+  };
+
+  // School Branding Handlers
+  const handleSchoolInfoChange = (field: keyof SchoolInfo, value: string) => {
+    setSchoolInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  const saveSchoolBranding = async () => {
+    await saveSchoolInfo(schoolInfo);
+    showMessage('success', 'School information saved successfully!');
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUrl = ev.target?.result as string;
+        await saveSchoolLogo(dataUrl);
+        setSchoolLogoPreview(dataUrl);
+        showMessage('success', 'School logo uploaded successfully!');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = async () => {
+    await saveSchoolLogo('');
+    setSchoolLogoPreview(null);
+    showMessage('success', 'School logo removed');
   };
 
   // Password Reset
@@ -402,12 +463,34 @@ const Settings: React.FC = () => {
 
       if (!data.version || !data.admissions) {
         showMessage('error', 'Invalid backup file format');
+        setDriveLoading(false);
         return;
       }
 
+      // Restore admissions
+      const admissionResult = await bulkRestoreAdmissions(data.admissions);
+
+      // Restore history if present
+      let historyAdded = 0;
+      if (data.history && data.history.length > 0) {
+        historyAdded = await bulkRestoreHistory(data.history);
+      }
+
+      // Restore fee map if present
+      if (data.feeMap) {
+        await saveFeeMapToDb(data.feeMap);
+        setFeeMap(data.feeMap);
+        setEditingFees(data.feeMap);
+      }
+
+      // Restore promotion date if present
+      if (data.promotionDate) {
+        await savePromotionDate(data.promotionDate);
+        setPromotionDate(data.promotionDate);
+      }
+
       setDriveDialogOpen(false);
-      showMessage('success', `✓ Restored from "${fileName}": ${data.admissions.length} students, ${data.history?.length || 0} history records.`);
-      // TODO: Actually restore data to database
+      showMessage('success', `✓ Restored from "${fileName}": ${admissionResult.added} new, ${admissionResult.updated} updated, ${historyAdded} history entries.`);
     } catch (err: any) {
       showMessage('error', 'Restore failed: ' + err.message);
     }
@@ -419,19 +502,44 @@ const Settings: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setLoading(true);
     try {
       const text = await file.text();
       const data = JSON.parse(text);
 
       if (!data.version || !data.admissions) {
         showMessage('error', 'Invalid backup file format');
+        setLoading(false);
         return;
       }
 
-      showMessage('success', `Backup loaded: ${data.admissions.length} students, ${data.history?.length || 0} history records.`);
+      // Restore admissions
+      const admissionResult = await bulkRestoreAdmissions(data.admissions);
+
+      // Restore history if present
+      let historyAdded = 0;
+      if (data.history && data.history.length > 0) {
+        historyAdded = await bulkRestoreHistory(data.history);
+      }
+
+      // Restore fee map if present
+      if (data.feeMap) {
+        await saveFeeMapToDb(data.feeMap);
+        setFeeMap(data.feeMap);
+        setEditingFees(data.feeMap);
+      }
+
+      // Restore promotion date if present
+      if (data.promotionDate) {
+        await savePromotionDate(data.promotionDate);
+        setPromotionDate(data.promotionDate);
+      }
+
+      showMessage('success', `✓ Restore complete! ${admissionResult.added} new students, ${admissionResult.updated} updated, ${historyAdded} history entries added.`);
     } catch (err) {
-      showMessage('error', 'Failed to read backup file');
+      showMessage('error', 'Failed to read or restore backup file');
     }
+    setLoading(false);
   };
 
   // Logout
@@ -557,6 +665,107 @@ const Settings: React.FC = () => {
                 </label>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* School Branding Card */}
+        <div className="settings-card" style={{ gridColumn: 'span 2' }}>
+          <div className="settings-card-header" style={{ background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)' }}>
+            <InfoIcon />
+            <h2>School Branding</h2>
+          </div>
+          <div className="settings-card-body">
+            <p className="settings-card-desc">Configure your school information for receipts and ID cards</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: 24, alignItems: 'flex-start' }}>
+              {/* Logo Upload */}
+              <div style={{ textAlign: 'center' }}>
+                <label style={{ cursor: 'pointer', display: 'block' }}>
+                  {schoolLogoPreview ? (
+                    <div style={{ position: 'relative', display: 'inline-block' }}>
+                      <img src={schoolLogoPreview} alt="School Logo" style={{ width: 120, height: 120, objectFit: 'contain', border: '2px solid #e5e7eb', borderRadius: 8, padding: 8 }} />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); removeLogo(); }}
+                        style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      >
+                        <DeleteIcon style={{ fontSize: 14 }} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ width: 120, height: 120, border: '2px dashed #d1d5db', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#6b7280', background: '#f9fafb' }}>
+                      <UploadFileIcon style={{ fontSize: 32, marginBottom: 8 }} />
+                      <span style={{ fontSize: 12 }}>Upload Logo</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} hidden />
+                </label>
+                <small style={{ color: '#6b7280', fontSize: 11 }}>Square image, max 500KB</small>
+              </div>
+
+              {/* School Info Form */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>School Name *</label>
+                  <input
+                    type="text"
+                    value={schoolInfo.name}
+                    onChange={(e) => handleSchoolInfoChange('name', e.target.value)}
+                    placeholder="Enter school name"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>Address *</label>
+                  <input
+                    type="text"
+                    value={schoolInfo.address}
+                    onChange={(e) => handleSchoolInfoChange('address', e.target.value)}
+                    placeholder="Full address with PIN code"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>Phone</label>
+                  <input
+                    type="text"
+                    value={schoolInfo.phone}
+                    onChange={(e) => handleSchoolInfoChange('phone', e.target.value)}
+                    placeholder="+91-XXXXXXXXXX"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>Email</label>
+                  <input
+                    type="email"
+                    value={schoolInfo.email}
+                    onChange={(e) => handleSchoolInfoChange('email', e.target.value)}
+                    placeholder="info@school.edu"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>Website</label>
+                  <input
+                    type="text"
+                    value={schoolInfo.website}
+                    onChange={(e) => handleSchoolInfoChange('website', e.target.value)}
+                    placeholder="www.school.edu"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              className="settings-btn settings-btn-primary"
+              onClick={saveSchoolBranding}
+              style={{ marginTop: 20 }}
+            >
+              <SaveIcon style={{ fontSize: 18 }} />
+              Save School Information
+            </button>
           </div>
         </div>
 
