@@ -1,5 +1,10 @@
+
 import { useState, useEffect, useRef } from 'react';
-import { getAdmissions, loadFeeMap } from './db';
+import {
+  getAdmissions,
+  loadFeeMap,
+  loadSchoolInfo
+} from './db';
 import './Chatbot.css';
 
 // ========================================
@@ -49,6 +54,7 @@ const Chatbot = () => {
     try {
       const students = await getAdmissions();
       const feeMap = await loadFeeMap();
+      const schoolInfo = await loadSchoolInfo(); // Fetch dynamic settings
 
       let totalFee = 0;
       let totalDues = 0;
@@ -80,8 +86,8 @@ const Chatbot = () => {
       });
 
       return {
-        schoolId: localStorage.getItem('schoolId') || 'default',
-        schoolName: localStorage.getItem('schoolName') || 'My School',
+        schoolId: schoolInfo.schoolCode || localStorage.getItem('schoolId') || 'default',
+        schoolName: schoolInfo.name || localStorage.getItem('schoolName') || 'My School', // Prioritize DB setting
         totalStudents: students.length,
         totalFeeCollected: totalFee,
         pendingDues: totalDues,
@@ -90,9 +96,10 @@ const Chatbot = () => {
         students: studentDetails  // All student details for queries
       };
     } catch (e) {
+      const schoolInfo = await loadSchoolInfo().catch(() => ({ name: 'My School' }));
       return {
         schoolId: localStorage.getItem('schoolId') || 'default',
-        schoolName: localStorage.getItem('schoolName') || 'My School',
+        schoolName: schoolInfo.name || 'My School',
         totalStudents: 0,
         totalFeeCollected: 0,
         pendingDues: 0,
@@ -379,7 +386,7 @@ const Chatbot = () => {
 
   return (
     <div className="chatbot-container">
-      <div className={`chatbot-icon ${isOpen ? 'open' : ''}`} onClick={toggleChat}>
+      <div className={`chatbot - icon ${isOpen ? 'open' : ''} `} onClick={toggleChat}>
         {isOpen ? '✕' : '💬'}
       </div>
       {isOpen && (
@@ -403,7 +410,7 @@ const Chatbot = () => {
               </div>
             )}
             {messages.map((msg, index) => (
-              <div key={index} className={`message ${msg.sender}`}>
+              <div key={index} className={`message ${msg.sender} `}>
                 {msg.text}
               </div>
             ))}

@@ -38,6 +38,7 @@ import Login from './Login';
 import './Chatbot.css';
 import './App.css';
 import Statistics from './Statistics';
+import Dashboard from './Dashboard';
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
   const firstLetter = schoolName[0].toUpperCase();
@@ -72,15 +73,29 @@ function App() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Check if already logged in
+  // Check if already logged in and load School Info
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    const storedSchoolName = localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School';
-    if (isLoggedIn) {
-      setLoggedIn(true);
-      setSchoolName(storedSchoolName);
-      setIsDataReady(true);
-    }
+    const initApp = async () => {
+      const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+      if (isLoggedIn) {
+        setLoggedIn(true);
+        setIsDataReady(true);
+
+        // Load latest school name from DB
+        try {
+          const info = await loadSchoolInfo();
+          if (info && info.name) {
+            setSchoolName(info.name);
+            localStorage.setItem('schoolName', info.name); // Keep sync
+          } else {
+            setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+          }
+        } catch (e) {
+          setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+        }
+      }
+    };
+    initApp();
   }, []);
 
   // Handle login from Login component
@@ -525,7 +540,7 @@ function App() {
               {menu === 'stats' && <Statistics mode={mode} />}
             </>
           ) : (
-            <div className="app-loading"><CircularProgress /></div>
+            <Dashboard onMenuClick={setMenu as any} styles={styles} schoolName={schoolName} />
           )}
         </div>
       </main>

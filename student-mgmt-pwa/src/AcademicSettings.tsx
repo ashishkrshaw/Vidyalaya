@@ -890,6 +890,16 @@ const Settings: React.FC = () => {
                   />
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>School Code / Affiliation No.</label>
+                  <input
+                    type="text"
+                    value={schoolInfo.schoolCode || ''}
+                    onChange={(e) => handleSchoolInfoChange('schoolCode', e.target.value)}
+                    placeholder="e.g. SCH-2024-001"
+                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                  />
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#374151' }}>Address *</label>
                   <input
                     type="text"

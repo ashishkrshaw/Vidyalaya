@@ -50,6 +50,8 @@ export async function addAdmission(admission: any) {
   await db.put(STORE_NAME, newAdmission);
 }
 
+
+
 // Bulk restore admissions from backup - handles conflicts by merging/overwriting
 export async function bulkRestoreAdmissions(admissions: any[]): Promise<{ added: number; updated: number }> {
   const db = await getDb();
@@ -299,6 +301,7 @@ export async function loadSchoolLogo() {
 // School Info (stored in DB, fallback to env)
 export interface SchoolInfo {
   name: string;
+  schoolCode?: string; // Custom School ID/Affiliation No
   address: string;
   phone: string;
   email: string;

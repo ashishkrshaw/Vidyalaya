@@ -26,20 +26,21 @@ const menuItems = [
 interface DashboardProps {
   onMenuClick: (menu: string) => void;
   styles: any;
+  schoolName: string; // Dynamic School Name
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onMenuClick, styles }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onMenuClick, styles, schoolName }) => {
   const theme = useTheme();
 
   return (
     <Box sx={{ flexGrow: 1, p: 3, width: '100%' }}>
       <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 700, textAlign: 'center', color: theme.palette.text.primary }}>
-        School Dashboard
+        {schoolName} Dashboard
       </Typography>
       <Grid container spacing={4} justifyContent="center">
         {menuItems.map((item) => (
           <Grid item xs={12} sm={6} md={4} key={item.key}>
-            <Card 
+            <Card
               sx={{
                 ...styles.mainCard,
                 cursor: 'pointer',
