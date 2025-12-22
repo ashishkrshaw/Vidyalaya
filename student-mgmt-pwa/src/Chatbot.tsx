@@ -8,7 +8,7 @@ import './Chatbot.css';
 // After deploying your Lambda function with API Gateway,
 // replace this URL with your actual API Gateway invoke URL
 // Example: 'https://abc123.execute-api.us-east-1.amazonaws.com/chat'
-const LAMBDA_API_URL = ''; // Leave empty to use local responses
+const LAMBDA_API_URL = import.meta.env.VITE_API_BOT || ''; // Set VITE_API_BOT in .env
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
