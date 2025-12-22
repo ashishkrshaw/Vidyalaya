@@ -13,45 +13,61 @@ let gapiInited = false;
 let gisInited = false;
 let accessToken: string | null = null;
 
-// Initialize GAPI client
+// Initialize GAPI client with retry
 export const initGapiClient = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const gapi = (window as any).gapi;
-    if (!gapi) {
-      reject(new Error('Google API not loaded'));
-      return;
-    }
-    
-    gapi.load('client', async () => {
-      try {
-        await gapi.client.init({
-          discoveryDocs: [DISCOVERY_DOC],
+    let attempts = 0;
+    const checkGapi = () => {
+      const gapi = (window as any).gapi;
+      if (gapi) {
+        gapi.load('client', async () => {
+          try {
+            await gapi.client.init({
+              discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
         });
-        gapiInited = true;
-        resolve();
-      } catch (err) {
-        reject(err);
+      } else {
+        attempts++;
+        if (attempts < 20) { // Wait up to 10 seconds (20 * 500ms)
+          setTimeout(checkGapi, 500);
+        } else {
+          reject(new Error('Google API failed to load (timeout)'));
+        }
       }
-    });
+    };
+    checkGapi();
   });
 };
 
-// Initialize Google Identity Services
+// Initialize Google Identity Services with retry
 export const initGisClient = (): Promise<void> => {
   return new Promise((resolve, reject) => {
-    const google = (window as any).google;
-    if (!google?.accounts?.oauth2) {
-      reject(new Error('Google Identity Services not loaded'));
-      return;
-    }
-    
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: '', // Will be set later
-    });
-    gisInited = true;
-    resolve();
+    let attempts = 0;
+    const checkGoogle = () => {
+      const google = (window as any).google;
+      if (google?.accounts?.oauth2) {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: '', // Will be set later
+        });
+        gisInited = true;
+        resolve();
+      } else {
+        attempts++;
+        if (attempts < 20) {
+          setTimeout(checkGoogle, 500);
+        } else {
+          reject(new Error('Google Identity Services failed to load (timeout)'));
+        }
+      }
+    };
+    checkGoogle();
   });
 };
 

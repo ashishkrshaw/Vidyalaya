@@ -43,7 +43,8 @@ import {
   signIn,
   uploadToDrive,
   listBackupFiles,
-  downloadFromDrive
+  downloadFromDrive,
+  signOut
 } from './googleDrive';
 import './AcademicSettings.css';
 
@@ -130,10 +131,7 @@ const Settings: React.FC = () => {
         console.log('Google API init failed:', err);
       }
     };
-
-    // Wait for scripts to load
-    const timer = setTimeout(initGoogle, 1000);
-    return () => clearTimeout(timer);
+    initGoogle();
   }, []);
 
   const loadAllSettings = async () => {
@@ -507,6 +505,27 @@ const Settings: React.FC = () => {
       showMessage('error', 'Restore failed: ' + err.message);
     }
     setDriveLoading(false);
+  };
+
+  // Manual Connect/Disconnect Handlers
+  const handleConnectDrive = async () => {
+    try {
+      await signIn();
+      setGoogleSignedIn(true);
+      showMessage('success', 'Connected to Google Drive successfully!');
+    } catch (err: any) {
+      if (err.message?.includes('popup')) {
+        showMessage('error', 'Popup blocked. Please allow popups for this site.');
+      } else {
+        showMessage('error', 'Connection failed: ' + err.message);
+      }
+    }
+  };
+
+  const handleDisconnectDrive = () => {
+    signOut();
+    setGoogleSignedIn(false);
+    showMessage('success', 'Disconnected from Google Drive.');
   };
 
   // Restore from local file
@@ -1018,6 +1037,30 @@ const Settings: React.FC = () => {
             <p className="settings-card-desc">Save your school data locally or to the cloud</p>
 
             <div className="settings-backup-grid">
+              {/* Google Drive Connection (Always Visible) */}
+              <div className="settings-backup-option">
+                <div className="settings-backup-icon cloud">
+                  <CloudIcon />
+                </div>
+                <h4>Google Drive</h4>
+                <p>{googleSignedIn ? 'Connected' : 'Not Connected'}</p>
+                {!googleSignedIn ? (
+                  <button
+                    className="settings-btn settings-btn-primary"
+                    onClick={handleConnectDrive}
+                    disabled={!googleReady}
+                  >
+                    {googleReady ? 'Connect Drive' : 'Loading...'}
+                  </button>
+                ) : (
+                  <button
+                    className="settings-btn settings-btn-secondary"
+                    onClick={handleDisconnectDrive}
+                  >
+                    Disconnect
+                  </button>
+                )}
+              </div>
               {/* Download Backup */}
               <div className="settings-backup-option">
                 <div className="settings-backup-icon download">
