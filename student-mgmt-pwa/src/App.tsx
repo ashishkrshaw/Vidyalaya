@@ -711,6 +711,8 @@ function App() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Chatbot />
     </div>
   );
 }

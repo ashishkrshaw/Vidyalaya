@@ -133,10 +133,12 @@ const Chatbot = () => {
       setIsLoading(true);
       const lambdaResponse = await callLambdaAPI(userInput);
       setIsLoading(false);
+
       if (lambdaResponse) {
         return lambdaResponse;
+      } else {
+        return "⚠️ Error: Could not reach the AI server. Please check your connection or API configuration.";
       }
-      // Fall back to local responses if Lambda fails
     }
 
     // Update context based on user input

@@ -52,6 +52,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         if (username === envUsername && password === envPassword) {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('schoolName', schoolName);
+            localStorage.setItem('schoolId', 'school_default'); // Fix: Required for DB access
             onLogin(schoolName);
         } else {
             setIsLoading(false);

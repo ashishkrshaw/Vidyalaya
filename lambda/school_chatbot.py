@@ -165,16 +165,20 @@ def lambda_handler(event, context):
         source = 'local'
         
         # If no local match and Gemini key exists, use API
-        if not response and GEMINI_KEY:
-            response = call_gemini(query, ctx)
-            source = 'gemini'
+        # If no local match
+        if not response:
+            if GEMINI_KEY:
+                response = call_gemini(query, ctx)
+                source = 'gemini'
+            else:
+                # Tell user clearly that AI is disabled
+                response = "🤖 My AI brain isn't connected. Please add 'GEMINI_API_KEY' environment variable in AWS Lambda to enable smart answers. For now, you can ask: 'Total students', 'Find [Name]', 'Fee Report'."
+                source = 'no_key'
         
-        # Fallback
+        # Fallback if AI failed or returned nothing
         if not response:
             name = ctx.get('schoolName', 'School')
-            total = ctx.get('totalStudents', 0)
-            response = f"""📚 {name}: {total} students
-Try: "How many students?", "Find [name]", "List class 10" """
+            response = f"I couldn't understand that. Try asking about students, fees, or classes."
             source = 'fallback'
         
         return {

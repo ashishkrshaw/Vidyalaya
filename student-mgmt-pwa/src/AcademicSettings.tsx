@@ -111,6 +111,7 @@ const Settings: React.FC = () => {
   const [ocrProgress, setOcrProgress] = useState(0);
   const [ocrText, setOcrText] = useState('');
   const [parsedStudents, setParsedStudents] = useState<any[]>([]);
+  const [ocrPreviewOpen, setOcrPreviewOpen] = useState(false); // New state for dialog
   const [ocrLoading, setOcrLoading] = useState(false);
 
   useEffect(() => {
@@ -604,7 +605,8 @@ const Settings: React.FC = () => {
       });
 
       setParsedStudents(parsed);
-      setOcrText(JSON.stringify(json, null, 2)); // Show raw JSON in text area
+      setOcrText(JSON.stringify(json, null, 2));
+      if (parsed.length > 0) setOcrPreviewOpen(true); // Open dialog
       showMessage('success', `Parsed ${parsed.length} students from Excel!`);
 
     } catch (err: any) {
@@ -676,6 +678,7 @@ const Settings: React.FC = () => {
     });
 
     setParsedStudents(students);
+    if (students.length > 0) setOcrPreviewOpen(true); // Open dialog
   };
 
   const removeParsedStudent = (index: number) => {
@@ -1103,20 +1106,29 @@ const Settings: React.FC = () => {
           <p className="settings-card-desc">Upload photo of student list or Excel/CSV file to automatically add them</p>
 
           <div className="settings-ocr-area">
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {/* Button 1: File Upload (Excel/Image) */}
               <label className="settings-btn settings-btn-secondary" style={{ width: 'auto', display: 'inline-flex' }}>
-                <UploadFileIcon /> Upload / Capture
-                <input type="file" accept="image/*, .xlsx, .xls, .csv" capture="environment" onChange={handleOcrUpload} hidden />
+                <UploadFileIcon /> Upload File
+                <input type="file" accept="image/*, .xlsx, .xls, .csv" onChange={handleOcrUpload} hidden />
               </label>
-              {ocrFile && <span style={{ marginLeft: 10 }}>{ocrFile.name} ({(ocrFile.size / 1024).toFixed(1)} KB)</span>}
+
+              {/* Button 2: Camera Capture (Mobile) */}
+              <label className="settings-btn settings-btn-primary" style={{ width: 'auto', display: 'inline-flex' }}>
+                <DocumentScannerIcon /> Camera
+                <input type="file" accept="image/*" capture="environment" onChange={handleOcrUpload} hidden />
+              </label>
+
+              {ocrFile && <span style={{ marginLeft: 10, alignSelf: 'center' }}>{ocrFile.name} ({(ocrFile.size / 1024).toFixed(1)} KB)</span>}
             </div>
 
+            {/* Process Button for Images */}
             {ocrFile && ocrFile.type.includes('image') && (
               <button
                 className="settings-btn settings-btn-primary"
                 onClick={processOCR}
                 disabled={ocrLoading}
-                style={{ marginBottom: 16 }}
+                style={{ marginBottom: 16, width: '100%' }}
               >
                 {ocrLoading ? `Processing ${ocrProgress}%...` : 'Extract Text & Parse'}
               </button>
@@ -1128,57 +1140,9 @@ const Settings: React.FC = () => {
               </div>
             )}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Raw Extracted Text</label>
-                <textarea
-                  value={ocrText}
-                  onChange={(e) => {
-                    setOcrText(e.target.value);
-                    parseOcrText(e.target.value);
-                  }}
-                  style={{ width: '100%', height: 200, padding: 8, fontSize: 12, fontFamily: 'monospace' }}
-                  placeholder="Extracted text will appear here..."
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Parsed Students Preview ({parsedStudents.length})</label>
-                <div style={{ height: 200, overflowY: 'auto', border: '1px solid #ccc', background: '#f9f9f9', padding: 8 }}>
-                  {parsedStudents.length > 0 ? (
-                    parsedStudents.map((s, i) => (
-                      <div key={i} style={{ borderBottom: '1px solid #eee', paddingBottom: 4, marginBottom: 4, fontSize: 11, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <strong>{s.name}</strong> | Cls: {s.class}-{s.section} <br />
-                          <span style={{ color: '#666' }}>Father: {s.fatherName} | Mob: {s.fatherMobile}</span>
-                        </div>
-                        <button
-                          onClick={() => removeParsedStudent(i)}
-                          style={{ border: 'none', background: 'transparent', color: '#ff4d4f', cursor: 'pointer', padding: 4 }}
-                          title="Remove this student"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ color: '#999', textAlign: 'center', marginTop: 80 }}>
-                      No students parsed. Ensure format: Name, Class, Section...
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {parsedStudents.length > 0 && (
-              <button
-                className="settings-btn settings-btn-primary"
-                onClick={() => requestPasswordAction('saveOcr')}
-                style={{ marginTop: 16 }}
-              >
-                Add {parsedStudents.length} Students
-              </button>
-            )}
+            <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+              * Ensure student list follows format: <strong>Name, Class, Section, Father Name, Mobile</strong>
+            </p>
           </div>
         </div>
       </div>
@@ -1188,6 +1152,79 @@ const Settings: React.FC = () => {
         <p>© {new Date().getFullYear()} School Management System | Version 2.0</p>
         <p>Developed by ASK Ltd.</p>
       </div>
+
+      {/* OCR Preview Dialog */}
+      {ocrPreviewOpen && (
+        <div className="settings-dialog-overlay" onClick={() => setOcrPreviewOpen(false)}>
+          <div className="settings-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 800, width: '90%' }}>
+            <div className="settings-card-header blue" style={{ borderBottom: '1px solid #1976d2', paddingBottom: 16, marginBottom: 16 }}>
+              <DocumentScannerIcon style={{ color: '1976d2' }} />
+              <h2 style={{ color: '#1976d2' }}>OCR/Excel Preview</h2>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: 16, textAlign: 'left' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Raw Extracted Text</label>
+                <textarea
+                  value={ocrText}
+                  onChange={(e) => {
+                    setOcrText(e.target.value);
+                    parseOcrText(e.target.value);
+                  }}
+                  style={{ width: '100%', height: 250, padding: 8, fontSize: 12, fontFamily: 'monospace', borderRadius: 8, border: '1px solid #ddd' }}
+                  placeholder="Extracted text will appear here..."
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Parsed Students ({parsedStudents.length})</label>
+                <div style={{ height: 250, overflowY: 'auto', border: '1px solid #ddd', borderRadius: 8, background: '#f9f9f9', padding: 8 }}>
+                  {parsedStudents.length > 0 ? (
+                    parsedStudents.map((s, i) => (
+                      <div key={i} style={{ borderBottom: '1px solid #eee', paddingBottom: 8, marginBottom: 8, fontSize: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong style={{ color: '#1976d2' }}>{s.name}</strong>
+                          <div style={{ fontSize: 11, color: '#555' }}>
+                            Class: {s.class}-{s.section} | Father: {s.fatherName}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#555' }}>Mobile: {s.fatherMobile}</div>
+                        </div>
+                        <button
+                          onClick={() => removeParsedStudent(i)}
+                          style={{ border: 'none', background: 'transparent', color: '#dc3545', cursor: 'pointer', padding: 4 }}
+                          title="Remove"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: '#999', textAlign: 'center', marginTop: 100 }}>
+                      No students parsed. Ensure format: Name, Class, Section...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="settings-dialog-actions" style={{ justifyContent: 'flex-end', marginTop: 24, gap: 12 }}>
+              <button className="settings-btn settings-btn-secondary" onClick={() => setOcrPreviewOpen(false)}>
+                Cancel
+              </button>
+              <button
+                className="settings-btn settings-btn-primary"
+                onClick={() => {
+                  setOcrPreviewOpen(false);
+                  requestPasswordAction('saveOcr');
+                }}
+                disabled={parsedStudents.length === 0}
+              >
+                Confirm & Add {parsedStudents.length} Students
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Backup Preview Dialog */}
       {backupDialogOpen && backupData && (
