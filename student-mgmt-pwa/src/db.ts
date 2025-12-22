@@ -315,7 +315,7 @@ export async function loadSchoolInfo(): Promise<SchoolInfo> {
   
   // Fallback to environment variables or defaults
   return {
-    name: import.meta.env?.VITE_SCHOOL_NAME || 'Sunrise Public School',
+    name: import.meta.env?.VITE_SCHOOL_NAME || 'DAV Public School',
     address: import.meta.env?.VITE_SCHOOL_ADDRESS || '123 Main Road, Knowledge Park, City - 110001',
     phone: import.meta.env?.VITE_SCHOOL_PHONE || '+91-9876543210',
     email: import.meta.env?.VITE_SCHOOL_EMAIL || 'info@school.edu',

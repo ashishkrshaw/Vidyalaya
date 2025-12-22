@@ -111,13 +111,13 @@ const Chatbot = () => {
       const response = await fetch(LAMBDA_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userInput, schoolContext })
+        body: JSON.stringify({ query: userInput, schoolContext })
       });
 
       if (!response.ok) throw new Error('Lambda API error');
 
       const data = await response.json();
-      return data.reply || null;
+      return data.response || null;
     } catch (error) {
       console.error('Lambda API error:', error);
       return null;

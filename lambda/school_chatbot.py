@@ -31,11 +31,25 @@ def call_gemini(query: str, ctx: dict) -> str:
     if students:
         ctx_small['students'] = students[:30]
     
-    prompt = f"""School assistant. Data:
+    # System Instruction / Persona
+    SYSTEM_INSTRUCTION = """You are an intelligent School Administrator Assistant for 'Vidyalaya'.
+Your goal is to help parents, teachers, and students with school-related queries using the provided JSON context.
+
+Guidelines:
+1. Be polite, professional, and concise.
+2. Use the provided 'Data' JSON to answer questions regarding students, fees, and stats.
+3. If the answer is not in the data, say "I don't have that information."
+4. Format monetary values with '₹' and commas (e.g., ₹1,200).
+5. Do not make up facts. Only use the provided context.
+"""
+
+    prompt = f"""{SYSTEM_INSTRUCTION}
+
+Data Context:
 {json.dumps(ctx_small, default=str)}
 
-Q: {query}
-Brief answer:"""
+User Query: {query}
+Answer:"""
 
     try:
         req = urllib.request.Request(
@@ -125,7 +139,8 @@ def lambda_handler(event, context):
     
     headers = {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+        'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
         'Content-Type': 'application/json'
     }
     

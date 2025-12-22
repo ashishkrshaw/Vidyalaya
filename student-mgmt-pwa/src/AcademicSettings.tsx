@@ -17,6 +17,7 @@ import CloudIcon from '@mui/icons-material/Cloud';
 import RestoreIcon from '@mui/icons-material/Restore';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import Tesseract from 'tesseract.js';
+import * as XLSX from 'xlsx';
 import {
   saveFeeMap,
   loadFeeMap,
@@ -552,7 +553,7 @@ const Settings: React.FC = () => {
     setLoading(false);
   };
 
-  // OCR Functions
+  // OCR / Excel Functions
   const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -560,7 +561,56 @@ const Settings: React.FC = () => {
       setOcrText('');
       setParsedStudents([]);
       setOcrProgress(0);
+
+      // Auto-process based on type
+      if (file.type.includes('image')) {
+        // Wait for user to click process for images (heavy op)
+      } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.name.endsWith('.csv')) {
+        processExcel(file);
+      }
     }
+  };
+
+  const processExcel = async (file: File) => {
+    setOcrLoading(true);
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const json: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+      let parsed: any[] = [];
+
+      // Try to map common column names
+      json.forEach(row => {
+        // Flexible field matching
+        const name = row['Name'] || row['Student Name'] || row['name'] || Object.values(row)[0]; // First column fallback
+        const cls = row['Class'] || row['class'] || row['Grade'];
+        const sec = row['Section'] || row['section'] || row['Sec'] || 'A';
+        const father = row['Father'] || row['Father Name'] || row['Guardian'];
+        const mobile = row['Mobile'] || row['Phone'] || row['Contact'];
+
+        if (name && cls) {
+          parsed.push({
+            name: String(name),
+            class: String(cls),
+            section: String(sec),
+            fatherName: father ? String(father) : '',
+            fatherMobile: mobile ? String(mobile) : '',
+            status: 'Pending'
+          });
+        }
+      });
+
+      setParsedStudents(parsed);
+      setOcrText(JSON.stringify(json, null, 2)); // Show raw JSON in text area
+      showMessage('success', `Parsed ${parsed.length} students from Excel!`);
+
+    } catch (err: any) {
+      showMessage('error', 'Excel Parse Error: ' + err.message);
+    }
+    setOcrLoading(false);
   };
 
   const processOCR = async () => {
@@ -626,6 +676,12 @@ const Settings: React.FC = () => {
     });
 
     setParsedStudents(students);
+  };
+
+  const removeParsedStudent = (index: number) => {
+    const updated = [...parsedStudents];
+    updated.splice(index, 1);
+    setParsedStudents(updated);
   };
 
   const saveOcrStudents = async () => {
@@ -1037,25 +1093,25 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      {/* OCR Offline Admission Card */}
+      {/* OCR / Excel Offline Admission Card */}
       <div className="settings-card wide">
         <div className="settings-card-header blue">
           <DocumentScannerIcon />
-          <h2>Offline Admission (OCR)</h2>
+          <h2>Offline Admission (OCR / Excel)</h2>
         </div>
         <div className="settings-card-body">
-          <p className="settings-card-desc">Upload photo of student list to automatically add them</p>
+          <p className="settings-card-desc">Upload photo of student list or Excel/CSV file to automatically add them</p>
 
           <div className="settings-ocr-area">
             <div style={{ marginBottom: 16 }}>
               <label className="settings-btn settings-btn-secondary" style={{ width: 'auto', display: 'inline-flex' }}>
-                <UploadFileIcon /> Select Image
-                <input type="file" accept="image/*" onChange={handleOcrUpload} hidden />
+                <UploadFileIcon /> Upload / Capture
+                <input type="file" accept="image/*, .xlsx, .xls, .csv" capture="environment" onChange={handleOcrUpload} hidden />
               </label>
               {ocrFile && <span style={{ marginLeft: 10 }}>{ocrFile.name} ({(ocrFile.size / 1024).toFixed(1)} KB)</span>}
             </div>
 
-            {ocrFile && (
+            {ocrFile && ocrFile.type.includes('image') && (
               <button
                 className="settings-btn settings-btn-primary"
                 onClick={processOCR}
@@ -1091,9 +1147,18 @@ const Settings: React.FC = () => {
                 <div style={{ height: 200, overflowY: 'auto', border: '1px solid #ccc', background: '#f9f9f9', padding: 8 }}>
                   {parsedStudents.length > 0 ? (
                     parsedStudents.map((s, i) => (
-                      <div key={i} style={{ borderBottom: '1px solid #eee', paddingBottom: 4, marginBottom: 4, fontSize: 11 }}>
-                        <strong>{s.name}</strong> | Cls: {s.class}-{s.section} <br />
-                        <span style={{ color: '#666' }}>Father: {s.fatherName} | Mob: {s.fatherMobile}</span>
+                      <div key={i} style={{ borderBottom: '1px solid #eee', paddingBottom: 4, marginBottom: 4, fontSize: 11, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <strong>{s.name}</strong> | Cls: {s.class}-{s.section} <br />
+                          <span style={{ color: '#666' }}>Father: {s.fatherName} | Mob: {s.fatherMobile}</span>
+                        </div>
+                        <button
+                          onClick={() => removeParsedStudent(i)}
+                          style={{ border: 'none', background: 'transparent', color: '#ff4d4f', cursor: 'pointer', padding: 4 }}
+                          title="Remove this student"
+                        >
+                          ✕
+                        </button>
                       </div>
                     ))
                   ) : (

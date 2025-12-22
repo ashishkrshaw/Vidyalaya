@@ -649,32 +649,116 @@
    ============================================ */
 @media (max-width: 768px) {
     .settings-page {
-        padding: 16px;
+        padding: 12px;
     }
 
     .settings-header {
         flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .settings-header-content {
+        width: 100%;
     }
 
     .settings-logout-btn {
         width: 100%;
         justify-content: center;
+        padding: 12px;
     }
 
     .settings-grid {
         grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .settings-card.wide {
+        grid-column: 1;
+        /* Reset span on mobile */
+    }
+
+    .settings-card[style*="grid-column: span 2"] {
+        grid-column: 1 !important;
+        /* Force overrides via style attribute */
     }
 
     .settings-fee-grid {
         grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .settings-card-body {
+        padding: 16px;
+    }
+
+    /* Branding Form Mobile Fix */
+    .settings-card-body div[style*="display: grid"] {
+        display: flex !important;
+        flex-direction: column;
+        gap: 16px !important;
+    }
+
+    .settings-card-body div[style*="grid-column: span 2"] {
+        grid-column: auto !important;
+        width: 100% !important;
+    }
+
+    .settings-backup-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .settings-backup-option {
+        display: flex;
+        flex-direction: row;
+        /* Horizontal layout for backup items on mobile */
+        align-items: center;
+        text-align: left;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .settings-backup-icon {
+        margin: 0;
+        width: 40px;
+        height: 40px;
+    }
+
+    .settings-backup-icon svg {
+        font-size: 20px;
+    }
+
+    .settings-backup-option h4 {
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .settings-backup-option p {
+        display: none;
+        /* Hide description to save space */
+    }
+
+    .settings-backup-option .settings-btn,
+    .settings-backup-option label.settings-btn {
+        width: auto;
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-left: auto;
+        /* Push to right */
     }
 
     .settings-backup-actions {
         flex-direction: column;
     }
 
-    .settings-btn.full-mobile {
+    .settings-btn.full-mobile,
+    .settings-password-actions button {
         width: 100%;
+    }
+
+    .settings-ocr-area div[style*="display: grid"] {
+        grid-template-columns: 1fr !important;
     }
 }
 
