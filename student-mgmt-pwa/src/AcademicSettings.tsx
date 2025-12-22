@@ -15,6 +15,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import FolderIcon from '@mui/icons-material/Folder';
 import CloudIcon from '@mui/icons-material/Cloud';
 import RestoreIcon from '@mui/icons-material/Restore';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import Tesseract from 'tesseract.js';
 import {
   saveFeeMap,
   loadFeeMap,
@@ -103,6 +105,13 @@ const Settings: React.FC = () => {
   });
   const [schoolLogoPreview, setSchoolLogoPreview] = useState<string | null>(null);
 
+  // OCR State
+  const [ocrFile, setOcrFile] = useState<File | null>(null);
+  const [ocrProgress, setOcrProgress] = useState(0);
+  const [ocrText, setOcrText] = useState('');
+  const [parsedStudents, setParsedStudents] = useState<any[]>([]);
+  const [ocrLoading, setOcrLoading] = useState(false);
+
   useEffect(() => {
     loadAllSettings();
   }, []);
@@ -175,6 +184,7 @@ const Settings: React.FC = () => {
 
       if (pendingAction === 'saveFees') saveFees();
       else if (pendingAction === 'savePromotion') savePromotion();
+      else if (pendingAction === 'saveOcr') saveOcrStudents();
 
       setPendingAction(null);
     } else {
@@ -538,6 +548,111 @@ const Settings: React.FC = () => {
       showMessage('success', `✓ Restore complete! ${admissionResult.added} new students, ${admissionResult.updated} updated, ${historyAdded} history entries added.`);
     } catch (err) {
       showMessage('error', 'Failed to read or restore backup file');
+    }
+    setLoading(false);
+  };
+
+  // OCR Functions
+  const handleOcrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setOcrFile(file);
+      setOcrText('');
+      setParsedStudents([]);
+      setOcrProgress(0);
+    }
+  };
+
+  const processOCR = async () => {
+    if (!ocrFile) return;
+    setOcrLoading(true);
+    setOcrProgress(0);
+
+    try {
+      const result = await Tesseract.recognize(
+        ocrFile,
+        'eng',
+        {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              setOcrProgress(Math.floor(m.progress * 100));
+            }
+          }
+        }
+      );
+
+      setOcrText(result.data.text);
+      parseOcrText(result.data.text);
+      showMessage('success', 'Text recognized successfully! Please review.');
+    } catch (err: any) {
+      showMessage('error', 'OCR Failed: ' + err.message);
+    }
+    setOcrLoading(false);
+  };
+
+  const parseOcrText = (text: string) => {
+    // Attempt to parse lines. Expected format examples:
+    // Name | Class | Section | Father Name | Mobile
+    // John Doe, 5, A, Mr. Doe, 9876543210
+
+    const lines = text.split('\n').filter(line => line.trim().length > 5);
+    const students: any[] = [];
+
+    lines.forEach(line => {
+      // Basic separator detection (comma, pipe, or tab)
+      const parts = line.split(/[,|\t]/).map(p => p.trim());
+
+      if (parts.length >= 3) {
+        // Simple heuristic mapping
+        // Assuming order: Name, Class, Section, FatherName, Mobile
+        const name = parts[0];
+        const cls = parts[1] || '';
+        const section = parts[2] || '';
+        const fatherName = parts[3] || '';
+        const mobile = parts[4] || '';
+
+        // Validate minimal requirements
+        if (name && cls) {
+          students.push({
+            name,
+            class: cls,
+            section: section,
+            fatherName: fatherName,
+            fatherMobile: mobile,
+            status: 'Pending' // For UI
+          });
+        }
+      }
+    });
+
+    setParsedStudents(students);
+  };
+
+  const saveOcrStudents = async () => {
+    if (parsedStudents.length === 0) return;
+
+    setLoading(true);
+    try {
+      // Enrich data with IDs and Admission Dates
+      const year = new Date().getFullYear().toString().slice(-2);
+      const month = (new Date().getMonth() + 1).toString().padStart(2, '0');
+
+      const toAdd = parsedStudents.map(s => ({
+        ...s,
+        studentId: `S${year}-${month}-${Math.floor(1000 + Math.random() * 9000)}`,
+        admissionDate: new Date().toISOString().split('T')[0],
+        rollNo: 'TBD', // Should be assigned logic
+        feeHistory: [],
+        dues: 0
+      }));
+
+      await bulkRestoreAdmissions(toAdd);
+      showMessage('success', `${toAdd.length} students added successfully!`);
+      setOcrFile(null);
+      setOcrText('');
+      setParsedStudents([]);
+    } catch (err: any) {
+      showMessage('error', 'Failed to save students: ' + err.message);
     }
     setLoading(false);
   };
@@ -917,6 +1032,87 @@ const Settings: React.FC = () => {
               <div className="settings-progress">
                 <div className="settings-progress-bar" style={{ width: `${backupProgress}%` }} />
               </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* OCR Offline Admission Card */}
+      <div className="settings-card wide">
+        <div className="settings-card-header blue">
+          <DocumentScannerIcon />
+          <h2>Offline Admission (OCR)</h2>
+        </div>
+        <div className="settings-card-body">
+          <p className="settings-card-desc">Upload photo of student list to automatically add them</p>
+
+          <div className="settings-ocr-area">
+            <div style={{ marginBottom: 16 }}>
+              <label className="settings-btn settings-btn-secondary" style={{ width: 'auto', display: 'inline-flex' }}>
+                <UploadFileIcon /> Select Image
+                <input type="file" accept="image/*" onChange={handleOcrUpload} hidden />
+              </label>
+              {ocrFile && <span style={{ marginLeft: 10 }}>{ocrFile.name} ({(ocrFile.size / 1024).toFixed(1)} KB)</span>}
+            </div>
+
+            {ocrFile && (
+              <button
+                className="settings-btn settings-btn-primary"
+                onClick={processOCR}
+                disabled={ocrLoading}
+                style={{ marginBottom: 16 }}
+              >
+                {ocrLoading ? `Processing ${ocrProgress}%...` : 'Extract Text & Parse'}
+              </button>
+            )}
+
+            {ocrLoading && (
+              <div className="settings-progress">
+                <div className="settings-progress-bar" style={{ width: `${ocrProgress}%` }} />
+              </div>
+            )}
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Raw Extracted Text</label>
+                <textarea
+                  value={ocrText}
+                  onChange={(e) => {
+                    setOcrText(e.target.value);
+                    parseOcrText(e.target.value);
+                  }}
+                  style={{ width: '100%', height: 200, padding: 8, fontSize: 12, fontFamily: 'monospace' }}
+                  placeholder="Extracted text will appear here..."
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: 5, fontSize: 12, fontWeight: 600 }}>Parsed Students Preview ({parsedStudents.length})</label>
+                <div style={{ height: 200, overflowY: 'auto', border: '1px solid #ccc', background: '#f9f9f9', padding: 8 }}>
+                  {parsedStudents.length > 0 ? (
+                    parsedStudents.map((s, i) => (
+                      <div key={i} style={{ borderBottom: '1px solid #eee', paddingBottom: 4, marginBottom: 4, fontSize: 11 }}>
+                        <strong>{s.name}</strong> | Cls: {s.class}-{s.section} <br />
+                        <span style={{ color: '#666' }}>Father: {s.fatherName} | Mob: {s.fatherMobile}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ color: '#999', textAlign: 'center', marginTop: 80 }}>
+                      No students parsed. Ensure format: Name, Class, Section...
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {parsedStudents.length > 0 && (
+              <button
+                className="settings-btn settings-btn-primary"
+                onClick={() => requestPasswordAction('saveOcr')}
+                style={{ marginTop: 16 }}
+              >
+                Add {parsedStudents.length} Students
+              </button>
             )}
           </div>
         </div>

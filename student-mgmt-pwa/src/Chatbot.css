@@ -122,8 +122,8 @@
 }
 
 .chatbot-window {
-  width: 380px;
-  height: 520px;
+  width: 320px;
+  height: 480px;
   background-color: #ffffff;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
