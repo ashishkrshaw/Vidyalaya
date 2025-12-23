@@ -59,16 +59,20 @@ const FeeManagement: React.FC = () => {
     }
   }, [student, months, feeMap]);
 
-  useEffect(() => {
-    getAdmissions().then((students: any[]) => {
-      const payments: any[] = [];
-      students.forEach((s: any) => {
-        (s.feeHistory || []).forEach((p: any) => {
-          payments.push({ ...p, class: s.class });
-        });
+  // Function to refresh all payments (for live summary data)
+  const refreshPayments = async () => {
+    const students = await getAdmissions();
+    const payments: any[] = [];
+    students.forEach((s: any) => {
+      (s.feeHistory || []).forEach((p: any) => {
+        payments.push({ ...p, class: s.class, name: s.name, studentId: s.studentId });
       });
-      setAllPayments(payments);
     });
+    setAllPayments(payments);
+  };
+
+  useEffect(() => {
+    refreshPayments();
   }, []);
 
   useEffect(() => {
@@ -140,6 +144,10 @@ const FeeManagement: React.FC = () => {
     setConfirmOpen(false);
     setMsg('Payment successful and logged in history!');
     setMonths([]);
+
+    // Refresh summary data
+    await refreshPayments();
+
     setTimeout(() => setMsg(''), 2500);
     setReceiptData({
       student,
