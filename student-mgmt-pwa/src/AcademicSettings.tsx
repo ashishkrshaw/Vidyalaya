@@ -385,15 +385,22 @@ const Settings: React.FC = () => {
     setTimeout(() => { setBackupProgress(0); setBackupType(null); }, 2000);
   };
 
-  // Google Drive Backup - Prepare data (no auto-download)
+  // Google Drive Backup - Direct upload (streamlined)
   const handleDriveBackup = async () => {
     setLoading(true);
     setBackupProgress(0);
     setBackupType('drive');
 
     try {
+      // Sign in if not already
+      if (!isSignedIn()) {
+        await signIn();
+        setGoogleSignedIn(true);
+      }
+      setBackupProgress(20);
+
       const admissions = await getAdmissions();
-      setBackupProgress(30);
+      setBackupProgress(40);
       const history = await getHistory();
       setBackupProgress(60);
 
@@ -406,14 +413,19 @@ const Settings: React.FC = () => {
         version: '1.0'
       };
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      setBackupData(data);
-      setBackupBlob(blob);
+      setBackupProgress(80);
+
+      const fileName = `school_backup_${new Date().toISOString().split('T')[0]}.json`;
+      const result = await uploadToDrive(data, fileName);
+
       setBackupProgress(100);
-      setBackupDialogOpen(true);
-      setDriveConnected(true);
+      showMessage('success', `✓ Backup uploaded to Google Drive: ${result.name}`);
     } catch (err: any) {
-      showMessage('error', 'Drive backup preparation failed: ' + err.message);
+      if (err.message?.includes('popup')) {
+        showMessage('error', 'Sign-in popup was blocked. Please allow popups.');
+      } else {
+        showMessage('error', 'Drive backup failed: ' + err.message);
+      }
     }
 
     setLoading(false);

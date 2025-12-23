@@ -294,6 +294,41 @@ const FeeManagement: React.FC = () => {
     );
   };
 
+  // Calculate student dues and paid months (starting from admission month)
+  const getStudentDuesInfo = () => {
+    if (!student || !feeMap[student.class]) return { totalPaid: 0, annualFee: 0, dues: 0, paidMonths: [] as string[], applicableMonths: [] as string[] };
+    const monthlyFee = Number(feeMap[student.class]) || 0;
+    const totalPaid = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+
+    // Determine applicable months based on admission date
+    let applicableMonths = [...monthOptions]; // Default: all 12 months
+    if (student.admissionDate) {
+      const admDate = new Date(student.admissionDate);
+      const admMonth = admDate.getMonth(); // 0-11
+      // Academic year: April (3) to March (2)
+      // Map calendar month to academic month index
+      // April=0, May=1, ..., March=11
+      const academicMonthIndex = (admMonth >= 3) ? admMonth - 3 : admMonth + 9;
+      applicableMonths = monthOptions.slice(academicMonthIndex);
+    }
+
+    const annualFee = monthlyFee * applicableMonths.length;
+    const dues = Math.max(0, annualFee - totalPaid);
+
+    // Determine paid months based on total paid (sequential from admission month)
+    const paidMonths: string[] = [];
+    let remaining = totalPaid;
+    for (const m of applicableMonths) {
+      if (remaining >= monthlyFee) {
+        paidMonths.push(m);
+        remaining -= monthlyFee;
+      } else {
+        break;
+      }
+    }
+    return { totalPaid, annualFee, dues, paidMonths, applicableMonths };
+  };
+
   return (
     <div className="fee-page">
       {/* Header */}
@@ -369,33 +404,66 @@ const FeeManagement: React.FC = () => {
                 <span><strong>Section:</strong> {student.section}</span>
                 <span><strong>Roll No:</strong> {student.rollNo}</span>
               </div>
+              {/* Dues Display */}
+              {(() => {
+                const info = getStudentDuesInfo();
+                return (
+                  <div style={{ marginTop: 16, padding: 16, background: info.dues > 0 ? '#FFEBE6' : '#E3FCEF', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span>Annual Fee:</span>
+                      <strong>₹{info.annualFee}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span>Total Paid:</span>
+                      <strong style={{ color: '#006644' }}>₹{info.totalPaid}</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ddd', paddingTop: 8 }}>
+                      <span style={{ fontWeight: 'bold' }}>Outstanding Dues:</span>
+                      <strong style={{ color: info.dues > 0 ? '#DE350B' : '#006644', fontSize: 18 }}>
+                        ₹{info.dues}
+                      </strong>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="fee-form-field">
               <label className="fee-form-label">Select Months to Pay</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                {monthOptions.map(month => (
-                  <label key={month} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '6px 12px',
-                    background: months.includes(month) ? '#0052CC' : '#F4F5F7',
-                    color: months.includes(month) ? '#FFFFFF' : '#42526E',
-                    borderRadius: 4,
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    transition: 'all 0.2s'
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={months.includes(month)}
-                      onChange={() => handleMonthToggle(month)}
-                      style={{ display: 'none' }}
-                    />
-                    {month}
-                  </label>
-                ))}
+                {(() => {
+                  const info = getStudentDuesInfo();
+                  return monthOptions.map(month => {
+                    const isApplicable = info.applicableMonths.includes(month);
+                    const isPaid = info.paidMonths.includes(month);
+                    const isSelected = months.includes(month);
+                    return (
+                      <label key={month} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '6px 12px',
+                        background: !isApplicable ? '#EBECF0' : (isPaid ? '#E3FCEF' : (isSelected ? '#0052CC' : '#F4F5F7')),
+                        color: !isApplicable ? '#A5ADBA' : (isPaid ? '#006644' : (isSelected ? '#FFFFFF' : '#42526E')),
+                        borderRadius: 4,
+                        cursor: (!isApplicable || isPaid) ? 'not-allowed' : 'pointer',
+                        fontSize: 14,
+                        transition: 'all 0.2s',
+                        opacity: (!isApplicable || isPaid) ? 0.6 : 1,
+                        border: isPaid ? '2px solid #36B37E' : 'none'
+                      }}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => isApplicable && !isPaid && handleMonthToggle(month)}
+                          disabled={!isApplicable || isPaid}
+                          style={{ display: 'none' }}
+                        />
+                        {month} {isPaid && '✓'} {!isApplicable && '—'}
+                      </label>
+                    );
+                  });
+                })()}
               </div>
             </div>
 
