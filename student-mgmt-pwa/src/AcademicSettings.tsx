@@ -13,9 +13,9 @@ import InfoIcon from '@mui/icons-material/Info';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import DownloadIcon from '@mui/icons-material/Download';
 import FolderIcon from '@mui/icons-material/Folder';
-import CloudIcon from '@mui/icons-material/Cloud';
 import RestoreIcon from '@mui/icons-material/Restore';
 import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import { GoogleDriveIcon } from './PremiumIcons';
 import Tesseract from 'tesseract.js';
 import * as XLSX from 'xlsx';
 import {
@@ -1052,7 +1052,7 @@ const Settings: React.FC = () => {
               {/* Google Drive Connection (Always Visible) */}
               <div className="settings-backup-option">
                 <div className="settings-backup-icon cloud">
-                  <CloudIcon />
+                  <GoogleDriveIcon size={24} />
                 </div>
                 <h4>Google Drive</h4>
                 <p>{googleSignedIn ? 'Connected' : 'Not Connected'}</p>
@@ -1108,7 +1108,7 @@ const Settings: React.FC = () => {
               {/* Google Drive Backup */}
               <div className="settings-backup-option">
                 <div className="settings-backup-icon cloud">
-                  <CloudIcon />
+                  <GoogleDriveIcon size={24} />
                 </div>
                 <h4>Backup to Drive</h4>
                 <p>Save to Google Drive</p>
@@ -1137,7 +1137,7 @@ const Settings: React.FC = () => {
               {/* Restore from Drive */}
               <div className="settings-backup-option">
                 <div className="settings-backup-icon cloud">
-                  <CloudIcon />
+                  <GoogleDriveIcon size={24} />
                 </div>
                 <h4>Restore from Drive</h4>
                 <p>Get backup from Google Drive</p>
@@ -1317,7 +1317,7 @@ const Settings: React.FC = () => {
                   onClick={handleUploadToDrive}
                   disabled={driveLoading}
                 >
-                  <CloudIcon style={{ fontSize: 18 }} />
+                  <GoogleDriveIcon size={18} />
                   {driveLoading ? 'Uploading...' : 'Upload to Google Drive'}
                 </button>
               )}
@@ -1334,7 +1334,7 @@ const Settings: React.FC = () => {
         <div className="settings-dialog-overlay" onClick={() => setDriveDialogOpen(false)}>
           <div className="settings-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 550 }}>
             <div className="settings-dialog-icon" style={{ background: 'linear-gradient(135deg, #4285F4, #34A853)' }}>
-              <CloudIcon style={{ fontSize: 32, color: 'white' }} />
+              <GoogleDriveIcon size={32} />
             </div>
             <h3>Restore from Google Drive</h3>
             <p style={{ marginBottom: 16 }}>Select a backup file to restore</p>

@@ -1,26 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import SchoolIcon from '@mui/icons-material/School';
 import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import GroupIcon from '@mui/icons-material/Group';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import PeopleIcon from '@mui/icons-material/People';
-import WarningIcon from '@mui/icons-material/Warning';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { getAdmissions, loadFeeMap } from './db';
 import './Statistics.css';
 
 interface StatisticsProps {
   mode: 'light' | 'dark';
-}
-
-interface StatCardData {
-  title: string;
-  value: string | number;
-  icon: React.ReactNode;
-  color: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'teal';
-  trend?: { direction: 'up' | 'down' | 'neutral'; text: string };
 }
 
 interface ClassData {
@@ -29,21 +20,19 @@ interface ClassData {
   percentage: number;
 }
 
-const Statistics: React.FC<StatisticsProps> = ({ mode }) => {
+const Statistics: React.FC<StatisticsProps> = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalStudents: 0,
     totalFeeCollected: 0,
     thisMonthAdmissions: 0,
-    lastMonthAdmissions: 0,
     totalDues: 0,
     maleCount: 0,
     femaleCount: 0,
-    avgFeePerStudent: 0,
     collectionRate: 0,
   });
   const [classData, setClassData] = useState<ClassData[]>([]);
-  const [topClasses, setTopClasses] = useState<ClassData[]>([]);
+  const [monthlyFees, setMonthlyFees] = useState<{ month: string, amount: number }[]>([]);
 
   useEffect(() => {
     fetchStats();
@@ -57,49 +46,50 @@ const Statistics: React.FC<StatisticsProps> = ({ mode }) => {
       const now = new Date();
       const thisMonth = now.getMonth();
       const thisYear = now.getFullYear();
-      const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
-      const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
 
       let totalFee = 0;
       let totalDuesAmount = 0;
       let thisMonthCount = 0;
-      let lastMonthCount = 0;
       let maleCount = 0;
       let femaleCount = 0;
       const classCountMap: { [key: string]: number } = {};
+      const monthlyFeeData: { [key: string]: number } = {};
+
+      const monthNames = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+      monthNames.forEach(m => { monthlyFeeData[m] = 0; });
 
       students.forEach((student: any) => {
-        // Count by class
         classCountMap[student.class] = (classCountMap[student.class] || 0) + 1;
 
-        // Count gender
         if (student.gender?.toLowerCase() === 'male') maleCount++;
         else if (student.gender?.toLowerCase() === 'female') femaleCount++;
 
-        // Count admissions by month
         const admissionDate = new Date(student.createdAt || student.timestamp);
         if (admissionDate.getMonth() === thisMonth && admissionDate.getFullYear() === thisYear) {
           thisMonthCount++;
         }
-        if (admissionDate.getMonth() === lastMonth && admissionDate.getFullYear() === lastMonthYear) {
-          lastMonthCount++;
-        }
 
-        // Calculate fees collected
         if (student.feeHistory && Array.isArray(student.feeHistory)) {
           student.feeHistory.forEach((payment: any) => {
             totalFee += Number(payment.amount) || 0;
+            if (payment.months && Array.isArray(payment.months)) {
+              const perMonth = (Number(payment.amount) || 0) / payment.months.length;
+              payment.months.forEach((m: string) => {
+                const shortMonth = m.substring(0, 3);
+                if (monthlyFeeData[shortMonth] !== undefined) {
+                  monthlyFeeData[shortMonth] += perMonth;
+                }
+              });
+            }
           });
         }
 
-        // Calculate pending dues
         const classFee = Number(feeMap[student.class]) || 0;
-        const expectedTotal = classFee * 12; // Full year
+        const expectedTotal = classFee * 12;
         const paidTotal = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
         totalDuesAmount += Math.max(0, expectedTotal - paidTotal);
       });
 
-      // Calculate class data with percentages
       const totalStudents = students.length;
       const classDataArray: ClassData[] = Object.entries(classCountMap)
         .map(([cls, count]) => ({
@@ -109,26 +99,25 @@ const Statistics: React.FC<StatisticsProps> = ({ mode }) => {
         }))
         .sort((a, b) => b.count - a.count);
 
-      // Calculate collection rate
       const expectedYearlyTotal = students.reduce((sum: number, s: any) => {
         return sum + (Number(feeMap[s.class]) || 0) * 12;
       }, 0);
       const collectionRate = expectedYearlyTotal > 0 ? (totalFee / expectedYearlyTotal) * 100 : 0;
 
+      const monthlyArray = monthNames.map(m => ({ month: m, amount: Math.round(monthlyFeeData[m]) }));
+
       setStats({
         totalStudents,
         totalFeeCollected: totalFee,
         thisMonthAdmissions: thisMonthCount,
-        lastMonthAdmissions: lastMonthCount,
         totalDues: totalDuesAmount,
         maleCount,
         femaleCount,
-        avgFeePerStudent: totalStudents > 0 ? Math.round(totalFee / totalStudents) : 0,
         collectionRate: Math.round(collectionRate),
       });
 
       setClassData(classDataArray);
-      setTopClasses(classDataArray.slice(0, 5));
+      setMonthlyFees(monthlyArray);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -136,186 +125,222 @@ const Statistics: React.FC<StatisticsProps> = ({ mode }) => {
     }
   };
 
-  const getAdmissionTrend = () => {
-    const diff = stats.thisMonthAdmissions - stats.lastMonthAdmissions;
-    if (diff > 0) return { direction: 'up' as const, text: `+${diff} from last month` };
-    if (diff < 0) return { direction: 'down' as const, text: `${diff} from last month` };
-    return { direction: 'neutral' as const, text: 'Same as last month' };
+  // Generate area chart path
+  const maxFee = Math.max(...monthlyFees.map(m => m.amount), 1);
+  const generateAreaPath = () => {
+    const width = 100;
+    const height = 60;
+    const padding = 2;
+    const points = monthlyFees.map((item, i) => {
+      const x = padding + (i / (monthlyFees.length - 1)) * (width - padding * 2);
+      const y = height - padding - (item.amount / maxFee) * (height - padding * 2);
+      return `${x},${y}`;
+    });
+    const linePath = `M ${points.join(' L ')}`;
+    const areaPath = `${linePath} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`;
+    return { linePath, areaPath };
   };
 
-  const statCards: StatCardData[] = [
-    {
-      title: 'Total Students',
-      value: stats.totalStudents,
-      icon: <SchoolIcon />,
-      color: 'blue',
-    },
-    {
-      title: 'This Month Admissions',
-      value: stats.thisMonthAdmissions,
-      icon: <CalendarTodayIcon />,
-      color: 'green',
-      trend: getAdmissionTrend(),
-    },
-    {
-      title: 'Total Fee Collected',
-      value: `₹${stats.totalFeeCollected.toLocaleString()}`,
-      icon: <MonetizationOnIcon />,
-      color: 'purple',
-    },
-    {
-      title: 'Pending Dues',
-      value: `₹${stats.totalDues.toLocaleString()}`,
-      icon: <WarningIcon />,
-      color: 'red',
-    },
-    {
-      title: 'Collection Rate',
-      value: `${stats.collectionRate}%`,
-      icon: <TrendingUpIcon />,
-      color: 'teal',
-    },
-    {
-      title: 'Avg. Fee / Student',
-      value: `₹${stats.avgFeePerStudent.toLocaleString()}`,
-      icon: <AssessmentIcon />,
-      color: 'orange',
-    },
-  ];
+  const { linePath, areaPath } = generateAreaPath();
 
   if (loading) {
     return (
-      <div className="stats-page">
-        <div className="stats-header">
-          <h1 className="stats-title">
-            <AssessmentIcon />
-            Statistics Dashboard
-          </h1>
-        </div>
-        <div style={{ textAlign: 'center', padding: 40, color: '#6B778C' }}>
-          Loading statistics...
+      <div className="analytics-page">
+        <div className="analytics-loading">
+          <div className="loading-spinner"></div>
+          <span>Loading analytics...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="stats-page">
+    <div className="analytics-page">
       {/* Header */}
-      <div className="stats-header">
-        <h1 className="stats-title">
-          <AssessmentIcon />
-          Statistics Dashboard
-        </h1>
-        <p className="stats-subtitle">Overview of school performance and metrics</p>
+      <div className="analytics-header">
+        <div>
+          <h1 className="analytics-title">Analytics Dashboard</h1>
+          <p className="analytics-subtitle">School performance overview</p>
+        </div>
+        <div className="analytics-date">
+          <CalendarTodayIcon />
+          <span>{new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</span>
+        </div>
       </div>
 
-      {/* Stat Cards Grid */}
-      <div className="stats-cards-grid">
-        {statCards.map((card, index) => (
-          <div key={index} className="stat-card">
-            <div className={`stat-card-icon ${card.color}`}>
-              {card.icon}
-            </div>
-            <div className="stat-card-content">
-              <p className="stat-card-label">{card.title}</p>
-              <h3 className="stat-card-value">{card.value}</h3>
-              {card.trend && (
-                <div className={`stat-card-trend ${card.trend.direction}`}>
-                  {card.trend.direction === 'up' && <TrendingUpIcon style={{ fontSize: 14 }} />}
-                  {card.trend.direction === 'down' && <TrendingDownIcon style={{ fontSize: 14 }} />}
-                  {card.trend.text}
-                </div>
-              )}
-            </div>
+      {/* Key Metrics Row */}
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <div className="metric-icon blue">
+            <SchoolIcon />
           </div>
-        ))}
-      </div>
-
-      {/* Two Column Layout */}
-      <div className="stats-two-col">
-        {/* Students by Class */}
-        <div className="stats-section">
-          <h2 className="stats-section-title">
-            <GroupIcon />
-            Students by Class
-          </h2>
-          <div className="stats-chart">
-            {classData.map((item) => (
-              <div key={item.class} className="stats-bar">
-                <span className="stats-bar-label">{item.class}</span>
-                <div className="stats-bar-track">
-                  <div
-                    className="stats-bar-fill"
-                    style={{ width: `${Math.max(item.percentage, 5)}%` }}
-                  />
-                </div>
-                <span className="stats-bar-value">{item.count}</span>
-              </div>
-            ))}
-            {classData.length === 0 && (
-              <p style={{ color: '#6B778C', textAlign: 'center' }}>No data available</p>
-            )}
+          <div className="metric-content">
+            <span className="metric-value">{stats.totalStudents}</span>
+            <span className="metric-label">Total Students</span>
+          </div>
+          <div className="metric-trend up">
+            <TrendingUpIcon />
+            <span>Active</span>
           </div>
         </div>
 
-        {/* Gender Distribution & Top Classes */}
-        <div className="stats-section">
-          <h2 className="stats-section-title">
+        <div className="metric-card">
+          <div className="metric-icon green">
             <PeopleIcon />
-            Gender Distribution
-          </h2>
-          <div style={{ display: 'flex', gap: 40, marginBottom: 30 }}>
-            <div className="stats-progress-ring">
-              <div className="stats-ring-value" style={{ color: '#0052CC' }}>
-                {stats.maleCount}
-              </div>
-              <div className="stats-ring-label">Male Students</div>
-            </div>
-            <div className="stats-progress-ring">
-              <div className="stats-ring-value" style={{ color: '#6554C0' }}>
-                {stats.femaleCount}
-              </div>
-              <div className="stats-ring-label">Female Students</div>
-            </div>
-            <div className="stats-progress-ring">
-              <div className="stats-ring-value" style={{ color: '#6B778C' }}>
-                {stats.totalStudents - stats.maleCount - stats.femaleCount}
-              </div>
-              <div className="stats-ring-label">Not Specified</div>
+          </div>
+          <div className="metric-content">
+            <span className="metric-value">{stats.thisMonthAdmissions}</span>
+            <span className="metric-label">New This Month</span>
+          </div>
+          <div className="metric-mini-chart">
+            <svg viewBox="0 0 40 20">
+              <path d="M0,15 Q10,5 20,10 T40,5" fill="none" stroke="#22c55e" strokeWidth="2" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon purple">
+            <AccountBalanceWalletIcon />
+          </div>
+          <div className="metric-content">
+            <span className="metric-value">₹{stats.totalFeeCollected.toLocaleString()}</span>
+            <span className="metric-label">Fee Collected</span>
+          </div>
+          <div className="metric-progress">
+            <div className="progress-ring-small">
+              <svg viewBox="0 0 36 36">
+                <circle cx="18" cy="18" r="15" className="progress-bg" />
+                <circle cx="18" cy="18" r="15" className="progress-fill purple"
+                  style={{ strokeDasharray: `${stats.collectionRate} 100` }} />
+              </svg>
+              <span className="progress-text">{stats.collectionRate}%</span>
             </div>
           </div>
+        </div>
 
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#42526E', marginBottom: 12 }}>
-            Top 5 Classes by Enrollment
-          </h3>
-          <table className="stats-table">
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Class</th>
-                <th>Students</th>
-                <th>%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {topClasses.map((item, index) => (
-                <tr key={item.class}>
-                  <td>#{index + 1}</td>
-                  <td>{item.class}</td>
-                  <td>{item.count}</td>
-                  <td>{item.percentage.toFixed(1)}%</td>
-                </tr>
+        <div className="metric-card warning">
+          <div className="metric-icon orange">
+            <WarningAmberIcon />
+          </div>
+          <div className="metric-content">
+            <span className="metric-value">₹{stats.totalDues.toLocaleString()}</span>
+            <span className="metric-label">Pending Dues</span>
+          </div>
+          <div className="metric-trend down">
+            <span>Outstanding</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="charts-grid">
+        {/* Area Chart - Monthly Fee Collection */}
+        <div className="chart-card large">
+          <div className="chart-header">
+            <div>
+              <h3 className="chart-title">Fee Collection Trend</h3>
+              <p className="chart-subtitle">Monthly collection over academic year</p>
+            </div>
+            <div className="chart-legend">
+              <span className="legend-dot blue"></span>
+              <span>Collection (₹)</span>
+            </div>
+          </div>
+          <div className="area-chart">
+            <svg viewBox="0 0 100 60" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+              <path d={areaPath} fill="url(#areaGradient)" />
+              <path d={linePath} fill="none" stroke="#3b82f6" strokeWidth="0.8" strokeLinecap="round" />
+            </svg>
+            <div className="area-chart-labels">
+              {monthlyFees.map((item, i) => (
+                <span key={item.month} className="chart-label">{item.month}</span>
               ))}
-              {topClasses.length === 0 && (
-                <tr>
-                  <td colSpan={4} style={{ textAlign: 'center', color: '#6B778C' }}>
-                    No data available
-                  </td>
-                </tr>
+            </div>
+          </div>
+        </div>
+
+        {/* Donut Chart - Gender Distribution */}
+        <div className="chart-card">
+          <div className="chart-header">
+            <h3 className="chart-title">Gender Ratio</h3>
+          </div>
+          <div className="donut-container">
+            <svg viewBox="0 0 100 100" className="donut-svg">
+              <circle cx="50" cy="50" r="40" className="donut-bg" />
+              {stats.totalStudents > 0 && (
+                <>
+                  <circle cx="50" cy="50" r="40" className="donut-segment blue"
+                    style={{
+                      strokeDasharray: `${(stats.maleCount / stats.totalStudents) * 251.2} 251.2`,
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: '50px 50px'
+                    }} />
+                  <circle cx="50" cy="50" r="40" className="donut-segment purple"
+                    style={{
+                      strokeDasharray: `${(stats.femaleCount / stats.totalStudents) * 251.2} 251.2`,
+                      strokeDashoffset: `-${(stats.maleCount / stats.totalStudents) * 251.2}`,
+                      transform: 'rotate(-90deg)',
+                      transformOrigin: '50px 50px'
+                    }} />
+                </>
               )}
-            </tbody>
-          </table>
+              <text x="50" y="48" className="donut-value">{stats.totalStudents}</text>
+              <text x="50" y="58" className="donut-label">Total</text>
+            </svg>
+            <div className="donut-legend">
+              <div className="legend-row">
+                <span className="legend-dot blue"></span>
+                <span className="legend-text">Male</span>
+                <span className="legend-value">{stats.maleCount}</span>
+              </div>
+              <div className="legend-row">
+                <span className="legend-dot purple"></span>
+                <span className="legend-text">Female</span>
+                <span className="legend-value">{stats.femaleCount}</span>
+              </div>
+              <div className="legend-row">
+                <span className="legend-dot gray"></span>
+                <span className="legend-text">Other</span>
+                <span className="legend-value">{stats.totalStudents - stats.maleCount - stats.femaleCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Class Distribution */}
+      <div className="chart-card full">
+        <div className="chart-header">
+          <h3 className="chart-title">
+            <AssessmentIcon />
+            Class-wise Enrollment
+          </h3>
+        </div>
+        <div className="bars-grid">
+          {classData.slice(0, 10).map((item, index) => (
+            <div key={item.class} className="bar-item-v2">
+              <div className="bar-header-v2">
+                <span className="bar-label-v2">Class {item.class}</span>
+                <span className="bar-value-v2">{item.count}</span>
+              </div>
+              <div className="bar-track-v2">
+                <div
+                  className="bar-fill-v2"
+                  style={{ width: `${item.percentage}%`, animationDelay: `${index * 0.05}s` }}
+                />
+              </div>
+            </div>
+          ))}
+          {classData.length === 0 && (
+            <p className="no-data">No enrollment data available</p>
+          )}
         </div>
       </div>
     </div>

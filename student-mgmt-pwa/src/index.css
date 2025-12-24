@@ -402,3 +402,99 @@ button:focus-visible {
 .MuiSelect-select {
   padding: 10px 32px 10px 14px !important;
 }
+
+/* ============================================
+   DARK MODE - MUI Component Overrides
+   Fixes for DatePicker, inputs, icons visibility
+   ============================================ */
+
+[data-theme="dark"] .MuiOutlinedInput-root {
+  background: #0d1117 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: #484f58 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #6e7681 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #58a6ff !important;
+}
+
+[data-theme="dark"] .MuiInputBase-input {
+  color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .MuiInputBase-input::placeholder {
+  color: #6e7681 !important;
+  opacity: 1 !important;
+}
+
+[data-theme="dark"] .MuiSvgIcon-root {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root.Mui-focused {
+  color: #58a6ff !important;
+}
+
+/* DatePicker specific */
+[data-theme="dark"] .MuiPickersDay-root {
+  color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .MuiPickersDay-root:hover {
+  background: #21262d !important;
+}
+
+[data-theme="dark"] .MuiPickersDay-root.Mui-selected {
+  background: #238636 !important;
+}
+
+[data-theme="dark"] .MuiPickersCalendarHeader-label {
+  color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .MuiDayCalendar-weekDayLabel {
+  color: #8b949e !important;
+}
+
+[data-theme="dark"] .MuiPickersPopper-paper,
+[data-theme="dark"] .MuiPaper-root {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+}
+
+/* Form input elements global dark mode */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #0d1117;
+  border-color: #484f58;
+  color: #e6edf3;
+}
+
+[data-theme="dark"] input:hover,
+[data-theme="dark"] select:hover,
+[data-theme="dark"] textarea:hover {
+  border-color: #6e7681;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #6e7681;
+}

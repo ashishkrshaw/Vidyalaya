@@ -1,19 +1,35 @@
-/* ShowStudent.css - Professional Jira-Style Layout */
-
 /* ============================================
-   SEARCH SECTION
+   SHOW STUDENT - Professional Desktop Design
    ============================================ */
+
+.show-student-page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 32px;
+    box-sizing: border-box;
+    background: var(--gray-50);
+}
+
+[data-theme="dark"] .show-student-page {
+    background: #0d1117;
+}
+
+/* Search Container */
 .search-container {
-    padding: 24px;
-    animation: slideUp 0.3s ease;
+    margin-bottom: 24px;
 }
 
 .search-card {
-    background: var(--neutral-0, #FFFFFF);
-    border: 1px solid var(--border-color, #DFE1E6);
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 1px 1px rgba(9, 30, 66, 0.25), 0 0 1px 0 rgba(9, 30, 66, 0.31);
+    background: #ffffff;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .search-card {
+    background: #161b22;
+    border-color: #30363d;
 }
 
 .search-header {
@@ -24,165 +40,130 @@
 }
 
 .search-icon {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, #0052CC 0%, #6554C0 100%);
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    background: var(--primary-50);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--primary-600);
 }
 
 .search-title {
     font-size: 18px;
     font-weight: 600;
-    color: var(--neutral-900, #172B4D);
+    color: var(--gray-800);
     margin: 0;
+}
+
+[data-theme="dark"] .search-title {
+    color: #e6edf3;
 }
 
 .search-form {
     display: flex;
-    gap: 16px;
     flex-wrap: wrap;
+    gap: 16px;
     align-items: flex-end;
 }
 
 .search-field {
+    min-width: 180px;
     flex: 1;
-    min-width: 200px;
 }
 
 .search-btn {
-    min-height: 40px;
-    padding: 8px 24px;
-    background: #0052CC;
-    color: white;
-    border: none;
-    border-radius: 4px;
+    height: 40px;
+    padding: 0 24px;
+    font-size: 14px;
     font-weight: 500;
+    font-family: inherit;
+    background: var(--primary-600);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: all 0.2s ease;
 }
 
 .search-btn:hover {
-    background: #0065FF;
+    background: var(--primary-700);
 }
 
-/* Compact Select Styling */
-.search-field .MuiFormControl-root {
-    min-width: 140px;
-}
-
-.search-field .MuiOutlinedInput-root {
-    border-radius: 4px;
-}
-
-.search-field .MuiSelect-select {
-    padding: 8px 12px;
-    min-height: auto !important;
-    font-size: 13px;
-}
-
-.search-field .MuiInputLabel-root {
-    font-size: 13px;
-}
-
-.search-field .MuiInputLabel-root.MuiInputLabel-shrink {
-    font-size: 12px;
-}
-
-@media (max-width: 640px) {
-    .search-form {
-        flex-direction: column;
-    }
-
-    .search-field {
-        width: 100%;
-    }
-}
-
-/* ============================================
-   RESULTS SECTION
-   ============================================ */
+/* Results Container */
 .results-container {
-    padding: 0 24px 24px;
+    background: #ffffff;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    min-height: 300px;
+}
+
+[data-theme="dark"] .results-container {
+    background: #161b22;
+    border-color: #30363d;
 }
 
 .results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color, #DFE1E6);
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+[data-theme="dark"] .results-header {
+    border-bottom-color: #30363d;
 }
 
 .results-count {
     font-size: 14px;
-    color: var(--neutral-500, #6B778C);
+    color: var(--gray-600);
+    font-weight: 500;
 }
 
+/* Results Grid */
 .results-grid {
     display: grid;
-    gap: 16px;
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    padding: 24px;
 }
 
-@media (min-width: 640px) {
-    .results-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (min-width: 1024px) {
-    .results-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (min-width: 1400px) {
-    .results-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-}
-
-/* ============================================
-   STUDENT CARD
-   ============================================ */
+/* Student Card */
 .student-card {
-    background: var(--neutral-0, #FFFFFF);
-    border: 1px solid var(--border-color, #DFE1E6);
-    border-radius: 8px;
-    padding: 16px;
-    transition: all 0.15s ease;
-    animation: fadeInUp 0.3s ease;
+    background: #ffffff;
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 0.2s ease;
 }
 
 .student-card:hover {
-    box-shadow: 0 4px 8px -2px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31);
-    transform: translateY(-2px);
+    border-color: var(--primary-300);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .student-card {
+    background: #0d1117;
+    border-color: #30363d;
 }
 
 .student-card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 14px;
+    margin-bottom: 16px;
 }
 
 .student-avatar {
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #0052CC 0%, #6554C0 100%);
+    background: var(--primary-100);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 20px;
-    flex-shrink: 0;
     overflow: hidden;
+    color: var(--primary-600);
+    flex-shrink: 0;
 }
 
 .student-avatar img {
@@ -197,92 +178,103 @@
 }
 
 .student-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
-    color: var(--neutral-900, #172B4D);
+    color: var(--gray-900);
     margin: 0 0 4px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
+[data-theme="dark"] .student-name {
+    color: #e6edf3;
+}
+
 .student-meta {
-    font-size: 12px;
-    color: var(--neutral-500, #6B778C);
+    font-size: 13px;
+    color: var(--gray-500);
     margin: 0;
 }
 
 .student-id {
-    font-size: 11px;
-    color: var(--neutral-400, #8993A4);
+    font-size: 12px;
+    color: var(--gray-400);
+    margin: 4px 0 0 0;
     font-family: monospace;
 }
 
+/* Action Buttons */
 .student-card-actions {
     display: flex;
     gap: 8px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color, #DFE1E6);
+    flex-wrap: wrap;
 }
 
 .action-btn {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    height: 34px;
+    padding: 0 14px;
     font-size: 13px;
     font-weight: 500;
-    transition: all 0.15s ease;
+    font-family: inherit;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
 }
 
 .action-btn.view {
-    background: #F4F5F7;
-    color: #42526E;
+    background: var(--primary-50);
+    color: var(--primary-600);
 }
 
 .action-btn.view:hover {
-    background: #EBECF0;
+    background: var(--primary-100);
 }
 
 .action-btn.edit {
-    background: rgba(0, 82, 204, 0.1);
-    color: #0052CC;
+    background: #fef3c7;
+    color: #d97706;
 }
 
 .action-btn.edit:hover {
-    background: rgba(0, 82, 204, 0.2);
+    background: #fde68a;
 }
 
 .action-btn.delete {
-    background: rgba(222, 53, 11, 0.1);
-    color: #DE350B;
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 0 10px;
 }
 
 .action-btn.delete:hover {
-    background: rgba(222, 53, 11, 0.2);
+    background: #fee2e2;
 }
 
 .action-btn.id-card {
-    background: #0052CC;
-    color: white;
+    background: #ccfbf1;
+    color: #0d9488;
 }
 
 .action-btn.id-card:hover {
-    background: #0065FF;
+    background: #99f6e4;
 }
 
-/* ============================================
-   EMPTY STATE
-   ============================================ */
+/* Loading */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 80px;
+}
+
+/* Empty State */
 .empty-state {
     text-align: center;
-    padding: 48px 24px;
-    color: var(--neutral-500, #6B778C);
+    padding: 64px 24px;
 }
 
 .empty-icon {
@@ -292,188 +284,18 @@
 }
 
 .empty-title {
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--gray-700);
     margin: 0 0 8px 0;
+}
+
+[data-theme="dark"] .empty-title {
+    color: #c9d1d9;
 }
 
 .empty-text {
     font-size: 14px;
+    color: var(--gray-500);
     margin: 0;
-}
-
-/* ============================================
-   LOADING STATE
-   ============================================ */
-.loading-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 48px;
-}
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(16px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Staggered animation for cards */
-.student-card:nth-child(1) {
-    animation-delay: 0.02s;
-}
-
-.student-card:nth-child(2) {
-    animation-delay: 0.04s;
-}
-
-.student-card:nth-child(3) {
-    animation-delay: 0.06s;
-}
-
-.student-card:nth-child(4) {
-    animation-delay: 0.08s;
-}
-
-.student-card:nth-child(5) {
-    animation-delay: 0.1s;
-}
-
-.student-card:nth-child(6) {
-    animation-delay: 0.12s;
-}
-
-/* ============================================
-   DARK MODE - Comprehensive
-   ============================================ */
-[data-theme="dark"] .show-student-page,
-.dark .show-student-page {
-    background: #161A1D;
-}
-
-[data-theme="dark"] .search-card,
-.dark .search-card,
-[data-theme="dark"] .student-card,
-.dark .student-card {
-    background: #1D2125;
-    border-color: #2C333A;
-}
-
-[data-theme="dark"] .search-title,
-.dark .search-title,
-[data-theme="dark"] .student-name,
-.dark .student-name {
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .results-count,
-.dark .results-count,
-[data-theme="dark"] .student-meta,
-.dark .student-meta,
-[data-theme="dark"] .student-id,
-.dark .student-id {
-    color: #8C9BAB;
-}
-
-[data-theme="dark"] .results-header,
-.dark .results-header,
-[data-theme="dark"] .student-card-actions,
-.dark .student-card-actions {
-    border-color: #2C333A;
-}
-
-[data-theme="dark"] .empty-state,
-.dark .empty-state,
-[data-theme="dark"] .empty-title,
-.dark .empty-title,
-[data-theme="dark"] .empty-text,
-.dark .empty-text {
-    color: #8C9BAB;
-}
-
-/* Dark mode action buttons */
-[data-theme="dark"] .action-btn.view,
-.dark .action-btn.view {
-    background: #22272B;
-    color: #9FADBC;
-}
-
-[data-theme="dark"] .action-btn.view:hover,
-.dark .action-btn.view:hover {
-    background: #2C333A;
-}
-
-[data-theme="dark"] .action-btn.edit,
-.dark .action-btn.edit {
-    background: rgba(76, 154, 255, 0.15);
-    color: #4C9AFF;
-}
-
-[data-theme="dark"] .action-btn.edit:hover,
-.dark .action-btn.edit:hover {
-    background: rgba(76, 154, 255, 0.25);
-}
-
-[data-theme="dark"] .action-btn.delete,
-.dark .action-btn.delete {
-    background: rgba(255, 86, 48, 0.15);
-    color: #FF5630;
-}
-
-[data-theme="dark"] .action-btn.delete:hover,
-.dark .action-btn.delete:hover {
-    background: rgba(255, 86, 48, 0.25);
-}
-
-/* Dark mode MUI inputs in search */
-[data-theme="dark"] .search-field .MuiOutlinedInput-root,
-.dark .search-field .MuiOutlinedInput-root {
-    background: #22272B;
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .search-field .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline,
-.dark .search-field .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-    border-color: #3D4750;
-}
-
-[data-theme="dark"] .search-field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
-.dark .search-field .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-    border-color: #596773;
-}
-
-[data-theme="dark"] .search-field .MuiInputLabel-root,
-.dark .search-field .MuiInputLabel-root {
-    color: #8C9BAB;
-}
-
-[data-theme="dark"] .search-field .MuiInputBase-input,
-.dark .search-field .MuiInputBase-input {
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .search-field .MuiSelect-icon,
-.dark .search-field .MuiSelect-icon {
-    color: #738496;
 }

@@ -1,622 +1,471 @@
-/* AdmissionForm.css - Modern Creative Design */
-
 /* ============================================
-   PAGE LAYOUT
+   ADMISSION FORM - Single Page Professional
    ============================================ */
+
 .admission-page {
     width: 100%;
     min-height: 100vh;
-    padding: 24px;
+    padding: 24px 32px;
     box-sizing: border-box;
-    animation: admissionFadeIn 0.4s ease;
+    background: var(--gray-50);
 }
 
-@keyframes admissionFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+[data-theme="dark"] .admission-page {
+    background: #0d1117;
 }
 
-/* ============================================
-   HEADER
-   ============================================ */
+/* Header */
 .admission-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 32px;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    margin-bottom: 24px;
     gap: 16px;
+    flex-wrap: wrap;
+}
+
+.admission-header-content {
+    flex: 1;
 }
 
 .admission-title {
-    font-size: 32px;
-    font-weight: 700;
-    color: #172B4D;
-    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--gray-900);
+    margin: 0 0 6px 0;
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
 }
 
 .admission-title svg {
-    color: #00875A;
-    font-size: 36px;
+    color: var(--primary-600);
+    font-size: 28px;
+}
+
+[data-theme="dark"] .admission-title {
+    color: #e6edf3;
 }
 
 .admission-subtitle {
     font-size: 14px;
-    color: #6B778C;
-    margin: 6px 0 0 0;
-}
-
-/* ============================================
-   PROGRESS STEPPER
-   ============================================ */
-.admission-stepper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 24px 32px;
-    background: linear-gradient(135deg, #0052CC 0%, #6554C0 100%);
-    border-radius: 16px;
-    margin-bottom: 32px;
-    overflow-x: auto;
-}
-
-.admission-step {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.admission-step-number {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    color: rgba(255, 255, 255, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s;
-}
-
-.admission-step.active .admission-step-number {
-    background: white;
-    color: #0052CC;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.admission-step.completed .admission-step-number {
-    background: #36B37E;
-    color: white;
-}
-
-.admission-step-label {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.admission-step.active .admission-step-label {
-    color: white;
-    font-weight: 600;
-}
-
-.admission-step.completed .admission-step-label {
-    color: rgba(255, 255, 255, 0.9);
-}
-
-.admission-step-connector {
-    width: 40px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.admission-step-connector.completed {
-    background: #36B37E;
-}
-
-/* ============================================
-   FORM SECTIONS
-   ============================================ */
-.admission-form-content {
-    animation: contentSlide 0.3s ease;
-}
-
-@keyframes contentSlide {
-    from {
-        opacity: 0;
-        transform: translateX(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.admission-section {
-    background: #FFFFFF;
-    border: 1px solid #DFE1E6;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(9, 30, 66, 0.08);
-    margin-bottom: 24px;
-}
-
-.admission-section-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 24px;
-    background: linear-gradient(135deg, #F4F5F7 0%, #EBECF0 100%);
-    border-bottom: 1px solid #DFE1E6;
-}
-
-.admission-section-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-}
-
-.admission-section-icon.personal {
-    background: linear-gradient(135deg, #0052CC, #0065FF);
-}
-
-.admission-section-icon.academic {
-    background: linear-gradient(135deg, #00875A, #36B37E);
-}
-
-.admission-section-icon.guardian {
-    background: linear-gradient(135deg, #6554C0, #8777D9);
-}
-
-.admission-section-icon.contact {
-    background: linear-gradient(135deg, #FF8B00, #FFAB00);
-}
-
-.admission-section-icon.photo {
-    background: linear-gradient(135deg, #00B8D9, #00C7E6);
-}
-
-.admission-section-icon.review {
-    background: linear-gradient(135deg, #DE350B, #FF5630);
-}
-
-.admission-section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #172B4D;
+    color: var(--gray-500);
     margin: 0;
 }
 
-.admission-section-desc {
-    font-size: 13px;
-    color: #6B778C;
-    margin: 4px 0 0 0;
+.admission-roll-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1e40af, #3b82f6);
+    color: #ffffff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 14px;
 }
 
-.admission-section-body {
+.admission-roll-badge svg {
+    font-size: 18px;
+}
+
+.admission-roll-badge strong {
+    font-size: 16px;
+    margin-left: 4px;
+}
+
+/* Form Container */
+.admission-form-container {
+    background: #ffffff;
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
     padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* ============================================
-   FORM GRID
-   ============================================ */
-.admission-form-grid {
+[data-theme="dark"] .admission-form-container {
+    background: #161b22;
+    border-color: #30363d;
+}
+
+/* Two Column Grid Layout */
+.admission-form-grid-layout {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
+    gap: 20px;
+    max-width: 900px;
+}
+
+@media (min-width: 1400px) {
+    .admission-form-grid-layout {
+        grid-template-columns: 1fr 1fr;
+        max-width: none;
+    }
+}
+
+.admission-form-column {
+    display: flex;
+    flex-direction: column;
     gap: 20px;
 }
 
-.admission-form-field {
+/* Form Section */
+.form-section {
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .form-section {
+    background: #0d1117;
+    border-color: #30363d;
+}
+
+.form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--gray-200);
+}
+
+[data-theme="dark"] .form-section-header {
+    background: #161b22;
+    border-bottom-color: #30363d;
+}
+
+.form-section-header h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-800);
+    margin: 0;
+}
+
+[data-theme="dark"] .form-section-header h3 {
+    color: #e6edf3;
+}
+
+.form-section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.form-section-icon svg {
+    font-size: 20px;
+    color: #ffffff;
+}
+
+.form-section-icon.blue {
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+}
+
+.form-section-icon.green {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+}
+
+.form-section-icon.purple {
+    background: linear-gradient(135deg, #9333ea, #a855f7);
+}
+
+.form-section-icon.orange {
+    background: linear-gradient(135deg, #ea580c, #f97316);
+}
+
+.form-section-icon.teal {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+}
+
+.form-section-body {
+    padding: 18px;
+}
+
+/* Form Rows */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-row.three-col {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+
+    .form-row,
+    .form-row.three-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Form Group */
+.form-group {
     display: flex;
     flex-direction: column;
 }
 
-.admission-form-field.full-width {
+.form-group.full-width {
     grid-column: 1 / -1;
 }
 
-.admission-form-field label {
+.form-group label {
     font-size: 13px;
-    font-weight: 600;
-    color: #42526E;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-weight: 500;
+    color: var(--gray-600);
+    margin-bottom: 6px;
 }
 
-.admission-form-field label .required {
-    color: #DE350B;
+[data-theme="dark"] .form-group label {
+    color: #8b949e;
 }
 
-.admission-form-field input,
-.admission-form-field select,
-.admission-form-field textarea {
-    padding: 14px 16px;
-    font-size: 15px;
-    border: 2px solid #DFE1E6;
-    border-radius: 10px;
-    background: #FAFBFC;
-    color: #172B4D;
-    transition: all 0.2s;
+.form-group label .required {
+    color: #dc2626;
 }
 
-.admission-form-field input:hover,
-.admission-form-field select:hover,
-.admission-form-field textarea:hover {
-    border-color: #B3BAC5;
-    background: #F4F5F7;
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--gray-900);
+    box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
-.admission-form-field input:focus,
-.admission-form-field select:focus,
-.admission-form-field textarea:focus {
-    outline: none;
-    border-color: #0052CC;
-    background: #FFFFFF;
-    box-shadow: 0 0 0 4px rgba(0, 82, 204, 0.15);
-}
-
-.admission-form-field textarea {
+.form-group textarea {
+    height: auto;
+    padding: 12px 14px;
     resize: vertical;
-    min-height: 80px;
 }
 
-/* ============================================
-   PHOTO UPLOAD
-   ============================================ */
-.admission-photo-upload {
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: var(--gray-400);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input.disabled,
+.form-group input:disabled {
+    background: var(--gray-100);
+    color: var(--gray-500);
+    cursor: not-allowed;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+    background: #0d1117;
+    border-color: #484f58;
+    color: #e6edf3;
+}
+
+[data-theme="dark"] .form-group input:hover,
+[data-theme="dark"] .form-group select:hover,
+[data-theme="dark"] .form-group textarea:hover {
+    border-color: #6e7681;
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus,
+[data-theme="dark"] .form-group textarea:focus {
+    border-color: #58a6ff;
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+[data-theme="dark"] .form-group input::placeholder,
+[data-theme="dark"] .form-group textarea::placeholder {
+    color: #6e7681;
+}
+
+[data-theme="dark"] .form-group input.disabled,
+[data-theme="dark"] .form-group input:disabled {
+    background: #21262d;
+    color: #6e7681;
+    border-color: #30363d;
+}
+
+/* MUI DatePicker Dark Mode Fix */
+[data-theme="dark"] .MuiOutlinedInput-root {
+    background: #0d1117 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+    border-color: #484f58 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #6e7681 !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #58a6ff !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-input {
+    color: #e6edf3 !important;
+}
+
+[data-theme="dark"] .MuiInputBase-input::placeholder {
+    color: #6e7681 !important;
+    opacity: 1 !important;
+}
+
+[data-theme="dark"] .MuiSvgIcon-root {
+    color: #8b949e !important;
+}
+
+/* Photo Upload */
+.photo-upload-area {
     display: flex;
-    gap: 24px;
     align-items: center;
-    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.admission-photo-preview {
-    width: 140px;
-    height: 170px;
-    border: 3px dashed #DFE1E6;
-    border-radius: 12px;
+.photo-preview {
+    width: 100px;
+    height: 120px;
+    border: 2px dashed var(--gray-300);
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    background: var(--gray-50);
     overflow: hidden;
-    background: #F4F5F7;
-    transition: all 0.2s;
+    flex-shrink: 0;
 }
 
-.admission-photo-preview.has-photo {
+.photo-preview.has-photo {
     border-style: solid;
-    border-color: #00875A;
+    border-color: var(--primary-400);
 }
 
-.admission-photo-preview img {
+.photo-preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.admission-photo-placeholder {
+.photo-placeholder {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    color: #6B778C;
+    gap: 6px;
+    color: var(--gray-400);
 }
 
-.admission-photo-placeholder svg {
-    font-size: 40px;
-    opacity: 0.5;
+.photo-placeholder svg {
+    font-size: 28px;
 }
 
-.admission-photo-actions {
+.photo-placeholder span {
+    font-size: 11px;
+}
+
+.photo-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
-.admission-photo-btn {
-    display: flex;
+.photo-upload-btn {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 24px;
-    border: 2px solid #DFE1E6;
-    border-radius: 10px;
-    background: #FFFFFF;
-    color: #42526E;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.admission-photo-btn:hover {
-    border-color: #0052CC;
-    background: #DEEBFF;
-    color: #0052CC;
-}
-
-.admission-photo-btn.primary {
-    background: linear-gradient(135deg, #0052CC, #0065FF);
-    border-color: transparent;
-    color: white;
-}
-
-.admission-photo-btn.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 82, 204, 0.35);
-}
-
-/* ============================================
-   REVIEW SECTION
-   ============================================ */
-.admission-review-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 16px;
-}
-
-.admission-review-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 14px 16px;
-    background: #F4F5F7;
+    padding: 10px 16px;
+    background: var(--primary-600);
+    color: #ffffff;
     border-radius: 8px;
-}
-
-.admission-review-label {
     font-size: 13px;
-    color: #6B778C;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
-.admission-review-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: #172B4D;
+.photo-upload-btn:hover {
+    background: var(--primary-700);
 }
 
-/* ============================================
-   FORM ACTIONS
-   ============================================ */
-.admission-actions {
+.photo-upload-btn svg {
+    font-size: 18px;
+}
+
+.photo-hint {
+    font-size: 12px;
+    color: var(--gray-500);
+}
+
+/* Submit Area */
+.admission-submit-area {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-top: 32px;
-    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--gray-200);
 }
 
-.admission-btn {
-    display: flex;
+[data-theme="dark"] .admission-submit-area {
+    border-top-color: #30363d;
+}
+
+.admission-submit-btn {
+    display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 32px;
+    height: 48px;
+    padding: 0 28px;
     font-size: 15px;
     font-weight: 600;
+    font-family: inherit;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #ffffff;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
-.admission-btn-secondary {
-    background: #F4F5F7;
-    color: #42526E;
-    border: 2px solid #DFE1E6;
-}
-
-.admission-btn-secondary:hover {
-    background: #EBECF0;
-    border-color: #B3BAC5;
-}
-
-.admission-btn-primary {
-    background: linear-gradient(135deg, #00875A 0%, #36B37E 100%);
-    color: white;
-}
-
-.admission-btn-primary:hover {
+.admission-submit-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 135, 90, 0.4);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
 }
 
-.admission-btn-primary:disabled {
-    background: #B3BAC5;
+.admission-submit-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
-/* ============================================
-   STUDENT ID PREVIEW
-   ============================================ */
-.admission-id-preview {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 20px;
-    background: linear-gradient(135deg, #DEEBFF 0%, #B3D4FF 100%);
-    border-radius: 10px;
-    margin-bottom: 20px;
+.admission-submit-btn svg {
+    font-size: 20px;
 }
 
-.admission-id-preview span {
-    font-size: 15px;
-    color: #0052CC;
-}
-
-.admission-id-preview strong {
-    font-family: 'Consolas', monospace;
-    font-size: 18px;
-    color: #172B4D;
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 768px) {
-    .admission-page {
-        padding: 16px;
-    }
-
-    .admission-header {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .admission-stepper {
-        padding: 16px;
-        gap: 4px;
-    }
-
-    .admission-step-label {
-        display: none;
-    }
-
-    .admission-form-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .admission-photo-upload {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .admission-actions {
-        flex-direction: column;
-    }
-
-    .admission-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* ============================================
-   DARK MODE
-   ============================================ */
-[data-theme="dark"] .admission-page,
-.dark .admission-page {
-    background: transparent;
-}
-
-[data-theme="dark"] .admission-title,
-.dark .admission-title {
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .admission-subtitle,
-.dark .admission-subtitle {
-    color: #8C9BAB;
-}
-
-[data-theme="dark"] .admission-section,
-.dark .admission-section {
-    background: #1D2125;
-    border-color: #2C333A;
-}
-
-[data-theme="dark"] .admission-section-header,
-.dark .admission-section-header {
-    background: linear-gradient(135deg, #22272B 0%, #2C333A 100%);
-    border-color: #3D4750;
-}
-
-[data-theme="dark"] .admission-section-title,
-.dark .admission-section-title {
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .admission-section-desc,
-.dark .admission-section-desc {
-    color: #8C9BAB;
-}
-
-[data-theme="dark"] .admission-form-field label,
-.dark .admission-form-field label {
-    color: #9FADBC;
-}
-
-[data-theme="dark"] .admission-form-field input,
-[data-theme="dark"] .admission-form-field select,
-[data-theme="dark"] .admission-form-field textarea,
-.dark .admission-form-field input,
-.dark .admission-form-field select,
-.dark .admission-form-field textarea {
-    background: #22272B;
-    border-color: #3D4750;
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .admission-form-field input:focus,
-[data-theme="dark"] .admission-form-field select:focus,
-[data-theme="dark"] .admission-form-field textarea:focus,
-.dark .admission-form-field input:focus,
-.dark .admission-form-field select:focus,
-.dark .admission-form-field textarea:focus {
-    border-color: #4C9AFF;
-}
-
-[data-theme="dark"] .admission-photo-preview,
-.dark .admission-photo-preview {
-    background: #22272B;
-    border-color: #3D4750;
-}
-
-[data-theme="dark"] .admission-review-item,
-.dark .admission-review-item {
-    background: #22272B;
-}
-
-[data-theme="dark"] .admission-review-label,
-.dark .admission-review-label {
-    color: #8C9BAB;
-}
-
-[data-theme="dark"] .admission-review-value,
-.dark .admission-review-value {
-    color: #B6C2CF;
-}
-
-[data-theme="dark"] .admission-btn-secondary,
-.dark .admission-btn-secondary {
-    background: #22272B;
-    color: #B6C2CF;
-    border-color: #3D4750;
-}
-
-[data-theme="dark"] .admission-id-preview,
-.dark .admission-id-preview {
-    background: linear-gradient(135deg, rgba(0, 82, 204, 0.2) 0%, rgba(76, 154, 255, 0.2) 100%);
-}
-
-[data-theme="dark"] .admission-id-preview span,
-.dark .admission-id-preview span {
-    color: #4C9AFF;
-}
-
-[data-theme="dark"] .admission-id-preview strong,
-.dark .admission-id-preview strong {
-    color: #B6C2CF;
+.admission-required-note {
+    font-size: 13px;
+    color: var(--gray-500);
 }
