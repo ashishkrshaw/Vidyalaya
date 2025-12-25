@@ -84,10 +84,40 @@ const Statistics: React.FC<StatisticsProps> = () => {
           });
         }
 
-        const classFee = Number(feeMap[student.class]) || 0;
-        const expectedTotal = classFee * 12;
-        const paidTotal = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
-        totalDuesAmount += Math.max(0, expectedTotal - paidTotal);
+        // Dues logic - consistent with FeeManagement (Accrued Dues)
+        const classFee = Number(student.monthlyFee || feeMap[student.class]) || 0;
+
+        // Accrued calculation
+        const now = new Date();
+        // Determine applicable months from admission date
+        const monthOptions = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
+        let applicableMonths = [...monthOptions];
+        if (student.admissionDate) {
+          const admDate = new Date(student.admissionDate);
+          const admMonth = admDate.getMonth(); // 0-11
+          // Academic year: April (3) to March (2)
+          const academicMonthIndex = (admMonth >= 3) ? admMonth - 3 : admMonth + 9;
+          applicableMonths = monthOptions.slice(academicMonthIndex);
+        }
+
+        const currentMonthIndex = now.getMonth();
+        const currentAcademicMonthIndex = (currentMonthIndex >= 3) ? currentMonthIndex - 3 : currentMonthIndex + 9;
+
+        // Filter applicableMonths to only those that have passed or are current
+        const elapsedMonths = applicableMonths.filter(m => {
+          // We can check indices in monthOptions.
+          return monthOptions.indexOf(m) <= currentAcademicMonthIndex;
+        });
+
+        const accruedFee = classFee * elapsedMonths.length;
+
+        // Total Paid for Tuition (Exclude Misc/Admission)
+        const paidForTuition = (student.feeHistory || []).reduce((sum: number, p: any) => {
+          if (p.type === 'misc' || p.type === 'Admission Fee') return sum;
+          return sum + (Number(p.amount) || 0);
+        }, 0);
+
+        totalDuesAmount += Math.max(0, accruedFee - paidForTuition);
       });
 
       const totalStudents = students.length;

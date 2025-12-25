@@ -639,6 +639,19 @@ function App() {
                   <Typography variant="body2">{previewData.note}</Typography>
                 </Box>
               )}
+
+              {/* Fee Information */}
+              {(previewData.admissionFee || previewData.monthlyFee) && (
+                <Box sx={{ background: '#F4F5F7', borderRadius: 2, p: 2 }}>
+                  <Typography variant="subtitle2" sx={{ color: '#10B981', fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PaymentIcon fontSize="small" /> Fee Details
+                  </Typography>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    <Box><Typography variant="caption" color="textSecondary">Admission Fee</Typography><Typography variant="body2">{previewData.admissionFee ? `₹${previewData.admissionFee}` : '-'}</Typography></Box>
+                    <Box><Typography variant="caption" color="textSecondary">Monthly Fee Override</Typography><Typography variant="body2">{previewData.monthlyFee ? `₹${previewData.monthlyFee}` : '-'}</Typography></Box>
+                  </Box>
+                </Box>
+              )}
             </Box>
           )}
         </DialogContent>

@@ -41,11 +41,28 @@ const getSchoolId = () => {
 export async function addAdmission(admission: any) {
   const db = await getDb();
   const schoolId = getSchoolId();
+
+  // Initialize fee history
+  let startFeeHistory = admission.feeHistory || [];
+
+  // If admission fee provided, add it as initial payment
+  if (admission.admissionFee && Number(admission.admissionFee) > 0) {
+    const feeEntry = {
+      date: new Date().toISOString(),
+      amount: Number(admission.admissionFee),
+      months: ['Admission Fee'],
+      type: 'Admission Fee', // Mark as specific type
+      mode: 'Cash' // Default
+    };
+    startFeeHistory.push(feeEntry);
+  }
+
   const newAdmission = {
     ...admission,
     schoolId,
-    feeHistory: admission.feeHistory || [],
+    feeHistory: startFeeHistory,
     dues: admission.dues || 0,
+    monthlyFee: admission.monthlyFee ? Number(admission.monthlyFee) : undefined // Store custom fee if present
   };
   await db.put(STORE_NAME, newAdmission);
 }

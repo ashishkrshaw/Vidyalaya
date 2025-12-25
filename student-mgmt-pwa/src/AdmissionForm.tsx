@@ -42,6 +42,8 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
     email: '',
     address: '',
     note: '',
+    admissionFee: '', // New field
+    monthlyFee: '',   // New field (optional override)
     photo: null as File | null,
   });
 
@@ -212,6 +214,33 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
                   <div className="form-group">
                     <label>Roll Number</label>
                     <input type="text" value={rollNo || 'Auto-assigned'} disabled className="disabled" />
+                  </div>
+                </div>
+
+                {/* Fee Details Subsection */}
+                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #E5E7EB' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#4B5563', marginBottom: '12px' }}>Fee Details</h4>
+                  <div className="form-row two-col">
+                    <div className="form-group">
+                      <label>Admission Fee (₹)</label>
+                      <input
+                        type="number"
+                        name="admissionFee"
+                        value={form.admissionFee}
+                        onChange={handleChange}
+                        placeholder="Enter Admission Fee"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Monthly Fee (₹) <small>(Optional Override)</small></label>
+                      <input
+                        type="number"
+                        name="monthlyFee"
+                        value={form.monthlyFee}
+                        onChange={handleChange}
+                        placeholder="Leave empty for default"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

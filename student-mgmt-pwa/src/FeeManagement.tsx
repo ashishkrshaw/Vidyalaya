@@ -42,6 +42,12 @@ const FeeManagement: React.FC = () => {
   const [passwordError, setPasswordError] = useState('');
   const [pendingPayment, setPendingPayment] = useState(false);
 
+  // New State for Partial & Misc
+  const [payingAmount, setPayingAmount] = useState<number | ''>(''); // Manual override
+  const [miscDesc, setMiscDesc] = useState('');
+  const [miscAmount, setMiscAmount] = useState<number | ''>('');
+  const [isMiscOpen, setIsMiscOpen] = useState(false);
+
   // QR code ref for PDF
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -52,12 +58,17 @@ const FeeManagement: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (student && months.length > 0 && feeMap[student.class]) {
-      setTotal(Number(feeMap[student.class]) * months.length);
+    if (student && (months.length > 0 || miscAmount)) {
+      const monthlyFee = Number(student.monthlyFee || feeMap[student.class] || 0);
+      const tuitionTotal = monthlyFee * months.length;
+      const finalTotal = tuitionTotal + (miscAmount ? Number(miscAmount) : 0);
+      setTotal(finalTotal);
+      setPayingAmount(finalTotal); // Default to full amount
     } else {
       setTotal(0);
+      setPayingAmount('');
     }
-  }, [student, months, feeMap]);
+  }, [student, months, feeMap, miscAmount]);
 
   // Function to refresh all payments (for live summary data)
   const refreshPayments = async () => {
@@ -94,6 +105,9 @@ const FeeManagement: React.FC = () => {
     }
     let sum = 0;
     allPayments.forEach(p => {
+      // Logic update: Include Misc Fees in summary?
+      // If p.type === 'misc', it might not have 'months'. 
+      // For now, keep existing logic for monthly summary, maybe add misc check later.
       if (p.class === summaryClass && Array.isArray(p.months) && p.months.includes(summaryMonth)) {
         sum += Number(p.amount) / p.months.length;
       }
@@ -118,10 +132,13 @@ const FeeManagement: React.FC = () => {
   };
 
   const handlePay = async () => {
-    await addHistoryEntry({
-      action: 'fee_payment',
-      studentId: student.studentId,
-      timestamp: new Date().toISOString(),
+    const paymentData = {
+      date: new Date().toISOString(),
+      months: months.length > 0 ? months : (miscAmount ? ['Misc Fee'] : []),
+      amount: total, // Final amount to pay (Fee + Misc)
+      miscAmount: miscAmount ? Number(miscAmount) : 0,
+      miscDesc: miscAmount ? miscDesc : undefined,
+      type: miscAmount && months.length === 0 ? 'misc' : 'tuition', // logic tag
       details: {
         months,
         amount: total,
@@ -129,13 +146,38 @@ const FeeManagement: React.FC = () => {
         section: student.section,
         rollNo: student.rollNo,
         name: student.name,
+        miscDesc
       },
+    };
+
+    await addHistoryEntry({
+      action: 'fee_payment',
+      studentId: student.studentId,
+      timestamp: new Date().toISOString(),
+      details: paymentData.details,
     });
-    const newDues = (student.dues || 0) - total;
+
+    // Dues update logic handled in addFeePayment possibly, or here
+    // New dues = Current Accrued Dues - Tuition Part Paid ??
+    // Actually simplicity: We update the student record's 'dues' field merely as a cache or just let calculation handle it.
+    // But existing logic updates 'dues'. Let's recalculate it.
+
+    // We need to know the tuition part of this payment to reduce dues.
+    const tuitionPart = miscAmount ? total - Number(miscAmount) : total;
+    // Current dues (accrued) - this payment ?? 
+    // Wait, 'dues' in DB is often used as "Previous Year Dues" or "Carry Forward". 
+    // Our new logic determines dues dynamically. 
+    // For safety, we will just subtract tuitionPart from whatever the backend thinks is 'dues' if we want to persist it,
+    // otherwise relies on dynamic calc. Steps:
+    // 1. Get current dynamic dues.
+    // 2. Subtract tuitionPart. 
+    // 3. Save as new 'dues' in DB (for reference/legacy compatibility).
+
+    const currentInfo = getStudentDuesInfo();
+    const newDues = Math.max(0, currentInfo.dues - tuitionPart);
+
     await addFeePayment(student.studentId, {
-      date: new Date().toISOString(),
-      months,
-      amount: total,
+      ...paymentData,
       dues: newDues,
     });
     const all = await getAdmissionsByClassSection(student.class, student.section);
@@ -304,9 +346,16 @@ const FeeManagement: React.FC = () => {
 
   // Calculate student dues and paid months (starting from admission month)
   const getStudentDuesInfo = () => {
-    if (!student || !feeMap[student.class]) return { totalPaid: 0, annualFee: 0, dues: 0, paidMonths: [] as string[], applicableMonths: [] as string[] };
-    const monthlyFee = Number(feeMap[student.class]) || 0;
-    const totalPaid = (student.feeHistory || []).reduce((sum: number, p: any) => sum + (Number(p.amount) || 0), 0);
+    if (!student || (!feeMap[student.class] && !student.monthlyFee)) return { totalPaid: 0, annualFee: 0, dues: 0, paidMonths: [] as string[], applicableMonths: [] as string[] };
+
+    // Prioritize student-specific monthly fee
+    const monthlyFee = Number(student.monthlyFee || feeMap[student.class]) || 0;
+
+    // Calculate total PAID for TUITION only (exclude misc)
+    const totalPaid = (student.feeHistory || []).reduce((sum: number, p: any) => {
+      if (p.type === 'misc' || p.type === 'Admission Fee') return sum;
+      return sum + (Number(p.amount) || 0);
+    }, 0);
 
     // Determine applicable months based on admission date
     let applicableMonths = [...monthOptions]; // Default: all 12 months
@@ -321,11 +370,37 @@ const FeeManagement: React.FC = () => {
     }
 
     const annualFee = monthlyFee * applicableMonths.length;
-    const dues = Math.max(0, annualFee - totalPaid);
+
+    // Accrued Fee Calculation (Elapsed Months * Monthly Fee)
+    const currentMonthIndex = new Date().getMonth(); // 0-11
+    // Map to academic index
+    const currentAcademicMonthIndex = (currentMonthIndex >= 3) ? currentMonthIndex - 3 : currentMonthIndex + 9;
+
+    // Filter applicableMonths to only those that have passed or are current
+    const elapsedMonths = applicableMonths.filter(m => {
+      const mIndex = monthOptions.indexOf(m);
+      // We need to check if this month index is <= currentAcademicMonthIndex
+      // But monthOptions is already sorted Apr->Mar. 
+      // So we can just check indices in monthOptions.
+      return monthOptions.indexOf(m) <= currentAcademicMonthIndex;
+    });
+
+    const accruedFee = monthlyFee * elapsedMonths.length;
+
+    // Total Paid for Tuition (Excluding Misc/Admission Fees if any, though usually admission fee is separate type)
+    // We should filter feeHistory to sum up only 'tuition' or 'monthly' payments?
+    // For now, assume all previous amount paid counts towards dues reduction (simple ledger).
+    // If we have 'misc' type, exclude it?
+    const paidForTuition = (student.feeHistory || []).reduce((sum: number, p: any) => {
+      if (p.type === 'misc' || p.type === 'Admission Fee') return sum;
+      return sum + (Number(p.amount) || 0);
+    }, 0);
+
+    const dues = Math.max(0, accruedFee - paidForTuition);
 
     // Determine paid months based on total paid (sequential from admission month)
     const paidMonths: string[] = [];
-    let remaining = totalPaid;
+    let remaining = paidForTuition;
     for (const m of applicableMonths) {
       if (remaining >= monthlyFee) {
         paidMonths.push(m);
@@ -418,22 +493,46 @@ const FeeManagement: React.FC = () => {
                 return (
                   <div style={{ marginTop: 16, padding: 16, background: info.dues > 0 ? '#FFEBE6' : '#E3FCEF', borderRadius: 8 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span>Annual Fee:</span>
-                      <strong>₹{info.annualFee}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span>Total Paid:</span>
-                      <strong style={{ color: '#006644' }}>₹{info.totalPaid}</strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ddd', paddingTop: 8 }}>
-                      <span style={{ fontWeight: 'bold' }}>Outstanding Dues:</span>
+                      <span>Accrued Dues (Till Now):</span>
                       <strong style={{ color: info.dues > 0 ? '#DE350B' : '#006644', fontSize: 18 }}>
                         ₹{info.dues}
                       </strong>
                     </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12, color: '#666' }}>
+                      <span>Projected Annual Fee:</span>
+                      <strong>₹{info.annualFee}</strong>
+                    </div>
                   </div>
                 );
               })()}
+            </div>
+
+            {/* Misc Fee Section */}
+            <div className="fee-card-section" style={{ marginTop: 20, borderTop: '1px dashed #ddd', paddingTop: 15 }}>
+              <div
+                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: '#0052CC', fontWeight: 600 }}
+                onClick={() => setIsMiscOpen(!isMiscOpen)}
+              >
+                <span>{isMiscOpen ? '−' : '+'} Add Miscellaneous Fee</span>
+              </div>
+              {isMiscOpen && (
+                <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                  <input
+                    type="text"
+                    placeholder="Description (e.g. Fine, Event)"
+                    className="fee-form-input"
+                    value={miscDesc}
+                    onChange={(e) => setMiscDesc(e.target.value)}
+                  />
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    className="fee-form-input"
+                    value={miscAmount}
+                    onChange={(e) => setMiscAmount(Number(e.target.value) || '')}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="fee-form-field">
@@ -478,15 +577,33 @@ const FeeManagement: React.FC = () => {
             <div className="fee-summary">
               <div className="fee-summary-row">
                 <span>Fee per Month</span>
-                <span>₹{feeMap[student.class] || 'N/A'}</span>
+                <span>₹{student.monthlyFee || feeMap[student.class] || 'N/A'}</span>
               </div>
               <div className="fee-summary-row">
                 <span>Months Selected</span>
                 <span>{months.length}</span>
               </div>
+              {miscAmount && (
+                <div className="fee-summary-row">
+                  <span>Misc Fee ({miscDesc})</span>
+                  <span>₹{miscAmount}</span>
+                </div>
+              )}
               <div className="fee-summary-row fee-summary-total">
-                <span>Total Amount</span>
+                <span>Total Payable</span>
                 <span>₹{total}</span>
+              </div>
+
+              {/* Manual Partial Payment Input */}
+              <div className="fee-summary-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee' }}>
+                <span style={{ fontWeight: 600, color: '#0052CC' }}>Paying Amount:</span>
+                <input
+                  type="number"
+                  value={payingAmount}
+                  onChange={(e) => setPayingAmount(Number(e.target.value) || '')}
+                  placeholder={`Max ₹${total}`}
+                  style={{ width: 100, padding: 5, borderRadius: 4, border: '1px solid #ccc', textAlign: 'right' }}
+                />
               </div>
             </div>
 
