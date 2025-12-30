@@ -234,6 +234,8 @@ const Settings: React.FC = () => {
 
   const saveSchoolBranding = async () => {
     await saveSchoolInfo(schoolInfo);
+    // Notify App.tsx to update state immediately
+    window.dispatchEvent(new CustomEvent('school-info-updated', { detail: schoolInfo.name }));
     showMessage('success', 'School information saved successfully!');
   };
 

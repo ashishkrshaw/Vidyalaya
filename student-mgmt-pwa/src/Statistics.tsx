@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SchoolIcon from '@mui/icons-material/School';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import AssessmentIcon from '@mui/icons-material/Assessment';
@@ -56,7 +56,9 @@ const Statistics: React.FC<StatisticsProps> = () => {
       const monthlyFeeData: { [key: string]: number } = {};
 
       const monthNames = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-      monthNames.forEach(m => { monthlyFeeData[m] = 0; });
+      // Standard short names for data collection
+      const standardMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      standardMonths.forEach(m => { monthlyFeeData[m] = 0; });
 
       students.forEach((student: any) => {
         classCountMap[student.class] = (classCountMap[student.class] || 0) + 1;
@@ -71,15 +73,34 @@ const Statistics: React.FC<StatisticsProps> = () => {
 
         if (student.feeHistory && Array.isArray(student.feeHistory)) {
           student.feeHistory.forEach((payment: any) => {
-            totalFee += Number(payment.amount) || 0;
-            if (payment.months && Array.isArray(payment.months)) {
-              const perMonth = (Number(payment.amount) || 0) / payment.months.length;
-              payment.months.forEach((m: string) => {
-                const shortMonth = m.substring(0, 3);
+            const amount = Number(payment.amount) || 0;
+            totalFee += amount;
+
+            // Trend Logic: Based on Payment Date (Cash Flow)
+            if (payment.date) {
+              const pDate = new Date(payment.date);
+
+              // Determine current academic year range
+              const currentYear = now.getFullYear();
+              const currentMonth = now.getMonth(); // 0=Jan
+
+              let startYear = currentYear;
+              if (currentMonth < 3) { // Jan, Feb, Mar belong to previous year's cycle
+                startYear = currentYear - 1;
+              }
+
+              const acadStart = new Date(startYear, 3, 1); // April 1st
+              const acadEnd = new Date(startYear + 1, 2, 31); // March 31st
+              acadEnd.setHours(23, 59, 59, 999); // Include the entire end date
+
+              // Only include if in current academic cycle
+              if (pDate >= acadStart && pDate <= acadEnd) {
+                const monthIndex = pDate.getMonth();
+                const shortMonth = standardMonths[monthIndex];
                 if (monthlyFeeData[shortMonth] !== undefined) {
-                  monthlyFeeData[shortMonth] += perMonth;
+                  monthlyFeeData[shortMonth] += amount;
                 }
-              });
+              }
             }
           });
         }
@@ -88,8 +109,6 @@ const Statistics: React.FC<StatisticsProps> = () => {
         const classFee = Number(student.monthlyFee || feeMap[student.class]) || 0;
 
         // Accrued calculation
-        const now = new Date();
-        // Determine applicable months from admission date
         const monthOptions = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
         let applicableMonths = [...monthOptions];
         if (student.admissionDate) {
@@ -270,7 +289,7 @@ const Statistics: React.FC<StatisticsProps> = () => {
           <div className="chart-header">
             <div>
               <h3 className="chart-title">Fee Collection Trend</h3>
-              <p className="chart-subtitle">Monthly collection over academic year</p>
+              <p className="chart-subtitle">Cash received per month (Current Academic Year)</p>
             </div>
             <div className="chart-legend">
               <span className="legend-dot blue"></span>
@@ -289,7 +308,7 @@ const Statistics: React.FC<StatisticsProps> = () => {
               <path d={linePath} fill="none" stroke="#3b82f6" strokeWidth="0.8" strokeLinecap="round" />
             </svg>
             <div className="area-chart-labels">
-              {monthlyFees.map((item, i) => (
+              {monthlyFees.map((item) => (
                 <span key={item.month} className="chart-label">{item.month}</span>
               ))}
             </div>
@@ -321,8 +340,8 @@ const Statistics: React.FC<StatisticsProps> = () => {
                     }} />
                 </>
               )}
-              <text x="50" y="48" className="donut-value">{stats.totalStudents}</text>
-              <text x="50" y="58" className="donut-label">Total</text>
+              <text x="50" y="42" className="donut-value">{stats.totalStudents}</text>
+              <text x="50" y="62" className="donut-label">Total</text>
             </svg>
             <div className="donut-legend">
               <div className="legend-row">
