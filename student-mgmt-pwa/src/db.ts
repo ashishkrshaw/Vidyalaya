@@ -75,7 +75,7 @@ export async function bulkRestoreAdmissions(admissions: any[]): Promise<{ added:
   const schoolId = getSchoolId();
   let added = 0;
   let updated = 0;
-  
+
   for (const admission of admissions) {
     const admissionWithSchoolId = {
       ...admission,
@@ -83,30 +83,30 @@ export async function bulkRestoreAdmissions(admissions: any[]): Promise<{ added:
       feeHistory: admission.feeHistory || [],
       dues: admission.dues || 0,
     };
-    
+
     // Check if exists
     const existing = await db.get(STORE_NAME, [schoolId, admission.studentId]);
     if (existing) {
       // Merge: keep newer feeHistory, update other fields
       const mergedFeeHistory = [...(existing.feeHistory || [])];
       const existingDates = new Set(mergedFeeHistory.map((f: any) => f.date));
-      
+
       // Add new fee payments not in existing
       for (const fee of (admission.feeHistory || [])) {
         if (!existingDates.has(fee.date)) {
           mergedFeeHistory.push(fee);
         }
       }
-      
+
       admissionWithSchoolId.feeHistory = mergedFeeHistory;
       updated++;
     } else {
       added++;
     }
-    
+
     await db.put(STORE_NAME, admissionWithSchoolId);
   }
-  
+
   return { added, updated };
 }
 
@@ -115,11 +115,11 @@ export async function bulkRestoreHistory(historyEntries: any[]): Promise<number>
   const db = await getDb();
   const schoolId = getSchoolId();
   let added = 0;
-  
+
   // Get existing history to avoid duplicates
   const existing = await db.getAllFromIndex(HISTORY_STORE, 'by-school', schoolId);
   const existingTimestamps = new Set(existing.map((h: any) => h.timestamp));
-  
+
   for (const entry of historyEntries) {
     // Only add if timestamp doesn't exist (avoid duplicates)
     if (!existingTimestamps.has(entry.timestamp)) {
@@ -127,7 +127,7 @@ export async function bulkRestoreHistory(historyEntries: any[]): Promise<number>
       added++;
     }
   }
-  
+
   return added;
 }
 
@@ -182,10 +182,10 @@ export async function getNextStudentSeq() {
   const maxSeq = all.reduce((max, s) => {
     const parts = s.studentId.split('-');
     if (parts.length > 2) {
-        const seq = parseInt(parts[2], 10);
-        if (!isNaN(seq) && seq > max) {
-            return seq;
-        }
+      const seq = parseInt(parts[2], 10);
+      if (!isNaN(seq) && seq > max) {
+        return seq;
+      }
     }
     return max;
   }, 0);
@@ -196,22 +196,22 @@ export async function getNextRollNoForClass(className: string, section: string) 
   const db = await getDb();
   const schoolId = getSchoolId();
   const classStudents = await db.getAllFromIndex(STORE_NAME, 'by-class-section', [schoolId, className, section]);
-  
+
   if (!classStudents.length) return 1;
-  
+
   // Find all used roll numbers for this class-section
   const usedRollNos = classStudents
     .map(student => parseInt(student.rollNo, 10))
     .filter(rollNo => !isNaN(rollNo))
     .sort((a, b) => a - b);
-  
+
   // Find the first available roll number from 1 to 50
   for (let i = 1; i <= 50; i++) {
     if (!usedRollNos.includes(i)) {
       return i;
     }
   }
-  
+
   // If all numbers 1-50 are used, return the next sequential number
   return Math.max(...usedRollNos) + 1;
 }
@@ -220,18 +220,18 @@ export async function getAvailableRollNumbers(className: string, section: string
   const db = await getDb();
   const schoolId = getSchoolId();
   const classStudents = await db.getAllFromIndex(STORE_NAME, 'by-class-section', [schoolId, className, section]);
-  
+
   const usedRollNos = classStudents
     .map(student => parseInt(student.rollNo, 10))
     .filter(rollNo => !isNaN(rollNo));
-  
+
   const availableNumbers = [];
   for (let i = 1; i <= 50; i++) {
     if (!usedRollNos.includes(i)) {
       availableNumbers.push(i);
     }
   }
-  
+
   return availableNumbers;
 }
 
@@ -248,16 +248,16 @@ export async function getHistory() {
 }
 
 export async function saveSetting(key: string, value: any) {
-    const db = await getDb();
-    const schoolId = getSchoolId();
-    await db.put(SETTINGS_STORE, { schoolId, key, value });
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  await db.put(SETTINGS_STORE, { schoolId, key, value });
 }
 
 export async function loadSetting(key: string) {
-    const db = await getDb();
-    const schoolId = getSchoolId();
-    const result = await db.get(SETTINGS_STORE, [schoolId, key]);
-    return result ? result.value : undefined;
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const result = await db.get(SETTINGS_STORE, [schoolId, key]);
+  return result ? result.value : undefined;
 }
 
 export async function saveFeeMap(feeMap: any) {
@@ -332,7 +332,7 @@ export async function saveSchoolInfo(info: SchoolInfo) {
 export async function loadSchoolInfo(): Promise<SchoolInfo> {
   const stored = await loadSetting('schoolInfo');
   if (stored) return stored;
-  
+
   // Fallback to environment variables or defaults
   return {
     name: import.meta.env?.VITE_SCHOOL_NAME || 'DAV Public School',
@@ -342,3 +342,93 @@ export async function loadSchoolInfo(): Promise<SchoolInfo> {
     website: import.meta.env?.VITE_SCHOOL_WEBSITE || 'www.school.edu'
   };
 }
+
+// ============================================
+// PAYTM PAYMENT GATEWAY CONFIGURATION
+// ============================================
+
+export interface PaytmConfig {
+  merchantId: string;
+  merchantKey: string;
+  isLive: boolean;
+}
+
+export async function savePaytmConfig(config: PaytmConfig) {
+  await saveSetting('paytmConfig', config);
+}
+
+export async function loadPaytmConfig(): Promise<PaytmConfig | null> {
+  return await loadSetting('paytmConfig');
+}
+
+// ============================================
+// ONLINE TRANSACTIONS
+// ============================================
+
+export interface OnlineTransaction {
+  id?: number;
+  orderId: string;
+  txnId: string;
+  studentId: string;
+  studentName: string;
+  amount: number;
+  paymentMode: 'UPI' | 'CARD' | 'NETBANKING' | 'WALLET';
+  status: 'SUCCESS' | 'FAILED' | 'PENDING';
+  timestamp: string;
+  bankTxnId?: string;
+  gatewayName?: string;
+  bankName?: string;
+  responseCode?: string;
+  responseMessage?: string;
+}
+
+export async function addOnlineTransaction(txn: OnlineTransaction) {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  await db.add(HISTORY_STORE, { ...txn, schoolId, action: 'online_payment' });
+}
+
+export async function getOnlineTransactions(): Promise<OnlineTransaction[]> {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const allHistory = await db.getAllFromIndex(HISTORY_STORE, 'by-school', schoolId);
+  return allHistory.filter((h: any) => h.action === 'online_payment') as OnlineTransaction[];
+}
+
+// ============================================
+// FEE NOTIFICATION SETTINGS
+// ============================================
+
+export interface NotificationSettings {
+  dayOfMonth: number;
+  isEnabled: boolean;
+  lastSentDate?: string;
+}
+
+export async function saveNotificationSettings(settings: NotificationSettings) {
+  await saveSetting('notificationSettings', settings);
+}
+
+export async function loadNotificationSettings(): Promise<NotificationSettings | null> {
+  return await loadSetting('notificationSettings');
+}
+
+// ============================================
+// MSG91 CONFIGURATION
+// ============================================
+
+export interface MSG91Config {
+  apiKey: string;
+  senderId: string;
+  templateId: string;
+}
+
+export async function saveMSG91Config(config: MSG91Config) {
+  await saveSetting('msg91Config', config);
+}
+
+export async function loadMSG91Config(): Promise<MSG91Config | null> {
+  return await loadSetting('msg91Config');
+}
+
+

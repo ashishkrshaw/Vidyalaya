@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import SchoolIcon from '@mui/icons-material/School';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './Login.css';
 
 interface LoginProps {
@@ -6,8 +8,11 @@ interface LoginProps {
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
+    const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [email, setEmail] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
     const [captcha, setCaptcha] = useState('');
     const [error, setError] = useState('');
@@ -52,7 +57,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         if (username === envUsername && password === envPassword) {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('schoolName', schoolName);
-            localStorage.setItem('schoolId', 'school_default'); // Fix: Required for DB access
+            localStorage.setItem('schoolId', 'school_default');
             onLogin(schoolName);
         } else {
             setIsLoading(false);
@@ -61,62 +66,197 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         }
     };
 
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        if (!username || !email || !password || !confirmPassword) {
+            setError('All fields are required');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match');
+            return;
+        }
+
+        if (captchaInput.toUpperCase() !== captcha) {
+            setError('Invalid captcha');
+            generateCaptcha();
+            return;
+        }
+
+        setIsLoading(true);
+        await new Promise(r => setTimeout(r, 1000));
+        setIsLoading(false);
+        setError('Registration feature coming soon! Please use admin login.');
+        generateCaptcha();
+    };
+
+    const handleBackToHome = () => {
+        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.pushState({ path: newUrl }, '', newUrl);
+        window.location.reload();
+    };
+
     return (
-        <div className="login-page">
-            <div className="login-left">
-                <div className="brand">
-                    <div className="brand-icon">🎓</div>
-                    <h1>{schoolName}</h1>
-                    <p>Streamline admissions, fees & student management</p>
+        <div className="login-universe">
+            {/* Animated Background */}
+            <div className="login-bg">
+                <div className="bg-gradient"></div>
+                <div className="bg-grid"></div>
+                <div className="starfield"></div>
+                <div className="floating-shapes">
+                    <div className="shape shape-1"></div>
+                    <div className="shape shape-2"></div>
+                    <div className="shape shape-3"></div>
+                    <div className="shape shape-4"></div>
                 </div>
             </div>
 
-            <div className="login-right">
-                <form onSubmit={handleSubmit} className="login-form">
-                    <h2>Sign In</h2>
+            {/* Back Button */}
+            <button className="back-to-home" onClick={handleBackToHome}>
+                <ArrowBackIcon /> Back to Home
+            </button>
 
-                    <div className="field">
-                        <input
-                            type="text"
-                            value={username}
-                            onChange={e => setUsername(e.target.value)}
-                            placeholder="Username"
-                            autoComplete="username"
-                        />
+            {/* Login Card */}
+            <div className="login-card">
+                {/* Logo */}
+                <div className="login-logo">
+                    <div className="logo-icon">
+                        <SchoolIcon style={{ fontSize: 32, color: 'white' }} />
                     </div>
+                    <h1>ScholarBase</h1>
+                </div>
 
-                    <div className="field">
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                            placeholder="Password"
-                            autoComplete="current-password"
-                        />
-                    </div>
-
-                    <div className="captcha-row">
-                        <div className="captcha-box">
-                            <span>{captcha}</span>
-                            <button type="button" onClick={generateCaptcha}>↻</button>
-                        </div>
-                        <input
-                            type="text"
-                            value={captchaInput}
-                            onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
-                            placeholder="Enter code"
-                            maxLength={5}
-                        />
-                    </div>
-
-                    {error && <div className="error">{error}</div>}
-
-                    <button type="submit" className="submit-btn" disabled={isLoading}>
-                        {isLoading ? <span className="loader"></span> : 'Sign In →'}
+                {/* Tab Switcher */}
+                <div className="login-tabs">
+                    <button
+                        className={`tab ${activeTab === 'login' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('login'); setError(''); }}
+                    >
+                        Login
                     </button>
+                    <button
+                        className={`tab ${activeTab === 'signup' ? 'active' : ''}`}
+                        onClick={() => { setActiveTab('signup'); setError(''); }}
+                    >
+                        Create Account
+                    </button>
+                    <div className={`tab-indicator ${activeTab}`}></div>
+                </div>
 
-                    <p className="footer">Powered by <strong>Skooly</strong></p>
-                </form>
+                {/* Login Form */}
+                {activeTab === 'login' && (
+                    <form onSubmit={handleSubmit} className="login-form">
+                        <div className="field">
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={e => setUsername(e.target.value)}
+                                placeholder="Username"
+                                autoComplete="username"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                placeholder="Password"
+                                autoComplete="current-password"
+                            />
+                        </div>
+
+                        <div className="captcha-row">
+                            <div className="captcha-box">
+                                <span>{captcha}</span>
+                                <button type="button" onClick={generateCaptcha}>↻</button>
+                            </div>
+                            <input
+                                type="text"
+                                value={captchaInput}
+                                onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
+                                placeholder="Enter code"
+                                maxLength={5}
+                            />
+                        </div>
+
+                        {error && <div className="error">{error}</div>}
+
+                        <button type="submit" className="submit-btn" disabled={isLoading}>
+                            {isLoading ? <span className="loader"></span> : 'Sign In →'}
+                        </button>
+                    </form>
+                )}
+
+                {/* Signup Form */}
+                {activeTab === 'signup' && (
+                    <form onSubmit={handleSignup} className="login-form">
+                        <div className="field">
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={e => setUsername(e.target.value)}
+                                placeholder="Username"
+                                autoComplete="username"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <input
+                                type="email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="Email Address"
+                                autoComplete="email"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                placeholder="Password"
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                placeholder="Confirm Password"
+                                autoComplete="new-password"
+                            />
+                        </div>
+
+                        <div className="captcha-row">
+                            <div className="captcha-box">
+                                <span>{captcha}</span>
+                                <button type="button" onClick={generateCaptcha}>↻</button>
+                            </div>
+                            <input
+                                type="text"
+                                value={captchaInput}
+                                onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
+                                placeholder="Enter code"
+                                maxLength={5}
+                            />
+                        </div>
+
+                        {error && <div className="error">{error}</div>}
+
+                        <button type="submit" className="submit-btn signup" disabled={isLoading}>
+                            {isLoading ? <span className="loader"></span> : 'Create Account →'}
+                        </button>
+                    </form>
+                )}
+
+                <p className="footer">Powered by <strong>ScholarBase</strong></p>
             </div>
         </div>
     );

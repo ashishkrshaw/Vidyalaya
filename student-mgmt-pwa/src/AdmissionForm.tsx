@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Box, Grid, Typography, Card, CardContent,
+  Button, TextField, MenuItem, IconButton,
+  InputAdornment, Avatar,
+  Stack, Chip
+} from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Dayjs } from 'dayjs';
+
+// Icons
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import PersonIcon from '@mui/icons-material/Person';
 import SchoolIcon from '@mui/icons-material/School';
-import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
+import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom'; // For Guardian
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SaveIcon from '@mui/icons-material/Save';
 import BadgeIcon from '@mui/icons-material/Badge';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import dayjs, { Dayjs } from 'dayjs';
+import EmailIcon from '@mui/icons-material/Email';
+import HomeIcon from '@mui/icons-material/Home';
+import PhoneIcon from '@mui/icons-material/Phone';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+
 import './AdmissionForm.css';
 
 interface AdmissionFormProps {
@@ -30,7 +43,6 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
   const [form, setForm] = useState({
     name: '',
     gender: '',
-    dob: '',
     class: '',
     section: '',
     aadhar: '',
@@ -42,8 +54,8 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
     email: '',
     address: '',
     note: '',
-    admissionFee: '', // New field
-    monthlyFee: '',   // New field (optional override)
+    admissionFee: '',
+    monthlyFee: '',
     photo: null as File | null,
   });
 
@@ -58,16 +70,14 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
     setRollNo(roll);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const getFormattedDob = () => {
-    if (selectedDate) {
-      return selectedDate.format('DD/MM/YYYY');
-    }
-    return '';
+  const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +107,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
       ...form,
       studentId,
       rollNo,
-      dob: getFormattedDob(),
+      dob: selectedDate ? selectedDate.format('DD/MM/YYYY') : '',
       admissionDate: new Date().toISOString().split('T')[0],
       photoData: photoPreview,
     };
@@ -105,266 +115,270 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
   };
 
   return (
-    <div className="admission-page">
-      {/* Header */}
+    <Box className="admission-container">
+      {/* Neo-Glass Header */}
       <div className="admission-header">
-        <div className="admission-header-content">
-          <h1 className="admission-title">
-            <PersonAddIcon />
-            New Student Admission
-          </h1>
-          <p className="admission-subtitle">Fill in all the required information below</p>
-        </div>
-        {form.class && form.section && rollNo && (
-          <div className="admission-roll-badge">
-            <BadgeIcon />
-            <span>Roll No:</span>
-            <strong>#{rollNo}</strong>
-          </div>
+        <Box>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+            <div className="admission-icon-box">
+              <PersonAddIcon sx={{ fontSize: 32 }} />
+            </div>
+            <Typography variant="h4" sx={{ fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>New Student Admission</Typography>
+          </Stack>
+          <Typography variant="body1" sx={{ opacity: 0.9, ml: 1, fontWeight: 500 }}>
+            Fill in the details below to register a new student.
+          </Typography>
+        </Box>
+        {rollNo && (
+          <Chip
+            icon={<BadgeIcon />}
+            label={`Roll No: #${rollNo}`}
+            className="admission-roll-chip"
+          />
         )}
       </div>
 
-      {/* Main Form Container */}
-      <div className="admission-form-container">
-        <div className="admission-form-grid-layout">
+      <Grid container spacing={3}>
+        {/* LEFT COLUMN */}
+        <Grid size={{ xs: 12, lg: 8 }}>
 
-          {/* Left Column */}
-          <div className="admission-form-column">
-
-            {/* Personal Information Section */}
-            <div className="form-section">
-              <div className="form-section-header">
-                <div className="form-section-icon blue">
+          {/* 1. Student Details */}
+          <Card className="admission-card">
+            <CardContent className="admission-card-content">
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+                <div className="section-icon-box personal">
                   <PersonIcon />
                 </div>
-                <h3>Personal Information</h3>
-              </div>
-              <div className="form-section-body">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Full Name <span className="required">*</span></label>
-                    <input type="text" name="name" value={form.name} onChange={handleChange} placeholder="Enter student's full name" />
-                  </div>
-                  <div className="form-group">
-                    <label>Gender <span className="required">*</span></label>
-                    <select name="gender" value={form.gender} onChange={handleChange}>
-                      <option value="">Select Gender</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Date of Birth <span className="required">*</span></label>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DatePicker
-                        value={selectedDate}
-                        onChange={(newValue) => setSelectedDate(newValue)}
-                        format="DD/MM/YYYY"
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            placeholder: 'Select Date',
-                            size: 'small'
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
-                  </div>
-                  <div className="form-group">
-                    <label>Aadhar Number</label>
-                    <input type="text" name="aadhar" value={form.aadhar} onChange={handleChange} placeholder="12-digit Aadhar" maxLength={12} />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>APAAR ID</label>
-                    <input type="text" name="apaar" value={form.apaar} onChange={handleChange} placeholder="APAAR/ABC ID" />
-                  </div>
-                </div>
-              </div>
-            </div>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Personal Information</Typography>
+              </Stack>
 
-            {/* Academic Information Section */}
-            <div className="form-section">
-              <div className="form-section-header">
-                <div className="form-section-icon green">
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth label="Full Name" name="name"
+                    value={form.name} onChange={handleChange} required
+                    placeholder="Student's Name"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    select fullWidth label="Gender" name="gender"
+                    value={form.gender} onChange={handleSelectChange} required
+                  >
+                    {['Male', 'Female', 'Other'].map((option) => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label="Date of Birth"
+                      value={selectedDate}
+                      onChange={(newValue) => setSelectedDate(newValue)}
+                      slotProps={{ textField: { fullWidth: true, required: true } }}
+                    />
+                  </LocalizationProvider>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth label="Aadhar Number" name="aadhar"
+                    value={form.aadhar} onChange={handleChange}
+                    inputProps={{ maxLength: 12 }} placeholder="12-digit number"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth label="APAAR ID (ABC ID)" name="apaar"
+                    value={form.apaar} onChange={handleChange}
+                    placeholder="Optional"
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* 2. Academic Details */}
+          <Card className="admission-card">
+            <CardContent className="admission-card-content">
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+                <div className="section-icon-box academic">
                   <SchoolIcon />
                 </div>
-                <h3>Academic Information</h3>
-              </div>
-              <div className="form-section-body">
-                <div className="form-row three-col">
-                  <div className="form-group">
-                    <label>Class <span className="required">*</span></label>
-                    <select name="class" value={form.class} onChange={handleChange}>
-                      <option value="">Select Class</option>
-                      {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Section <span className="required">*</span></label>
-                    <select name="section" value={form.section} onChange={handleChange}>
-                      <option value="">Select Section</option>
-                      {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Roll Number</label>
-                    <input type="text" value={rollNo || 'Auto-assigned'} disabled className="disabled" />
-                  </div>
-                </div>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Academic Details</Typography>
+              </Stack>
 
-                {/* Fee Details Subsection */}
-                <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #E5E7EB' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#4B5563', marginBottom: '12px' }}>Fee Details</h4>
-                  <div className="form-row two-col">
-                    <div className="form-group">
-                      <label>Admission Fee (₹)</label>
-                      <input
-                        type="number"
-                        name="admissionFee"
-                        value={form.admissionFee}
-                        onChange={handleChange}
-                        placeholder="Enter Admission Fee"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Monthly Fee (₹) <small>(Optional Override)</small></label>
-                      <input
-                        type="number"
-                        name="monthlyFee"
-                        value={form.monthlyFee}
-                        onChange={handleChange}
-                        placeholder="Leave empty for default"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    select fullWidth label="Class" name="class"
+                    value={form.class} onChange={handleSelectChange} required
+                  >
+                    {classOptions.map((option) => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    select fullWidth label="Section" name="section"
+                    value={form.section} onChange={handleSelectChange} required
+                  >
+                    {sectionOptions.map((option) => (
+                      <MenuItem key={option} value={option}>{option}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid size={{ xs: 12, sm: 4 }}>
+                  <TextField
+                    fullWidth label="Roll Number"
+                    value={rollNo ? `#${rollNo}` : 'Auto-generated'}
+                    disabled
+                    sx={{
+                      '& .MuiInputBase-input': {
+                        WebkitTextFillColor: '#334155 !important',
+                        fontWeight: 700
+                      }
+                    }}
+                  />
+                </Grid>
 
-            {/* Guardian Information Section */}
-            <div className="form-section">
-              <div className="form-section-header">
-                <div className="form-section-icon purple">
+                <Grid size={{ xs: 12 }}>
+                  <div className="fee-config-box">
+                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+                      <CurrencyRupeeIcon sx={{ fontSize: 20, color: '#64748b' }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Fee Configuration</Typography>
+                    </Stack>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth label="Admission Fee" name="admissionFee"
+                          value={form.admissionFee} onChange={handleChange}
+                          type="number" InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <TextField
+                          fullWidth label="Monthly Fee (Override)" name="monthlyFee"
+                          value={form.monthlyFee} onChange={handleChange}
+                          type="number" placeholder="Default if empty"
+                          InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+                        />
+                      </Grid>
+                    </Grid>
+                  </div>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
+
+          {/* 3. Guardian Details */}
+          <Card className="admission-card">
+            <CardContent className="admission-card-content">
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+                <div className="section-icon-box guardian">
                   <FamilyRestroomIcon />
                 </div>
-                <h3>Guardian Information</h3>
-              </div>
-              <div className="form-section-body">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Father's Name <span className="required">*</span></label>
-                    <input type="text" name="fatherName" value={form.fatherName} onChange={handleChange} placeholder="Enter father's full name" />
-                  </div>
-                  <div className="form-group">
-                    <label>Mother's Name</label>
-                    <input type="text" name="motherName" value={form.motherName} onChange={handleChange} placeholder="Enter mother's full name" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Parents / Guardian Info</Typography>
+              </Stack>
 
-          {/* Right Column */}
-          <div className="admission-form-column">
+              <Grid container spacing={3}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth label="Father's Name" name="fatherName"
+                    value={form.fatherName} onChange={handleChange} required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    fullWidth label="Mother's Name" name="motherName"
+                    value={form.motherName} onChange={handleChange}
+                  />
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
 
-            {/* Contact Information Section */}
-            <div className="form-section">
-              <div className="form-section-header">
-                <div className="form-section-icon orange">
+        </Grid>
+
+        {/* RIGHT COLUMN */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+
+          {/* 4. Photo Upload */}
+          <Card className="admission-card">
+            <CardContent className="admission-card-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div className="photo-upload-box">
+                <Avatar
+                  variant="rounded"
+                  src={photoPreview || undefined}
+                  className="photo-avatar"
+                >
+                  {!photoPreview && <CameraAltIcon sx={{ fontSize: 40, color: '#cbd5e1' }} />}
+                </Avatar>
+                <IconButton
+                  component="label"
+                  className="upload-icon-btn"
+                >
+                  <input hidden accept="image/*" type="file" onChange={handlePhotoUpload} />
+                  <CameraAltIcon fontSize="small" />
+                </IconButton>
+              </div>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>Student Photo</Typography>
+              <Typography variant="caption" color="textSecondary">Supported: JPG, PNG (Max 2MB)</Typography>
+            </CardContent>
+          </Card>
+
+          {/* 5. Contact Info */}
+          <Card className="admission-card">
+            <CardContent className="admission-card-content">
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+                <div className="section-icon-box contact">
                   <ContactPhoneIcon />
                 </div>
-                <h3>Contact Information</h3>
-              </div>
-              <div className="form-section-body">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Father's Mobile <span className="required">*</span></label>
-                    <input type="tel" name="fatherMobile" value={form.fatherMobile} onChange={handleChange} placeholder="10-digit mobile" maxLength={10} />
-                  </div>
-                  <div className="form-group">
-                    <label>Mother's Mobile</label>
-                    <input type="tel" name="motherMobile" value={form.motherMobile} onChange={handleChange} placeholder="10-digit mobile" maxLength={10} />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label>Email Address</label>
-                    <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="parent@email.com" />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label>Full Address</label>
-                    <textarea name="address" value={form.address} onChange={handleChange} placeholder="Enter complete address" rows={3} />
-                  </div>
-                </div>
-              </div>
-            </div>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>Contact Details</Typography>
+              </Stack>
 
-            {/* Photo Upload Section */}
-            <div className="form-section">
-              <div className="form-section-header">
-                <div className="form-section-icon teal">
-                  <CameraAltIcon />
-                </div>
-                <h3>Student Photo</h3>
-              </div>
-              <div className="form-section-body">
-                <div className="photo-upload-area">
-                  <div className={`photo-preview ${photoPreview ? 'has-photo' : ''}`}>
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Student" />
-                    ) : (
-                      <div className="photo-placeholder">
-                        <CameraAltIcon />
-                        <span>No Photo</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="photo-actions">
-                    <label className="photo-upload-btn">
-                      <CameraAltIcon />
-                      {photoPreview ? 'Change Photo' : 'Upload Photo'}
-                      <input type="file" accept="image/*" onChange={handlePhotoUpload} hidden />
-                    </label>
-                    <span className="photo-hint">Passport-size, max 2MB</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <Stack spacing={3}>
+                <TextField
+                  fullWidth label="Father's Mobile" name="fatherMobile"
+                  value={form.fatherMobile} onChange={handleChange} required
+                  InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" /></InputAdornment> }}
+                />
+                <TextField
+                  fullWidth label="Mother's Mobile" name="motherMobile"
+                  value={form.motherMobile} onChange={handleChange}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><PhoneIcon fontSize="small" /></InputAdornment> }}
+                />
+                <TextField
+                  fullWidth label="Email Address" name="email"
+                  value={form.email} onChange={handleChange}
+                  InputProps={{ startAdornment: <InputAdornment position="start"><EmailIcon fontSize="small" /></InputAdornment> }}
+                />
+                <TextField
+                  fullWidth label="Residential Address" name="address"
+                  value={form.address} onChange={handleChange} multiline rows={3}
+                  InputProps={{ startAdornment: <InputAdornment position="start" sx={{ mt: 1 }}><HomeIcon fontSize="small" /></InputAdornment> }}
+                />
+              </Stack>
+            </CardContent>
+          </Card>
 
-            {/* Additional Notes */}
-            <div className="form-section">
-              <div className="form-section-body">
-                <div className="form-group full-width">
-                  <label>Additional Notes</label>
-                  <textarea name="note" value={form.note} onChange={handleChange} placeholder="Any special notes about the student..." rows={3} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <div className="admission-submit-area">
-          <button
-            type="button"
-            className="admission-submit-btn"
+          {/* Submit */}
+          <Button
+            fullWidth
+            variant="contained"
+            size="large"
             onClick={handleSubmit}
             disabled={!isFormValid()}
+            startIcon={<SaveIcon />}
+            className="submit-btn"
           >
-            <SaveIcon />
-            Submit Admission
-          </button>
-          <span className="admission-required-note">* Required fields</span>
-        </div>
-      </div>
-    </div>
+            Save Admission
+          </Button>
+
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
