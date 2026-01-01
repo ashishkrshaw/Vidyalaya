@@ -3,10 +3,15 @@ import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
 import DownloadIcon from '@mui/icons-material/Download';
-import { getAdmissionsByClassSection, getAdmissions, addHistoryEntry, loadFeeMap, addFeePayment, loadPrincipalSignature } from './db';
+import { getAdmissionsByClassSection, getAdmissions, addHistoryEntry, loadFeeMap, addFeePayment, loadPrincipalSignature, loadSchoolInfo } from './db';
+import HistoryIcon from '@mui/icons-material/History';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { QRCodeCanvas } from 'qrcode.react';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import PaymentSettings from './PaymentSettings';
+import FeeNotification from './FeeNotification';
 import './FeeManagement.css';
 
 const classOptions = [
@@ -31,6 +36,7 @@ const FeeManagement: React.FC = () => {
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
   const [principalSignature, setPrincipalSignature] = useState<any>(null);
+  const [schoolInfo, setSchoolInfo] = useState<any>(null);
   const [allPayments, setAllPayments] = useState<any[]>([]);
   const [summaryClass, setSummaryClass] = useState('');
   const [summaryMonth, setSummaryMonth] = useState('');
@@ -47,6 +53,8 @@ const FeeManagement: React.FC = () => {
   const [miscDesc, setMiscDesc] = useState('');
   const [miscAmount, setMiscAmount] = useState<number | ''>('');
   const [isMiscOpen, setIsMiscOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'payment' | 'history' | 'gateway' | 'notify'>('payment');
+  const [historySearch, setHistorySearch] = useState('');
 
   // QR code ref for PDF
   const qrRef = useRef<HTMLDivElement>(null);
@@ -55,6 +63,7 @@ const FeeManagement: React.FC = () => {
   useEffect(() => {
     loadFeeMap().then(setFeeMap);
     loadPrincipalSignature().then(setPrincipalSignature);
+    loadSchoolInfo().then(setSchoolInfo);
   }, []);
 
   useEffect(() => {
@@ -196,7 +205,9 @@ const FeeManagement: React.FC = () => {
       months,
       total,
       date: new Date().toLocaleDateString(),
+
       principalSignature,
+      miscDesc: miscAmount ? miscDesc : undefined,
     });
     setReceiptOpen(true);
   };
@@ -225,11 +236,11 @@ const FeeManagement: React.FC = () => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
-    doc.text('Sunrise Public School', 105, 22, { align: 'center' });
+    doc.text(schoolInfo?.name || 'Sunrise Public School', 105, 22, { align: 'center' });
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text('123 Main Road, City, State, PIN', 105, 30, { align: 'center' });
-    doc.text('Contact: 9876543210 | info@sunrise.edu', 105, 36, { align: 'center' });
+    doc.text(schoolInfo?.address || '123 Main Road, City, State, PIN', 105, 30, { align: 'center' });
+    doc.text(`Contact: ${schoolInfo?.phone || '9876543210'} | ${schoolInfo?.email || 'info@sunrise.edu'}`, 105, 36, { align: 'center' });
     doc.setDrawColor(0);
     doc.rect(20, 15, 25, 25);
     doc.setFontSize(10);
@@ -261,12 +272,34 @@ const FeeManagement: React.FC = () => {
     doc.text('Fee Details', 20, y);
     doc.line(20, y + 2, 190, y + 2);
     y += 10;
+    y += 10;
     doc.setFont('helvetica', 'normal');
-    doc.text(`Tuition Fee:`, 20, y);
-    doc.text(`Rs. ${receiptData.total.toFixed(2)}`, 180, y, { align: 'right' });
-    y += 8;
-    doc.text(`Months Paid:`, 20, y);
-    doc.text(`${receiptData.months.join(', ')}`, 180, y, { align: 'right' });
+
+    // Tuition Fee Row
+    const tuitionAmount = receiptData.miscDesc ? (receiptData.total - (Number(receiptData.miscAmount) || 0)) : receiptData.total;
+    // If it's a misc-only payment, tuition might be 0
+    if (tuitionAmount > 0) {
+      doc.text(`Tuition Fee:`, 20, y);
+      doc.text(`Rs. ${tuitionAmount.toFixed(2)}`, 180, y, { align: 'right' });
+      y += 8;
+    }
+
+    // Misc Fee Row
+    if (receiptData.miscDesc) {
+      doc.text(`Misc Fee (${receiptData.miscDesc}):`, 20, y);
+      doc.text(`Rs. ${(Number(receiptData.miscAmount) || 0).toFixed(2)}`, 180, y, { align: 'right' });
+      y += 8;
+    }
+
+    // Months Row
+    if (receiptData.months && receiptData.months.length > 0) {
+      doc.text(`Months Paid:`, 20, y);
+      doc.text(receiptData.months.join(', '), 180, y, { align: 'right' });
+    } else if (!receiptData.miscDesc) {
+      // Fallback if no months and no misc (shouldn't happen usually)
+      doc.text(`Months Paid:`, 20, y);
+      doc.text(`Tuition Fee`, 180, y, { align: 'right' });
+    }
     y += 12;
     doc.setFont('helvetica', 'bold');
     doc.line(20, y, 190, y);
@@ -412,6 +445,110 @@ const FeeManagement: React.FC = () => {
     return { totalPaid, annualFee, dues, paidMonths, applicableMonths };
   };
 
+  const renderHistory = () => {
+    const filtered = allPayments.filter(p => {
+      const search = historySearch.toLowerCase();
+      return (
+        p.name?.toLowerCase().includes(search) ||
+        p.studentId?.toLowerCase().includes(search) ||
+        String(p.amount).includes(search)
+      );
+    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return (
+      <div className="fee-card">
+        <div className="fee-card-header">
+          <h2 className="fee-card-title"><HistoryIcon style={{ marginRight: 8 }} /> Transaction History</h2>
+        </div>
+
+        <div className="history-controls">
+          <div className="history-search-wrapper">
+            <SearchIcon className="history-search-icon" />
+            <input
+              type="text"
+              className="history-search-input"
+              placeholder="Search by Name, ID or Amount..."
+              value={historySearch}
+              onChange={(e) => setHistorySearch(e.target.value)}
+            />
+          </div>
+          <button className="fee-btn fee-btn-secondary" onClick={handleExportAllExcel}>
+            <DownloadIcon style={{ fontSize: 18 }} />
+            Export History
+          </button>
+        </div>
+
+        <div className="fee-table-container">
+          <table className="fee-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Student info</th>
+                <th>Type</th>
+                <th>Months / Desc</th>
+                <th>Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length > 0 ? (
+                filtered.map((p: any, i: number) => (
+                  <tr key={i}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{new Date(p.date).toLocaleDateString()}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{new Date(p.date).toLocaleTimeString()}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{p.name}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{p.studentId} | Class {p.class}</div>
+                    </td>
+                    <td>
+                      <span className={`history-status-badge ${p.type === 'misc' ? 'pending' : 'success'}`}>
+                        {p.type === 'misc' ? 'Misc' : 'Tuition'}
+                      </span>
+                    </td>
+                    <td style={{ maxWidth: 200 }}>
+                      {p.months && p.months.length > 0 ? p.months.join(', ') : (p.miscDesc || '-')}
+                    </td>
+                    <td style={{ fontWeight: 700, color: '#166534' }}>
+                      ₹{Number(p.amount).toFixed(2)}
+                    </td>
+                    <td>
+                      <button
+                        className="fee-btn fee-btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: 12 }}
+                        onClick={() => {
+                          setReceiptData({
+                            student: { name: p.name, studentId: p.studentId, class: p.class, section: p.section, rollNo: p.rollNo, fatherName: p.fatherName || 'N/A', fatherMobile: p.fatherMobile || 'N/A' }, // Hydrate if needed
+                            months: p.months || [],
+                            total: Number(p.amount),
+                            date: new Date(p.date).toLocaleDateString(),
+                            principalSignature,
+                            miscDesc: p.miscDesc,
+                            miscAmount: p.miscAmount
+                          });
+                          setReceiptOpen(true);
+                        }}
+                      >
+                        Receipt
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: 'var(--text-secondary)' }}>
+                    No transactions found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fee-page">
       {/* Header */}
@@ -425,352 +562,406 @@ const FeeManagement: React.FC = () => {
       {msg && <div className="fee-alert fee-alert-success">{msg}</div>}
 
       {/* Main Grid */}
-      <div className="fee-grid">
-        {/* Search Student Card */}
-        <div className="fee-card">
-          <h2 className="fee-card-title">
-            <SearchIcon />
-            Find Student
-          </h2>
-          <div className="fee-form-grid">
-            <div className="fee-form-field">
-              <label className="fee-form-label">Class</label>
-              <select
-                className="fee-form-select"
-                value={cls}
-                onChange={(e) => setCls(e.target.value)}
-              >
-                <option value="">Select Class</option>
-                {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="fee-form-field">
-              <label className="fee-form-label">Section</label>
-              <select
-                className="fee-form-select"
-                value={section}
-                onChange={(e) => setSection(e.target.value)}
-              >
-                <option value="">Select Section</option>
-                {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div className="fee-form-field">
-              <label className="fee-form-label">Roll Number</label>
-              <input
-                type="text"
-                className="fee-form-input"
-                value={rollNo}
-                onChange={(e) => setRollNo(e.target.value)}
-                placeholder="Enter Roll No"
-              />
-            </div>
-          </div>
-          <button className="fee-btn fee-btn-primary fee-btn-full" onClick={handleSearch}>
-            <SearchIcon style={{ fontSize: 18 }} />
-            Search Student
+      <div className="fee-page-content">
+        {/* Tabs */}
+        <div className="fee-tabs">
+          <button
+            className={`fee-tab ${activeTab === 'payment' ? 'active' : ''}`}
+            onClick={() => setActiveTab('payment')}
+          >
+            New Payment
+          </button>
+          <button
+            className={`fee-tab ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            Transaction History
+          </button>
+          <button
+            className={`fee-tab ${activeTab === 'gateway' ? 'active' : ''}`}
+            onClick={() => setActiveTab('gateway')}
+          >
+            <CreditCardIcon style={{ fontSize: 16, marginRight: 6 }} />
+            Payment Gateway
+          </button>
+          <button
+            className={`fee-tab ${activeTab === 'notify' ? 'active' : ''}`}
+            onClick={() => setActiveTab('notify')}
+          >
+            <NotificationsActiveIcon style={{ fontSize: 16, marginRight: 6 }} />
+            Notify Parents
           </button>
         </div>
 
-        {/* Student Payment Card */}
-        {student && (
-          <div className="fee-card">
-            <h2 className="fee-card-title">
-              <PersonIcon />
-              Student Payment
-            </h2>
-            <div className="fee-student-info">
-              <h3 className="fee-student-name">{student.name}</h3>
-              <p className="fee-student-id">{student.studentId}</p>
-              <div className="fee-student-details">
-                <span><strong>Class:</strong> {student.class}</span>
-                <span><strong>Section:</strong> {student.section}</span>
-                <span><strong>Roll No:</strong> {student.rollNo}</span>
-              </div>
-              {/* Dues Display */}
-              {(() => {
-                const info = getStudentDuesInfo();
-                return (
-                  <div style={{ marginTop: 16, padding: 16, background: info.dues > 0 ? '#FFEBE6' : '#E3FCEF', borderRadius: 8 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <span>Accrued Dues (Till Now):</span>
-                      <strong style={{ color: info.dues > 0 ? '#DE350B' : '#006644', fontSize: 18 }}>
-                        ₹{info.dues}
-                      </strong>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12, color: '#666' }}>
-                      <span>Projected Annual Fee:</span>
-                      <strong>₹{info.annualFee}</strong>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Misc Fee Section */}
-            <div className="fee-card-section" style={{ marginTop: 20, borderTop: '1px dashed #ddd', paddingTop: 15 }}>
-              <div
-                style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', color: '#0052CC', fontWeight: 600 }}
-                onClick={() => setIsMiscOpen(!isMiscOpen)}
-              >
-                <span>{isMiscOpen ? '−' : '+'} Add Miscellaneous Fee</span>
-              </div>
-              {isMiscOpen && (
-                <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+        {activeTab === 'payment' ? (
+          <div className="fee-grid">
+            {/* Search Student Card */}
+            <div className="fee-card">
+              <h2 className="fee-card-title">
+                <SearchIcon />
+                Find Student
+              </h2>
+              <div className="fee-form-grid">
+                <div className="fee-form-field">
+                  <label className="fee-form-label">Class</label>
+                  <select
+                    className="fee-form-select"
+                    value={cls}
+                    onChange={(e) => setCls(e.target.value)}
+                  >
+                    <option value="">Select Class</option>
+                    {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="fee-form-field">
+                  <label className="fee-form-label">Section</label>
+                  <select
+                    className="fee-form-select"
+                    value={section}
+                    onChange={(e) => setSection(e.target.value)}
+                  >
+                    <option value="">Select Section</option>
+                    {sectionOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="fee-form-field">
+                  <label className="fee-form-label">Roll Number</label>
                   <input
                     type="text"
-                    placeholder="Description (e.g. Fine, Event)"
                     className="fee-form-input"
-                    value={miscDesc}
-                    onChange={(e) => setMiscDesc(e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    className="fee-form-input"
-                    value={miscAmount}
-                    onChange={(e) => setMiscAmount(Number(e.target.value) || '')}
+                    value={rollNo}
+                    onChange={(e) => setRollNo(e.target.value)}
+                    placeholder="Enter Roll No"
                   />
                 </div>
-              )}
+              </div>
+              <button className="fee-btn fee-btn-primary fee-btn-full" onClick={handleSearch}>
+                <SearchIcon style={{ fontSize: 18 }} />
+                Search Student
+              </button>
             </div>
 
-            <div className="fee-form-field">
-              <label className="fee-form-label">Select Months to Pay</label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-                {(() => {
-                  const info = getStudentDuesInfo();
-                  return monthOptions.map(month => {
-                    const isApplicable = info.applicableMonths.includes(month);
-                    const isPaid = info.paidMonths.includes(month);
-                    const isSelected = months.includes(month);
+            {/* Student Payment Card */}
+            {student && (
+              <div className="fee-card">
+                <h2 className="fee-card-title">
+                  <PersonIcon />
+                  Student Payment
+                </h2>
+                <div className="fee-student-info">
+                  <h3 className="fee-student-name">{student.name}</h3>
+                  <p className="fee-student-id">{student.studentId}</p>
+                  <div className="fee-student-details">
+                    <span><strong>Class:</strong> {student.class}</span>
+                    <span><strong>Section:</strong> {student.section}</span>
+                    <span><strong>Roll No:</strong> {student.rollNo}</span>
+                  </div>
+                  {/* Dues Display */}
+                  {(() => {
+                    const info = getStudentDuesInfo();
                     return (
-                      <label key={month} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '6px 12px',
-                        background: !isApplicable ? '#EBECF0' : (isPaid ? '#E3FCEF' : (isSelected ? '#0052CC' : '#F4F5F7')),
-                        color: !isApplicable ? '#A5ADBA' : (isPaid ? '#006644' : (isSelected ? '#FFFFFF' : '#42526E')),
-                        borderRadius: 4,
-                        cursor: (!isApplicable || isPaid) ? 'not-allowed' : 'pointer',
-                        fontSize: 14,
-                        transition: 'all 0.2s',
-                        opacity: (!isApplicable || isPaid) ? 0.6 : 1,
-                        border: isPaid ? '2px solid #36B37E' : 'none'
-                      }}>
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => isApplicable && !isPaid && handleMonthToggle(month)}
-                          disabled={!isApplicable || isPaid}
-                          style={{ display: 'none' }}
-                        />
-                        {month} {isPaid && '✓'} {!isApplicable && '—'}
-                      </label>
+                      <div style={{ marginTop: 16, padding: 16, background: info.dues > 0 ? '#FFEBE6' : '#E3FCEF', borderRadius: 8 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span>Accrued Dues (Till Now):</span>
+                          <strong style={{ color: info.dues > 0 ? '#DE350B' : '#006644', fontSize: 18 }}>
+                            ₹{info.dues}
+                          </strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12, color: '#666' }}>
+                          <span>Projected Annual Fee:</span>
+                          <strong>₹{info.annualFee}</strong>
+                        </div>
+                      </div>
                     );
-                  });
-                })()}
-              </div>
-            </div>
+                  })()}
+                </div>
 
-            <div className="fee-summary">
-              <div className="fee-summary-row">
-                <span>Fee per Month</span>
-                <span>₹{student.monthlyFee || feeMap[student.class] || 'N/A'}</span>
+                {/* Misc Fee Section */}
+                <div className="fee-card-section" style={{ marginTop: 20, borderTop: '1px dashed #ddd', paddingTop: 15 }}>
+                  <button
+                    className="fee-btn fee-btn-secondary"
+                    style={{ width: '100%', marginBottom: 10, justifyContent: 'center' }}
+                    onClick={() => {
+                      if (isMiscOpen) {
+                        setMiscAmount('');
+                        setMiscDesc('');
+                      }
+                      setIsMiscOpen(!isMiscOpen);
+                    }}
+                  >
+                    {isMiscOpen ? '− Remove Miscellaneous Fee' : '+ Add Miscellaneous Fee'}
+                  </button>
+                  {isMiscOpen && (
+                    <div style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                      <input
+                        type="text"
+                        placeholder="Description (e.g. Fine, Event)"
+                        className="fee-form-input"
+                        value={miscDesc}
+                        onChange={(e) => setMiscDesc(e.target.value)}
+                      />
+                      <input
+                        type="number"
+                        placeholder="Amount"
+                        className="fee-form-input"
+                        value={miscAmount}
+                        onChange={(e) => setMiscAmount(Number(e.target.value) || '')}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="fee-form-field">
+                  <label className="fee-form-label">Select Months to Pay</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                    {(() => {
+                      const info = getStudentDuesInfo();
+                      return monthOptions.map(month => {
+                        const isApplicable = info.applicableMonths.includes(month);
+                        const isPaid = info.paidMonths.includes(month);
+                        const isSelected = months.includes(month);
+                        return (
+                          <label key={month} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            padding: '6px 12px',
+                            background: !isApplicable ? '#EBECF0' : (isPaid ? '#E3FCEF' : (isSelected ? '#0052CC' : '#F4F5F7')),
+                            color: !isApplicable ? '#A5ADBA' : (isPaid ? '#006644' : (isSelected ? '#FFFFFF' : '#42526E')),
+                            borderRadius: 4,
+                            cursor: (!isApplicable || isPaid) ? 'not-allowed' : 'pointer',
+                            fontSize: 14,
+                            transition: 'all 0.2s',
+                            opacity: (!isApplicable || isPaid) ? 0.6 : 1,
+                            border: isPaid ? '2px solid #36B37E' : 'none'
+                          }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => isApplicable && !isPaid && handleMonthToggle(month)}
+                              disabled={!isApplicable || isPaid}
+                              style={{ display: 'none' }}
+                            />
+                            {month} {isPaid && '✓'} {!isApplicable && '—'}
+                          </label>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                <div className="fee-summary">
+                  <div className="fee-summary-row">
+                    <span>Fee per Month</span>
+                    <span>₹{student.monthlyFee || feeMap[student.class] || 'N/A'}</span>
+                  </div>
+                  <div className="fee-summary-row">
+                    <span>Months Selected</span>
+                    <span>{months.length}</span>
+                  </div>
+                  {miscAmount && (
+                    <div className="fee-summary-row">
+                      <span>Misc Fee ({miscDesc})</span>
+                      <span>₹{miscAmount}</span>
+                    </div>
+                  )}
+                  <div className="fee-summary-row fee-summary-total">
+                    <span>Total Payable</span>
+                    <span>₹{total}</span>
+                  </div>
+
+                  {/* Manual Partial Payment Input */}
+                  <div className="fee-summary-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee' }}>
+                    <span style={{ fontWeight: 600, color: '#0052CC' }}>Paying Amount:</span>
+                    <input
+                      type="number"
+                      value={payingAmount}
+                      onChange={(e) => setPayingAmount(Number(e.target.value) || '')}
+                      placeholder={`Max ₹${total}`}
+                      style={{ width: 100, padding: 5, borderRadius: 4, border: '1px solid #ccc', textAlign: 'right' }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  className="fee-btn fee-btn-primary fee-btn-full"
+                  disabled={months.length === 0 || !feeMap[student.class]}
+                  onClick={handlePayRequest}
+                >
+                  <MonetizationOnIcon style={{ fontSize: 18 }} />
+                  Make Payment
+                </button>
               </div>
-              <div className="fee-summary-row">
-                <span>Months Selected</span>
-                <span>{months.length}</span>
+            )}
+
+            {/* Fee Summary Card */}
+            <div className="fee-card">
+              <h2 className="fee-card-title">
+                <MonetizationOnIcon />
+                Fee Payment Summary
+              </h2>
+
+              <div className="fee-filters">
+                <div className="fee-filter-field">
+                  <label className="fee-form-label">Filter by Class</label>
+                  <select
+                    className="fee-form-select"
+                    value={summaryClass}
+                    onChange={(e) => setSummaryClass(e.target.value)}
+                  >
+                    <option value="">All Classes</option>
+                    {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="fee-filter-field">
+                  <label className="fee-form-label">Filter by Month</label>
+                  <select
+                    className="fee-form-select"
+                    value={summaryMonth}
+                    onChange={(e) => setSummaryMonth(e.target.value)}
+                  >
+                    <option value="">All Months</option>
+                    {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <button className="fee-btn fee-btn-secondary" onClick={handleExportAllExcel}>
+                  <DownloadIcon style={{ fontSize: 18 }} />
+                  Export All to Excel
+                </button>
               </div>
-              {miscAmount && (
-                <div className="fee-summary-row">
-                  <span>Misc Fee ({miscDesc})</span>
-                  <span>₹{miscAmount}</span>
+
+              {summaryClass && summaryMonth && (
+                <div className="fee-alert fee-alert-success" style={{ marginBottom: 16 }}>
+                  Total for {summaryClass} in {summaryMonth}: ₹{classMonthSum !== null ? classMonthSum.toFixed(2) : '0.00'}
                 </div>
               )}
-              <div className="fee-summary-row fee-summary-total">
-                <span>Total Payable</span>
-                <span>₹{total}</span>
-              </div>
 
-              {/* Manual Partial Payment Input */}
-              <div className="fee-summary-row" style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #eee' }}>
-                <span style={{ fontWeight: 600, color: '#0052CC' }}>Paying Amount:</span>
-                <input
-                  type="number"
-                  value={payingAmount}
-                  onChange={(e) => setPayingAmount(Number(e.target.value) || '')}
-                  placeholder={`Max ₹${total}`}
-                  style={{ width: 100, padding: 5, borderRadius: 4, border: '1px solid #ccc', textAlign: 'right' }}
-                />
+              <div className="fee-table-container">
+                <table className="fee-table">
+                  <thead>
+                    <tr>
+                      <th>Month</th>
+                      <th>Total Paid (All Classes)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthOptions.map(m => (
+                      <tr key={m}>
+                        <td>{m}</td>
+                        <td>₹{summary[m] ? summary[m].toFixed(2) : '0.00'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            <button
-              className="fee-btn fee-btn-primary fee-btn-full"
-              disabled={months.length === 0 || !feeMap[student.class]}
-              onClick={handlePayRequest}
-            >
-              <MonetizationOnIcon style={{ fontSize: 18 }} />
-              Make Payment
-            </button>
           </div>
+
+        ) : activeTab === 'history' ? (
+          renderHistory()
+        ) : activeTab === 'gateway' ? (
+          <PaymentSettings />
+        ) : (
+          <FeeNotification />
         )}
-
-        {/* Fee Summary Card */}
-        <div className="fee-card">
-          <h2 className="fee-card-title">
-            <MonetizationOnIcon />
-            Fee Payment Summary
-          </h2>
-
-          <div className="fee-filters">
-            <div className="fee-filter-field">
-              <label className="fee-form-label">Filter by Class</label>
-              <select
-                className="fee-form-select"
-                value={summaryClass}
-                onChange={(e) => setSummaryClass(e.target.value)}
-              >
-                <option value="">All Classes</option>
-                {classOptions.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="fee-filter-field">
-              <label className="fee-form-label">Filter by Month</label>
-              <select
-                className="fee-form-select"
-                value={summaryMonth}
-                onChange={(e) => setSummaryMonth(e.target.value)}
-              >
-                <option value="">All Months</option>
-                {monthOptions.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
-            </div>
-            <button className="fee-btn fee-btn-secondary" onClick={handleExportAllExcel}>
-              <DownloadIcon style={{ fontSize: 18 }} />
-              Export All to Excel
-            </button>
-          </div>
-
-          {summaryClass && summaryMonth && (
-            <div className="fee-alert fee-alert-success" style={{ marginBottom: 16 }}>
-              Total for {summaryClass} in {summaryMonth}: ₹{classMonthSum !== null ? classMonthSum.toFixed(2) : '0.00'}
-            </div>
-          )}
-
-          <div className="fee-table-container">
-            <table className="fee-table">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Total Paid (All Classes)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthOptions.map(m => (
-                  <tr key={m}>
-                    <td>{m}</td>
-                    <td>₹{summary[m] ? summary[m].toFixed(2) : '0.00'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </div>
 
       {/* Confirm Payment Dialog */}
-      {confirmOpen && (
-        <div className="fee-dialog-overlay" onClick={() => setConfirmOpen(false)}>
-          <div className="fee-dialog" onClick={e => e.stopPropagation()}>
-            <h3 className="fee-dialog-title">Confirm Payment</h3>
-            <p><strong>Student:</strong> {student?.name}</p>
-            <p><strong>Class:</strong> {student?.class} - {student?.section}</p>
-            <p><strong>Months:</strong> {months.join(', ')}</p>
-            <p><strong>Total Amount:</strong> ₹{total}</p>
-            <div className="fee-dialog-actions">
-              <button className="fee-btn fee-btn-secondary" onClick={() => setConfirmOpen(false)}>Cancel</button>
-              <button className="fee-btn fee-btn-primary" onClick={handlePay}>Confirm & Pay</button>
+      {
+        confirmOpen && (
+          <div className="fee-dialog-overlay" onClick={() => setConfirmOpen(false)}>
+            <div className="fee-dialog" onClick={e => e.stopPropagation()}>
+              <h3 className="fee-dialog-title">Confirm Payment</h3>
+              <p><strong>Student:</strong> {student?.name}</p>
+              <p><strong>Class:</strong> {student?.class} - {student?.section}</p>
+              <p><strong>Months:</strong> {months.join(', ')}</p>
+              <p><strong>Total Amount:</strong> ₹{total}</p>
+              <div className="fee-dialog-actions">
+                <button className="fee-btn fee-btn-secondary" onClick={() => setConfirmOpen(false)}>Cancel</button>
+                <button className="fee-btn fee-btn-primary" onClick={handlePay}>Confirm & Pay</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Password Dialog */}
-      {passwordDialogOpen && (
-        <div className="fee-dialog-overlay" onClick={() => setPasswordDialogOpen(false)}>
-          <div className="fee-dialog" onClick={e => e.stopPropagation()}>
-            <h3 className="fee-dialog-title">🔒 Enter Password</h3>
-            <p style={{ color: '#6B778C', marginBottom: 16 }}>Enter payment authorization password</p>
-            <input
-              type="password"
-              className="fee-form-input"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handlePasswordConfirm()}
-              placeholder="Password"
-              autoFocus
-            />
-            {passwordError && <p style={{ color: '#DE350B', marginTop: 8, fontSize: 14 }}>{passwordError}</p>}
-            <div className="fee-dialog-actions">
-              <button className="fee-btn fee-btn-secondary" onClick={() => { setPasswordDialogOpen(false); setPasswordInput(''); setPasswordError(''); setPendingPayment(false); }}>Cancel</button>
-              <button className="fee-btn fee-btn-primary" onClick={handlePasswordConfirm}>Confirm</button>
+      {
+        passwordDialogOpen && (
+          <div className="fee-dialog-overlay" onClick={() => setPasswordDialogOpen(false)}>
+            <div className="fee-dialog" onClick={e => e.stopPropagation()}>
+              <h3 className="fee-dialog-title">🔒 Enter Password</h3>
+              <p style={{ color: '#6B778C', marginBottom: 16 }}>Enter payment authorization password</p>
+              <input
+                type="password"
+                className="fee-form-input"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordConfirm()}
+                placeholder="Password"
+                autoFocus
+              />
+              {passwordError && <p style={{ color: '#DE350B', marginTop: 8, fontSize: 14 }}>{passwordError}</p>}
+              <div className="fee-dialog-actions">
+                <button className="fee-btn fee-btn-secondary" onClick={() => { setPasswordDialogOpen(false); setPasswordInput(''); setPasswordError(''); setPendingPayment(false); }}>Cancel</button>
+                <button className="fee-btn fee-btn-primary" onClick={handlePasswordConfirm}>Confirm</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* Receipt Dialog */}
-      {receiptOpen && receiptData && (
-        <div className="fee-dialog-overlay" onClick={() => setReceiptOpen(false)}>
-          <div className="fee-dialog" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
-            <h3 className="fee-dialog-title">Payment Receipt</h3>
-            <div style={{ background: '#F4F5F7', padding: 20, borderRadius: 8, marginBottom: 20 }}>
-              <h4 style={{ margin: '0 0 16px 0', textAlign: 'center' }}>Sunrise Public School</h4>
-              <p style={{ textAlign: 'center', margin: '0 0 16px 0', fontSize: 12, color: '#6B778C' }}>
-                Receipt No: {receiptNumber} | Date: {receiptData.date}
-              </p>
-              <hr style={{ border: 'none', borderTop: '1px solid #DFE1E6', margin: '16px 0' }} />
-              <div style={{ display: 'flex', gap: 20 }}>
-                <div style={{ flex: 1 }}>
-                  <p><strong>Name:</strong> {receiptData.student.name}</p>
-                  <p><strong>Class:</strong> {receiptData.student.class} - {receiptData.student.section}</p>
-                  <p><strong>Months Paid:</strong> {receiptData.months.join(', ')}</p>
+      {
+        receiptOpen && receiptData && (
+          <div className="fee-dialog-overlay" onClick={() => setReceiptOpen(false)}>
+            <div className="fee-dialog" onClick={e => e.stopPropagation()} style={{ maxWidth: 600 }}>
+              <h3 className="fee-dialog-title">Payment Receipt</h3>
+              <div style={{ background: '#FFFFFF', color: '#172B4D', padding: 20, borderRadius: 8, marginBottom: 20 }}>
+                <h4 style={{ margin: '0 0 16px 0', textAlign: 'center', color: '#172B4D' }}>Sunrise Public School</h4>
+                <p style={{ textAlign: 'center', margin: '0 0 16px 0', fontSize: 12, color: '#6B778C' }}>
+                  Receipt No: {receiptNumber} | Date: {receiptData.date}
+                </p>
+                <hr style={{ border: 'none', borderTop: '1px solid #DFE1E6', margin: '16px 0' }} />
+                <div style={{ display: 'flex', gap: 20 }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ color: '#172B4D' }}><strong>Name:</strong> {receiptData.student.name}</p>
+                    <p style={{ color: '#172B4D' }}><strong>Class:</strong> {receiptData.student.class} - {receiptData.student.section}</p>
+                    <p style={{ color: '#172B4D' }}><strong>Months Paid:</strong> {receiptData.months.join(', ')}</p>
+                  </div>
+                  {/* QR Code for verification */}
+                  <div ref={qrRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <QRCodeCanvas
+                      value={JSON.stringify({
+                        receipt: receiptNumber,
+                        studentId: receiptData.student.studentId,
+                        name: receiptData.student.name,
+                        amount: receiptData.total,
+                        date: receiptData.date
+                      })}
+                      size={80}
+                      bgColor="#ffffff"
+                      fgColor="#172B4D"
+                      level="M"
+                    />
+                    <span style={{ fontSize: 10, color: '#6B778C', marginTop: 4 }}>Scan to verify</span>
+                  </div>
                 </div>
-                {/* QR Code for verification */}
-                <div ref={qrRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <QRCodeCanvas
-                    value={JSON.stringify({
-                      receipt: receiptNumber,
-                      studentId: receiptData.student.studentId,
-                      name: receiptData.student.name,
-                      amount: receiptData.total,
-                      date: receiptData.date
-                    })}
-                    size={80}
-                    bgColor="#ffffff"
-                    fgColor="#172B4D"
-                    level="M"
-                  />
-                  <span style={{ fontSize: 10, color: '#6B778C', marginTop: 4 }}>Scan to verify</span>
-                </div>
+                <hr style={{ border: 'none', borderTop: '1px solid #DFE1E6', margin: '16px 0' }} />
+                <p style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#172B4D' }}>Total Paid: ₹{receiptData.total}</p>
               </div>
-              <hr style={{ border: 'none', borderTop: '1px solid #DFE1E6', margin: '16px 0' }} />
-              <p style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center' }}>Total Paid: ₹{receiptData.total}</p>
-            </div>
-            <div className="fee-dialog-actions">
-              <button className="fee-btn fee-btn-secondary" onClick={() => setReceiptOpen(false)}>Close</button>
-              <button className="fee-btn fee-btn-primary" onClick={handleDownloadPDF}>
-                <DownloadIcon style={{ fontSize: 18 }} />
-                Download PDF
-              </button>
+              <div className="fee-dialog-actions">
+                <button className="fee-btn fee-btn-secondary" onClick={() => setReceiptOpen(false)}>Close</button>
+                <button className="fee-btn fee-btn-primary" onClick={handleDownloadPDF}>
+                  <DownloadIcon style={{ fontSize: 18 }} />
+                  Download PDF
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
