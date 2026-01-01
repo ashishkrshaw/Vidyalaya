@@ -44,7 +44,8 @@ import {
   uploadToDrive,
   listBackupFiles,
   downloadFromDrive,
-  signOut
+  signOut,
+  tryRestoreSession
 } from './googleDrive';
 import './AcademicSettings.css';
 
@@ -125,6 +126,10 @@ const Settings: React.FC = () => {
       try {
         await initGapiClient();
         await initGisClient();
+
+        // Try to restore session if available
+        tryRestoreSession();
+
         setGoogleReady(true);
         setGoogleSignedIn(isSignedIn());
       } catch (err) {
@@ -149,7 +154,32 @@ const Settings: React.FC = () => {
       reader.readAsDataURL(sig);
     }
 
-    // Load school branding
+    // Load school branding - Try API first
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${API_BASE}/api/settings/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSchoolInfo({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            address: data.address || '',
+            website: data.website || ''
+          });
+          if (data.logo_url) {
+            setSchoolLogoPreview(data.logo_url);
+            return;
+          }
+        }
+      }
+    } catch (e) { console.log('Using local settings'); }
+
+    // Fallback to local DB
     const info = await loadSchoolInfo();
     setSchoolInfo(info);
 
@@ -233,10 +263,34 @@ const Settings: React.FC = () => {
   };
 
   const saveSchoolBranding = async () => {
-    await saveSchoolInfo(schoolInfo);
-    // Notify App.tsx to update state immediately
-    window.dispatchEvent(new CustomEvent('school-info-updated', { detail: schoolInfo.name }));
-    showMessage('success', 'School information saved successfully!');
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error("Not authenticated");
+
+      // Update Backend
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE}/api/settings/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(schoolInfo)
+      });
+
+      if (!response.ok) throw new Error('Failed to update school profile');
+
+      // Local Fallback / Sync
+      await saveSchoolInfo(schoolInfo);
+
+      // Notify App.tsx to update state immediately
+      window.dispatchEvent(new CustomEvent('school-info-updated', { detail: schoolInfo.name }));
+      showMessage('success', 'School information saved successfully!');
+    } catch (e: any) {
+      showMessage('error', e.message || 'Update failed');
+    }
+    setLoading(false);
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -247,6 +301,20 @@ const Settings: React.FC = () => {
         const dataUrl = ev.target?.result as string;
         await saveSchoolLogo(dataUrl);
         setSchoolLogoPreview(dataUrl);
+
+        // Also update backend logo_url if possible (as dataURI)
+        try {
+          const token = localStorage.getItem('accessToken');
+          if (token) {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            await fetch(`${API_BASE}/api/settings/profile`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ logo_url: dataUrl })
+            });
+          }
+        } catch (e) { console.error("Backend logo sync failed", e); }
+
         showMessage('success', 'School logo uploaded successfully!');
       };
       reader.readAsDataURL(file);
@@ -260,14 +328,9 @@ const Settings: React.FC = () => {
   };
 
   // Password Reset
-  const handlePasswordReset = () => {
+  const handlePasswordReset = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       showMessage('error', 'Please fill all password fields');
-      return;
-    }
-    const storedPassword = localStorage.getItem('actionPassword') || '123456';
-    if (oldPassword !== storedPassword) {
-      showMessage('error', 'Current password is incorrect');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -278,13 +341,42 @@ const Settings: React.FC = () => {
       showMessage('error', 'Password must be at least 6 characters');
       return;
     }
-    // Save the new password
-    localStorage.setItem('actionPassword', newPassword);
-    showMessage('success', 'Password changed successfully!');
-    setResetMode(false);
-    setOldPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) throw new Error("Not logged in");
+
+      const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${API_BASE}/api/settings/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          old_password: oldPassword,
+          new_password: newPassword
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || 'Password change failed');
+      }
+
+      // Legacy support
+      localStorage.setItem('actionPassword', newPassword);
+
+      showMessage('success', 'Password changed successfully!');
+      setResetMode(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (e: any) {
+      showMessage('error', e.message);
+    }
+    setLoading(false);
   };
 
   // Backup Handler - Prepare backup data (no auto-download)

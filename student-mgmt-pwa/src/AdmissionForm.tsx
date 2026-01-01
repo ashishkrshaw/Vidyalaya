@@ -66,6 +66,25 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
   }, [form.class, form.section]);
 
   const fetchRollNo = async () => {
+    // API call with fallback for offline mode
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${API_BASE}/api/students/next-roll?class_name=${form.class}&section=${form.section}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setRollNo(data.next_roll_no);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("API fetch failed, falling back", e);
+    }
+
+    // Fallback to prop if API fails (offline mode)
     const roll = await getNextRollNo(form.class, form.section);
     setRollNo(roll);
   };
@@ -78,6 +97,11 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
   const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleRollChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val)) setRollNo(val);
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +164,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
 
       <Grid container spacing={3}>
         {/* LEFT COLUMN */}
-        <Grid size={{ xs: 12, lg: 8 }}>
+        <Grid item xs={12} lg={8}>
 
           {/* 1. Student Details */}
           <Card className="admission-card">
@@ -153,14 +177,14 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
               </Stack>
 
               <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth label="Full Name" name="name"
                     value={form.name} onChange={handleChange} required
                     placeholder="Student's Name"
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     select fullWidth label="Gender" name="gender"
                     value={form.gender} onChange={handleSelectChange} required
@@ -170,24 +194,25 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
                     ))}
                   </TextField>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
                       label="Date of Birth"
                       value={selectedDate}
                       onChange={(newValue) => setSelectedDate(newValue)}
+                      format="DD/MM/YYYY"
                       slotProps={{ textField: { fullWidth: true, required: true } }}
                     />
                   </LocalizationProvider>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth label="Aadhar Number" name="aadhar"
                     value={form.aadhar} onChange={handleChange}
                     inputProps={{ maxLength: 12 }} placeholder="12-digit number"
                   />
                 </Grid>
-                <Grid size={{ xs: 12 }}>
+                <Grid item xs={12}>
                   <TextField
                     fullWidth label="APAAR ID (ABC ID)" name="apaar"
                     value={form.apaar} onChange={handleChange}
@@ -209,7 +234,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
               </Stack>
 
               <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     select fullWidth label="Class" name="class"
                     value={form.class} onChange={handleSelectChange} required
@@ -219,7 +244,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
                     ))}
                   </TextField>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     select fullWidth label="Section" name="section"
                     value={form.section} onChange={handleSelectChange} required
@@ -229,35 +254,39 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
                     ))}
                   </TextField>
                 </Grid>
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid item xs={12} sm={4}>
                   <TextField
                     fullWidth label="Roll Number"
-                    value={rollNo ? `#${rollNo}` : 'Auto-generated'}
-                    disabled
+                    value={rollNo || ''}
+                    onChange={handleRollChange}
+                    type="number"
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">#</InputAdornment>
+                    }}
                     sx={{
                       '& .MuiInputBase-input': {
-                        WebkitTextFillColor: '#334155 !important',
                         fontWeight: 700
                       }
                     }}
+                    helperText="Auto-assigned (Editable by Admin)"
                   />
                 </Grid>
 
-                <Grid size={{ xs: 12 }}>
+                <Grid item xs={12}>
                   <div className="fee-config-box">
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
                       <CurrencyRupeeIcon sx={{ fontSize: 20, color: '#64748b' }} />
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Fee Configuration</Typography>
                     </Stack>
                     <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, sm: 6 }}>
+                      <Grid item xs={12} sm={6}>
                         <TextField
                           fullWidth label="Admission Fee" name="admissionFee"
                           value={form.admissionFee} onChange={handleChange}
                           type="number" InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
                         />
                       </Grid>
-                      <Grid size={{ xs: 12, sm: 6 }}>
+                      <Grid item xs={12} sm={6}>
                         <TextField
                           fullWidth label="Monthly Fee (Override)" name="monthlyFee"
                           value={form.monthlyFee} onChange={handleChange}
@@ -283,13 +312,13 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
               </Stack>
 
               <Grid container spacing={3}>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth label="Father's Name" name="fatherName"
                     value={form.fatherName} onChange={handleChange} required
                   />
                 </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
+                <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth label="Mother's Name" name="motherName"
                     value={form.motherName} onChange={handleChange}
@@ -302,7 +331,7 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
         </Grid>
 
         {/* RIGHT COLUMN */}
-        <Grid size={{ xs: 12, lg: 4 }}>
+        <Grid item xs={12} lg={4}>
 
           {/* 4. Photo Upload */}
           <Card className="admission-card">

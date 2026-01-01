@@ -122,19 +122,56 @@ function App() {
   // Check if already logged in and load School Info
   useEffect(() => {
     const initApp = async () => {
+      // Start Drive System in background
+      import('./syncManager').then(async (m) => {
+        const connected = await m.initDriveSystem();
+        if (connected) {
+          console.log('Drive connected, syncing in background...');
+          const result = await m.performAutoSync();
+          if (result.success && result.details) {
+            // Update school name if sync brought shorter/newer data
+            window.dispatchEvent(new CustomEvent('school-info-updated', { detail: result.details.name }));
+          }
+        }
+      });
+
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       if (isLoggedIn) {
         setLoggedIn(true);
         setIsDataReady(true);
 
-        // Load latest school name from DB
+        // Load latest school name from DB or API
         try {
-          const info = await loadSchoolInfo();
-          if (info && info.name) {
-            setSchoolName(info.name);
-            localStorage.setItem('schoolName', info.name); // Keep sync
-          } else {
-            setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+          const token = localStorage.getItem('accessToken');
+          let apiSuccess = false;
+
+          // 1. Try API first for fresh data
+          if (token) {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            try {
+              const res = await fetch(`${API_BASE}/api/settings/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.name) {
+                  setSchoolName(data.name);
+                  localStorage.setItem('schoolName', data.name);
+                  apiSuccess = true;
+                }
+              }
+            } catch (e) { console.log("API profile fetch failed, using local"); }
+          }
+
+          // 2. Fallback to Local DB
+          if (!apiSuccess) {
+            const info = await loadSchoolInfo();
+            if (info && info.name) {
+              setSchoolName(info.name);
+              localStorage.setItem('schoolName', info.name);
+            } else {
+              setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+            }
           }
         } catch (e) {
           setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
@@ -213,13 +250,33 @@ function App() {
     alert("ID Card download logic preserved (simplified for brevity)");
   };
 
-  // Unified logout handler
-  const handleLogout = () => {
+  // Handle logout with auto-backup
+  const handleLogout = async () => {
+    // Show saving/syncing indicator if possible (using simple alert or state here for now, better UI recommended)
+    const wasDriveConnected = localStorage.getItem('gdrive_token');
+
+    if (wasDriveConnected) {
+      // Small delay or UI feedback could be added here
+      console.log('Auto-backing up to Drive...');
+      // We don't await strictly to prevent hanging if network is bad, or we use a toast
+      try {
+        await import('./syncManager').then(m => m.performAutoBackup());
+        console.log('Backup complete');
+      } catch (e) {
+        console.error('Backup failed on logout', e);
+      }
+    }
+
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('loginTime');
     localStorage.removeItem('schoolName');
+    // Clear Drive token too? User said "no need to reconnect unless disconnect by user".
+    // So we Keep the Drive Token! "after every logout all data will be auto backed up"
+    // So we do NOT remove gdrive_token on logout. They stay connected for next session.
+
     setLoggedIn(false);
     setIsDataReady(false);
+    setSavedStudent(null);
   };
 
   // Handle starting from landing page with transition
@@ -229,10 +286,9 @@ function App() {
     setTimeout(() => {
       setCurrentView('login');
       setTransitioning(false);
-      // Update URL without reload to reflect login view
       const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?view=login';
       window.history.pushState({ path: newUrl }, '', newUrl);
-    }, 1200); // Match animation duration
+    }, 1200);
   };
 
   // Logic to determine which screen to show

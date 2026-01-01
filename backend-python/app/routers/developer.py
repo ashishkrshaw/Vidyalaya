@@ -132,3 +132,60 @@ async def reject_school(school_id: str, x_developer_secret: str = Header(...)):
         message=f"School '{school['name']}' has been rejected.",
         success=True
     )
+
+@router.post("/deactivate/{school_id}", response_model=MessageResponse)
+async def deactivate_school(school_id: str, x_developer_secret: str = Header(...)):
+    """Deactivate an active school"""
+    check_developer_auth(x_developer_secret)
+    
+    try:
+        obj_id = ObjectId(school_id)
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid school ID")
+    
+    school = await schools_collection.find_one({"_id": obj_id})
+    if not school:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="School not found")
+        
+    await schools_collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"status": SchoolStatus.deactivated.value}}
+    )
+    
+    return {"message": f"School '{school['name']}' has been deactivated.", "success": True}
+
+@router.post("/activate/{school_id}", response_model=MessageResponse)
+async def activate_school(school_id: str, x_developer_secret: str = Header(...)):
+    """Re-activate a deactivated school"""
+    check_developer_auth(x_developer_secret)
+    
+    try:
+        obj_id = ObjectId(school_id)
+    except:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid school ID")
+    
+    school = await schools_collection.find_one({"_id": obj_id})
+    if not school:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="School not found")
+
+    await schools_collection.update_one(
+        {"_id": obj_id},
+        {"$set": {"status": SchoolStatus.active.value}}
+    )
+    
+    return {"message": f"School '{school['name']}' has been activated.", "success": True}
+
+@router.post("/deactivate-all", response_model=MessageResponse)
+async def deactivate_all_schools(x_developer_secret: str = Header(...)):
+    """EMERGENCY: Deactivate ALL active schools"""
+    check_developer_auth(x_developer_secret)
+    
+    result = await schools_collection.update_many(
+        {"status": SchoolStatus.active.value},
+        {"$set": {"status": SchoolStatus.deactivated.value}}
+    )
+    
+    return {
+        "message": f"EMERGENCY: Deactivated {result.modified_count} schools.",
+        "success": True
+    }

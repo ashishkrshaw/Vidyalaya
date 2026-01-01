@@ -7,7 +7,7 @@ interface School {
     email: string;
     phone: string;
     address?: string;
-    status: 'pending' | 'active' | 'rejected';
+    status: 'pending' | 'active' | 'rejected' | 'deactivated';
     created_at: string;
     verified_at?: string;
 }
@@ -20,7 +20,7 @@ const DeveloperDashboard: React.FC = () => {
     const [error, setError] = useState('');
     const [secret, setSecret] = useState('');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'rejected'>('pending');
+    const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'rejected' | 'deactivated'>('pending');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
     const authenticate = () => {
@@ -106,6 +106,67 @@ const DeveloperDashboard: React.FC = () => {
         }
     };
 
+    const deactivateSchool = async (schoolId: string) => {
+        if (!window.confirm('Are you sure you want to deactivate this school? They will lose access immediately.')) return;
+        setActionLoading(schoolId);
+        try {
+            const storedSecret = localStorage.getItem('developerSecret');
+            const response = await fetch(`${API_BASE}/api/developer/deactivate/${schoolId}`, {
+                method: 'POST',
+                headers: { 'x-developer-secret': storedSecret || '' }
+            });
+
+            if (!response.ok) throw new Error('Deactivation failed');
+            await fetchSchools();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const activateSchool = async (schoolId: string) => {
+        setActionLoading(schoolId);
+        try {
+            const storedSecret = localStorage.getItem('developerSecret');
+            const response = await fetch(`${API_BASE}/api/developer/activate/${schoolId}`, {
+                method: 'POST',
+                headers: { 'x-developer-secret': storedSecret || '' }
+            });
+
+            if (!response.ok) throw new Error('Activation failed');
+            await fetchSchools();
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDeactivateAll = async () => {
+        const confirm1 = window.confirm('⚠ EMERGENCY STOP: Are you sure you want to deactivate ALL schools?');
+        if (!confirm1) return;
+        const confirm2 = window.confirm('⚠ This will immediately lock out ALL users. Confirm again?');
+        if (!confirm2) return;
+
+        setLoading(true);
+        try {
+            const storedSecret = localStorage.getItem('developerSecret');
+            const response = await fetch(`${API_BASE}/api/developer/deactivate-all`, {
+                method: 'POST',
+                headers: { 'x-developer-secret': storedSecret || '' }
+            });
+
+            if (!response.ok) throw new Error('Emergency stop failed');
+            const data = await response.json();
+            alert(data.message);
+            await fetchSchools();
+        } catch (err: any) {
+            setError(err.message);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         const storedSecret = localStorage.getItem('developerSecret');
         if (storedSecret) {
@@ -124,7 +185,8 @@ const DeveloperDashboard: React.FC = () => {
         const colors: Record<string, string> = {
             pending: '#FFAB00',
             active: '#36B37E',
-            rejected: '#DE350B'
+            rejected: '#DE350B',
+            deactivated: '#6B778C'
         };
         return (
             <span style={{
@@ -172,16 +234,25 @@ const DeveloperDashboard: React.FC = () => {
                     <h1>🎓 Vidyalaya Developer Dashboard</h1>
                     <p>School Verification Portal</p>
                 </div>
-                <button
-                    className="logout-btn"
-                    onClick={() => {
-                        localStorage.removeItem('developerSecret');
-                        setIsAuthenticated(false);
-                        setSecret('');
-                    }}
-                >
-                    Logout
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        className="logout-btn"
+                        style={{ backgroundColor: '#EF4444' }}
+                        onClick={handleDeactivateAll}
+                    >
+                        ⛔ STOP ALL
+                    </button>
+                    <button
+                        className="logout-btn"
+                        onClick={() => {
+                            localStorage.removeItem('developerSecret');
+                            setIsAuthenticated(false);
+                            setSecret('');
+                        }}
+                    >
+                        Logout
+                    </button>
+                </div>
             </header>
 
             <div className="dev-filters">
@@ -202,6 +273,12 @@ const DeveloperDashboard: React.FC = () => {
                     onClick={() => setFilter('rejected')}
                 >
                     ❌ Rejected
+                </button>
+                <button
+                    className={filter === 'deactivated' ? 'active' : ''}
+                    onClick={() => setFilter('deactivated' as any)}
+                >
+                    ⛔ Stopped
                 </button>
                 <button
                     className={filter === 'all' ? 'active' : ''}
@@ -260,7 +337,22 @@ const DeveloperDashboard: React.FC = () => {
                                             </div>
                                         )}
                                         {school.status === 'active' && (
-                                            <span className="status-text">Verified ✓</span>
+                                            <button
+                                                className="reject-btn"
+                                                onClick={() => deactivateSchool(school.id)}
+                                                disabled={actionLoading === school.id}
+                                            >
+                                                {actionLoading === school.id ? '...' : '⛔ Stop'}
+                                            </button>
+                                        )}
+                                        {school.status === 'deactivated' && (
+                                            <button
+                                                className="verify-btn"
+                                                onClick={() => activateSchool(school.id)}
+                                                disabled={actionLoading === school.id}
+                                            >
+                                                {actionLoading === school.id ? '...' : '✅ Activate'}
+                                            </button>
                                         )}
                                         {school.status === 'rejected' && (
                                             <span className="status-text">Rejected</span>

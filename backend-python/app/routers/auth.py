@@ -74,6 +74,12 @@ async def login(data: SchoolLogin):
             detail="Your account has been rejected. Please contact support."
         )
     
+    if school["status"] == SchoolStatus.deactivated.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been deactivated. Please contact support."
+        )
+    
     # Create token
     token_data = {
         "school_id": str(school["_id"]),

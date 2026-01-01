@@ -668,6 +668,236 @@
     color: #002E6E;
 }
 
+/* Payment Tabs */
+.payment-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+    border-color: #7c3aed;
+    color: #7c3aed;
+}
+
+/* QR Section */
+.qr-section {
+    text-align: center;
+    padding: 24px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.qr-container {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    display: inline-block;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 16px;
+}
+
+.scan-instruction {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 20px 0;
+}
+
+.upi-id-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #f8fafc;
+    padding: 12px 20px;
+    border-radius: 12px;
+}
+
+.upi-id-display code {
+    font-family: monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: #7c3aed;
+}
+
+.copy-btn {
+    background: #7c3aed;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #6d28d9;
+}
+
+/* UPI Apps Section */
+.upi-apps-section {
+    text-align: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.upi-apps-section p {
+    color: #6b7280;
+    margin: 0 0 16px 0;
+}
+
+.upi-apps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.upi-app-btn {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.upi-app-btn:hover {
+    border-color: #7c3aed;
+    transform: translateY(-2px);
+}
+
+.upi-app-btn img {
+    height: 32px;
+    width: auto;
+}
+
+.upi-app-btn span {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.generic-upi-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 12px;
+    transition: all 0.2s ease;
+}
+
+.generic-upi-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+/* Manual Verify Section */
+.manual-verify-section {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.manual-verify-section p {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 12px 0;
+}
+
+.verify-input-group {
+    display: flex;
+    gap: 12px;
+}
+
+.verify-input-group input {
+    flex: 1;
+    height: 48px;
+    padding: 0 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+}
+
+.verify-input-group input:focus {
+    outline: none;
+    border-color: #7c3aed;
+}
+
+.verify-input-group button {
+    padding: 0 24px;
+    background: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.verify-input-group button:hover {
+    background: #16a34a;
+}
+
+/* Receipt Info */
+.receipt-info {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+}
+
+.receipt-row strong {
+    font-family: monospace;
+    color: #7c3aed;
+}
+
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
     .parent-payment-page {
