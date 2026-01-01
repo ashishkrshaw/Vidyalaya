@@ -1,0 +1,206 @@
+.dev-dashboard {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    padding: 20px;
+}
+
+.dev-auth-card {
+    max-width: 400px;
+    margin: 100px auto;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+}
+
+.dev-auth-card h1 {
+    margin-bottom: 10px;
+}
+
+.dev-auth-card p {
+    color: #888;
+    margin-bottom: 24px;
+}
+
+.dev-auth-card input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+.dev-auth-card button {
+    width: 100%;
+    padding: 14px;
+    background: #4f46e5;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dev-auth-card button:hover {
+    background: #4338ca;
+}
+
+.dev-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dev-header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.dev-header p {
+    margin: 4px 0 0;
+    color: #888;
+}
+
+.logout-btn {
+    padding: 10px 20px;
+    background: rgba(222, 53, 11, 0.2);
+    border: 1px solid #DE350B;
+    border-radius: 8px;
+    color: #DE350B;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.logout-btn:hover {
+    background: rgba(222, 53, 11, 0.3);
+}
+
+.dev-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.dev-filters button {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #888;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.dev-filters button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.dev-filters button.active {
+    background: rgba(79, 70, 229, 0.2);
+    border-color: #4f46e5;
+    color: #a5b4fc;
+}
+
+.dev-error {
+    background: rgba(222, 53, 11, 0.2);
+    border: 1px solid #DE350B;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #DE350B;
+    margin-bottom: 16px;
+}
+
+.dev-loading,
+.dev-empty {
+    text-align: center;
+    padding: 60px;
+    color: #888;
+    font-size: 18px;
+}
+
+.dev-table-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.dev-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dev-table th {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+}
+
+.dev-table td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dev-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.verify-btn {
+    padding: 8px 16px;
+    background: rgba(54, 179, 126, 0.2);
+    border: 1px solid #36B37E;
+    border-radius: 6px;
+    color: #36B37E;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.verify-btn:hover {
+    background: rgba(54, 179, 126, 0.3);
+}
+
+.reject-btn {
+    padding: 8px 16px;
+    background: rgba(222, 53, 11, 0.2);
+    border: 1px solid #DE350B;
+    border-radius: 6px;
+    color: #DE350B;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.reject-btn:hover {
+    background: rgba(222, 53, 11, 0.3);
+}
+
+.status-text {
+    color: #888;
+    font-size: 13px;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

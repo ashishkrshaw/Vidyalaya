@@ -99,10 +99,13 @@ function App() {
   }, []);
 
   // Handle login from Login component
-  const handleLogin = (name: string) => {
+  const handleLogin = (name: string, token?: string) => {
     setLoggedIn(true);
     setSchoolName(name);
     setIsDataReady(true);
+    if (token) {
+      localStorage.setItem('accessToken', token);
+    }
   };
 
   useEffect(() => {

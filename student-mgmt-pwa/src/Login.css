@@ -226,6 +226,41 @@
     border-color: rgba(220, 38, 38, 0.3);
 }
 
+/* Success Message */
+.success {
+    background: #f0fdf4;
+    color: #16a34a;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    border: 1px solid #bbf7d0;
+    text-align: center;
+}
+
+[data-theme="dark"] .success {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.3);
+}
+
+/* Toggle Auth Link */
+.toggle-auth {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.toggle-auth span {
+    color: #3b82f6;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.toggle-auth span:hover {
+    text-decoration: underline;
+}
+
 /* Submit Button */
 .submit-btn {
     width: 100%;
