@@ -12,6 +12,7 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import PaymentSettings from './PaymentSettings';
 import FeeNotification from './FeeNotification';
+import PaymentTest from './PaymentTest';
 import './FeeManagement.css';
 
 const classOptions = [
@@ -53,7 +54,7 @@ const FeeManagement: React.FC = () => {
   const [miscDesc, setMiscDesc] = useState('');
   const [miscAmount, setMiscAmount] = useState<number | ''>('');
   const [isMiscOpen, setIsMiscOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'payment' | 'history' | 'gateway' | 'notify'>('payment');
+  const [activeTab, setActiveTab] = useState<'payment' | 'history' | 'gateway' | 'notify' | 'test'>('payment');
   const [historySearch, setHistorySearch] = useState('');
 
   // QR code ref for PDF
@@ -591,6 +592,13 @@ const FeeManagement: React.FC = () => {
             <NotificationsActiveIcon style={{ fontSize: 16, marginRight: 6 }} />
             Notify Parents
           </button>
+          <button
+            className={`fee-tab ${activeTab === 'test' ? 'active' : ''}`}
+            onClick={() => setActiveTab('test')}
+            style={{ background: activeTab === 'test' ? 'linear-gradient(135deg, #667eea, #764ba2)' : undefined, color: activeTab === 'test' ? '#fff' : undefined }}
+          >
+            💳 Razorpay Test
+          </button>
         </div>
 
         {activeTab === 'payment' ? (
@@ -861,9 +869,11 @@ const FeeManagement: React.FC = () => {
           renderHistory()
         ) : activeTab === 'gateway' ? (
           <PaymentSettings />
-        ) : (
+        ) : activeTab === 'notify' ? (
           <FeeNotification />
-        )}
+        ) : activeTab === 'test' ? (
+          <PaymentTest />
+        ) : null}
       </div>
 
       {/* Confirm Payment Dialog */}

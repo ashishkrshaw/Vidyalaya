@@ -176,7 +176,8 @@ const AdmissionForm: React.FC<AdmissionFormProps> = ({ onPreview, getNextRollNo 
                       label="Date of Birth"
                       value={selectedDate}
                       onChange={(newValue) => setSelectedDate(newValue)}
-                      slotProps={{ textField: { fullWidth: true, required: true } }}
+                      format="DD/MM/YYYY"
+                      slotProps={{ textField: { fullWidth: true, required: true, placeholder: "DD/MM/YYYY" } }}
                     />
                   </LocalizationProvider>
                 </Grid>

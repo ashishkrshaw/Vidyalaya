@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.tsx'
+import DeveloperDashboard from './DeveloperDashboard.tsx'
 import './index.css'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 
@@ -52,9 +54,15 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <App />
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Routes>
+          <Route path="/developer" element={<DeveloperDashboard />} />
+          <Route path="/*" element={<App />} />
+        </Routes>
+      </ThemeProvider>
+    </BrowserRouter>
   </StrictMode>
 )
+

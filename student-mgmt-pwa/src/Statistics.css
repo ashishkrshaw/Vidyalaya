@@ -94,20 +94,18 @@
 }
 
 /* ===== METRICS GRID ===== */
+/* ===== METRICS GRID ===== */
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    /* Auto-fit to wrap items if they get smaller than 260px */
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 24px;
     margin-bottom: 32px;
 }
 
-@media (max-width: 1200px) {
-    .metrics-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 600px) {
+/* Removed specific media queries as auto-fit handles it better, 
+   but keeping specific mobile override for very small screens if needed */
+@media (max-width: 480px) {
     .metrics-grid {
         grid-template-columns: 1fr;
     }
@@ -209,6 +207,9 @@
     font-weight: 800;
     color: var(--text-primary);
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .metric-label {

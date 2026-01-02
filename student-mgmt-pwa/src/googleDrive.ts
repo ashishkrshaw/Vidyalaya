@@ -1,7 +1,7 @@
 // Google Drive API Service for Backup/Restore
 // Uses OAuth 2.0 with Google Identity Services
 
-const CLIENT_ID = '868489588525-tk04vimaevj4ae7060u9fcsbot26ni1s.apps.googleusercontent.com';
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '868489588525-tk04vimaevj4ae7060u9fcsbot26ni1s.apps.googleusercontent.com';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.appdata';
 const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
 
@@ -76,6 +76,24 @@ export const isSignedIn = (): boolean => {
   return accessToken !== null;
 };
 
+// Try to restore session from storage
+export const tryRestoreSession = (): boolean => {
+  const storedToken = localStorage.getItem('gdrive_token');
+  const storedExpiry = localStorage.getItem('gdrive_expiry');
+  
+  if (storedToken && storedExpiry) {
+    if (new Date().getTime() < Number(storedExpiry)) {
+      accessToken = storedToken;
+      return true;
+    } else {
+      // Token expired
+      localStorage.removeItem('gdrive_token');
+      localStorage.removeItem('gdrive_expiry');
+    }
+  }
+  return false;
+};
+
 // Get access token via OAuth popup
 export const signIn = (): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -90,10 +108,17 @@ export const signIn = (): Promise<string> => {
         return;
       }
       accessToken = response.access_token;
+      
+      // Save token (approx 1 hour expiry handling)
+      const expiry = new Date().getTime() + (3500 * 1000); // 3500s safety margin
+      localStorage.setItem('gdrive_token', response.access_token);
+      localStorage.setItem('gdrive_expiry', String(expiry));
+      
       resolve(response.access_token);
     };
     
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    // Remove prompt: 'consent' to allow auto-authorization if possible
+    tokenClient.requestAccessToken({ prompt: '' });
   });
 };
 
@@ -103,6 +128,8 @@ export const signOut = (): void => {
   if (accessToken) {
     google.accounts.oauth2.revoke(accessToken);
     accessToken = null;
+    localStorage.removeItem('gdrive_token');
+    localStorage.removeItem('gdrive_expiry');
   }
 };
 

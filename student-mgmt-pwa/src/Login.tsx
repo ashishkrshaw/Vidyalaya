@@ -4,23 +4,28 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import './Login.css';
 
 interface LoginProps {
-    onLogin: (schoolName: string) => void;
+    onLogin: (schoolName: string, token?: string) => void;
 }
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [email, setEmail] = useState('');
+    const [schoolName, setSchoolName] = useState('');
+    const [phone, setPhone] = useState('');
     const [captchaInput, setCaptchaInput] = useState('');
     const [captcha, setCaptcha] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
-    const schoolName = import.meta.env.VITE_SCHOOL_NAME || 'School Management System';
+    // Fallback to env-based auth for offline/legacy mode
     const envUsername = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
     const envPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@123';
+    const defaultSchoolName = import.meta.env.VITE_SCHOOL_NAME || 'ScholarBase';
 
     const generateCaptcha = useCallback(() => {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -36,9 +41,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         generateCaptcha();
     }, [generateCaptcha]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
         if (captchaInput.toUpperCase() !== captcha) {
             setError('Invalid captcha');
@@ -46,32 +52,72 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             return;
         }
 
-        if (!username || !password) {
+        if (!email || !password) {
             setError('Enter credentials');
             return;
         }
 
         setIsLoading(true);
-        await new Promise(r => setTimeout(r, 800));
 
-        if (username === envUsername && password === envPassword) {
+        // Try backend API first
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    setError(data.detail || 'Account not verified');
+                } else {
+                    setError(data.detail || 'Login failed');
+                }
+                setIsLoading(false);
+                generateCaptcha();
+                return;
+            }
+
+            // Success - store token and login
             localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('schoolName', schoolName);
-            localStorage.setItem('schoolId', 'school_default');
-            onLogin(schoolName);
-        } else {
-            setIsLoading(false);
-            setError('Invalid credentials');
-            generateCaptcha();
+            localStorage.setItem('accessToken', data.access_token);
+            localStorage.setItem('schoolName', data.school.name);
+            localStorage.setItem('schoolId', data.school.id);
+            onLogin(data.school.name, data.access_token);
+
+        } catch (networkError) {
+            // Fallback to env-based login if backend is not available
+            console.log('Backend not available, using fallback auth');
+
+            if (email === envUsername && password === envPassword) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('schoolName', defaultSchoolName);
+                localStorage.setItem('schoolId', 'school_default');
+                onLogin(defaultSchoolName);
+            } else {
+                setError('Invalid credentials');
+                generateCaptcha();
+            }
         }
+
+        setIsLoading(false);
     };
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setSuccess('');
 
-        if (!username || !email || !password || !confirmPassword) {
-            setError('All fields are required');
+        if (captchaInput.toUpperCase() !== captcha) {
+            setError('Invalid captcha');
+            generateCaptcha();
+            return;
+        }
+
+        if (!schoolName || !email || !password || !phone) {
+            setError('Please fill all required fields');
             return;
         }
 
@@ -80,17 +126,48 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             return;
         }
 
-        if (captchaInput.toUpperCase() !== captcha) {
-            setError('Invalid captcha');
-            generateCaptcha();
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters');
             return;
         }
 
         setIsLoading(true);
-        await new Promise(r => setTimeout(r, 1000));
+
+        try {
+            const response = await fetch(`${API_BASE}/api/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: schoolName,
+                    email,
+                    password,
+                    phone
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.detail || 'Registration failed');
+                setIsLoading(false);
+                generateCaptcha();
+                return;
+            }
+
+            setSuccess(data.message || 'Registration successful! Please wait for verification.');
+            setActiveTab('login');
+            setSchoolName('');
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+            setPhone('');
+            generateCaptcha();
+
+        } catch (networkError) {
+            setError('Cannot connect to server. Please try again later.');
+        }
+
         setIsLoading(false);
-        setError('Registration feature coming soon! Please use admin login.');
-        generateCaptcha();
     };
 
     const handleBackToHome = () => {
@@ -133,13 +210,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <div className="login-tabs">
                     <button
                         className={`tab ${activeTab === 'login' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('login'); setError(''); }}
+                        onClick={() => { setActiveTab('login'); setError(''); setSuccess(''); }}
                     >
                         Login
                     </button>
                     <button
                         className={`tab ${activeTab === 'signup' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('signup'); setError(''); }}
+                        onClick={() => { setActiveTab('signup'); setError(''); setSuccess(''); }}
                     >
                         Create Account
                     </button>
@@ -148,14 +225,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                 {/* Login Form */}
                 {activeTab === 'login' && (
-                    <form onSubmit={handleSubmit} className="login-form">
+                    <form onSubmit={handleLogin} className="login-form">
                         <div className="field">
                             <input
                                 type="text"
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
-                                placeholder="Username"
-                                autoComplete="username"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="Email / Username"
+                                autoComplete="email"
                             />
                         </div>
 
@@ -184,6 +261,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
 
                         {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
 
                         <button type="submit" className="submit-btn" disabled={isLoading}>
                             {isLoading ? <span className="loader"></span> : 'Sign In →'}
@@ -197,10 +275,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         <div className="field">
                             <input
                                 type="text"
-                                value={username}
-                                onChange={e => setUsername(e.target.value)}
-                                placeholder="Username"
-                                autoComplete="username"
+                                value={schoolName}
+                                onChange={e => setSchoolName(e.target.value)}
+                                placeholder="School Name *"
                             />
                         </div>
 
@@ -209,8 +286,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                 type="email"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
-                                placeholder="Email Address"
+                                placeholder="Email Address *"
                                 autoComplete="email"
+                            />
+                        </div>
+
+                        <div className="field">
+                            <input
+                                type="tel"
+                                value={phone}
+                                onChange={e => setPhone(e.target.value)}
+                                placeholder="Phone Number *"
                             />
                         </div>
 
@@ -219,7 +305,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                 type="password"
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                placeholder="Password"
+                                placeholder="Password (min 6 chars) *"
                                 autoComplete="new-password"
                             />
                         </div>
@@ -229,7 +315,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                                 type="password"
                                 value={confirmPassword}
                                 onChange={e => setConfirmPassword(e.target.value)}
-                                placeholder="Confirm Password"
+                                placeholder="Confirm Password *"
                                 autoComplete="new-password"
                             />
                         </div>
@@ -249,6 +335,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                         </div>
 
                         {error && <div className="error">{error}</div>}
+                        {success && <div className="success">{success}</div>}
 
                         <button type="submit" className="submit-btn signup" disabled={isLoading}>
                             {isLoading ? <span className="loader"></span> : 'Create Account →'}

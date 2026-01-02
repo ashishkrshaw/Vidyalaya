@@ -124,19 +124,56 @@ function App() {
   // Check if already logged in and load School Info + Logo
   useEffect(() => {
     const initApp = async () => {
+      // Start Drive System in background
+      import('./syncManager').then(async (m) => {
+        const connected = await m.initDriveSystem();
+        if (connected) {
+          console.log('Drive connected, syncing in background...');
+          const result = await m.performAutoSync();
+          if (result.success && result.details) {
+            // Update school name if sync brought shorter/newer data
+            window.dispatchEvent(new CustomEvent('school-info-updated', { detail: result.details.name }));
+          }
+        }
+      });
+
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
       if (isLoggedIn) {
         setLoggedIn(true);
         setIsDataReady(true);
 
-        // Load latest school name from DB
+        // Load latest school name from DB or API
         try {
-          const info = await loadSchoolInfo();
-          if (info && info.name) {
-            setSchoolName(info.name);
-            localStorage.setItem('schoolName', info.name); // Keep sync
-          } else {
-            setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+          const token = localStorage.getItem('accessToken');
+          let apiSuccess = false;
+
+          // 1. Try API first for fresh data
+          if (token) {
+            const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+            try {
+              const res = await fetch(`${API_BASE}/api/settings/profile`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.name) {
+                  setSchoolName(data.name);
+                  localStorage.setItem('schoolName', data.name);
+                  apiSuccess = true;
+                }
+              }
+            } catch (e) { console.log("API profile fetch failed, using local"); }
+          }
+
+          // 2. Fallback to Local DB
+          if (!apiSuccess) {
+            const info = await loadSchoolInfo();
+            if (info && info.name) {
+              setSchoolName(info.name);
+              localStorage.setItem('schoolName', info.name);
+            } else {
+              setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+            }
           }
         } catch (e) {
           setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
@@ -157,10 +194,13 @@ function App() {
   }, []);
 
   // Handle login from Login component
-  const handleLogin = (name: string) => {
+  const handleLogin = (name: string, token?: string) => {
     setLoggedIn(true);
     setSchoolName(name);
     setIsDataReady(true);
+    if (token) {
+      localStorage.setItem('accessToken', token);
+    }
   };
 
   useEffect(() => {
@@ -231,13 +271,33 @@ function App() {
     alert("ID Card download logic preserved (simplified for brevity)");
   };
 
-  // Unified logout handler
-  const handleLogout = () => {
+  // Handle logout with auto-backup
+  const handleLogout = async () => {
+    // Show saving/syncing indicator if possible (using simple alert or state here for now, better UI recommended)
+    const wasDriveConnected = localStorage.getItem('gdrive_token');
+
+    if (wasDriveConnected) {
+      // Small delay or UI feedback could be added here
+      console.log('Auto-backing up to Drive...');
+      // We don't await strictly to prevent hanging if network is bad, or we use a toast
+      try {
+        await import('./syncManager').then(m => m.performAutoBackup());
+        console.log('Backup complete');
+      } catch (e) {
+        console.error('Backup failed on logout', e);
+      }
+    }
+
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('loginTime');
     localStorage.removeItem('schoolName');
+    // Clear Drive token too? User said "no need to reconnect unless disconnect by user".
+    // So we Keep the Drive Token! "after every logout all data will be auto backed up"
+    // So we do NOT remove gdrive_token on logout. They stay connected for next session.
+
     setLoggedIn(false);
     setIsDataReady(false);
+    setSavedStudent(null);
   };
 
   // Handle starting from landing page with transition
@@ -247,10 +307,9 @@ function App() {
     setTimeout(() => {
       setCurrentView('login');
       setTransitioning(false);
-      // Update URL without reload to reflect login view
       const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?view=login';
       window.history.pushState({ path: newUrl }, '', newUrl);
-    }, 1200); // Match animation duration
+    }, 1200);
   };
 
   // Logic to determine which screen to show
@@ -422,7 +481,7 @@ function App() {
           }}>
             <CheckCircleIcon /> Confirm Admission
           </DialogTitle>
-          <DialogContent sx={{ p: 3 }}>
+          <DialogContent sx={{ p: 3, bgcolor: '#ffffff', color: '#1f2937' }}>
             {previewData && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Student Photo and Basic Info */}
@@ -468,10 +527,10 @@ function App() {
                     <PersonIcon fontSize="small" /> Personal Details
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Gender</Typography><Typography variant="body2">{previewData.gender}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Date of Birth</Typography><Typography variant="body2">{previewData.dob}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Aadhar No.</Typography><Typography variant="body2">{previewData.aadhar || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">APAAR ID</Typography><Typography variant="body2">{previewData.apaar || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Gender</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.gender}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Date of Birth</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.dob}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Aadhar No.</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.aadhar || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>APAAR ID</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.apaar || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
@@ -481,10 +540,10 @@ function App() {
                     <FamilyRestroomIcon fontSize="small" /> Guardian Details
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Father's Name</Typography><Typography variant="body2">{previewData.fatherName || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Father's Mobile</Typography><Typography variant="body2">{previewData.fatherMobile || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Mother's Name</Typography><Typography variant="body2">{previewData.motherName || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Mother's Mobile</Typography><Typography variant="body2">{previewData.motherMobile || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Father's Name</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.fatherName || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Father's Mobile</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.fatherMobile || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Mother's Name</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.motherName || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Mother's Mobile</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.motherMobile || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
@@ -494,15 +553,15 @@ function App() {
                     <ContactPhoneIcon fontSize="small" /> Contact & Address
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Email</Typography><Typography variant="body2">{previewData.email || '-'}</Typography></Box>
-                    <Box sx={{ gridColumn: '1 / -1' }}><Typography variant="caption" color="textSecondary">Address</Typography><Typography variant="body2">{previewData.address || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Email</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.email || '-'}</Typography></Box>
+                    <Box sx={{ gridColumn: '1 / -1' }}><Typography variant="caption" sx={{ color: '#6B7280' }}>Address</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.address || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
                 {previewData.note && (
                   <Box sx={{ background: '#FFF3CD', borderRadius: 2, p: 2, border: '1px solid #FFE69C' }}>
-                    <Typography variant="caption" color="textSecondary">Additional Notes</Typography>
-                    <Typography variant="body2">{previewData.note}</Typography>
+                    <Typography variant="caption" sx={{ color: '#6B7280' }}>Additional Notes</Typography>
+                    <Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.note}</Typography>
                   </Box>
                 )}
 
@@ -513,8 +572,8 @@ function App() {
                       <PaymentIcon fontSize="small" /> Fee Details
                     </Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                      <Box><Typography variant="caption" color="textSecondary">Admission Fee</Typography><Typography variant="body2">{previewData.admissionFee ? `₹${previewData.admissionFee}` : '-'}</Typography></Box>
-                      <Box><Typography variant="caption" color="textSecondary">Monthly Fee Override</Typography><Typography variant="body2">{previewData.monthlyFee ? `₹${previewData.monthlyFee}` : '-'}</Typography></Box>
+                      <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Admission Fee</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.admissionFee ? `₹${previewData.admissionFee}` : '-'}</Typography></Box>
+                      <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Monthly Fee Override</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.monthlyFee ? `₹${previewData.monthlyFee}` : '-'}</Typography></Box>
                     </Box>
                   </Box>
                 )}
