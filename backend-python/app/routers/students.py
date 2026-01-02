@@ -34,6 +34,48 @@ async def get_next_roll_no(
     else:
         return {"next_roll_no": 1}
 
+
+@router.get("/")
+async def get_students(
+    search: str = None,
+    class_name: str = None,
+    section: str = None,
+    current_school: dict = Depends(get_current_school)
+):
+    """
+    Get all students with optional search and filters.
+    Search works on name, studentId, fatherName.
+    """
+    school_id = current_school["school_id"]
+    
+    # Build query
+    query = {"school_id": school_id}
+    
+    if class_name:
+        query["class"] = class_name
+    
+    if section:
+        query["section"] = section
+    
+    # If search provided, use regex on name/studentId
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"studentId": {"$regex": search, "$options": "i"}},
+            {"student_id": {"$regex": search, "$options": "i"}},
+            {"fatherName": {"$regex": search, "$options": "i"}}
+        ]
+    
+    cursor = students_collection.find(query).sort("name", 1).limit(50)
+    students = await cursor.to_list(length=50)
+    
+    # Convert ObjectId to string
+    for s in students:
+        s["id"] = str(s["_id"])
+        del s["_id"]
+    
+    return {"students": students, "count": len(students)}
+
 @router.post("/", response_model=StudentResponse)
 async def admit_student(
     student: StudentCreate,

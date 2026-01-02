@@ -13,9 +13,11 @@ class Settings(BaseSettings):
     razorpay_key_id: Optional[str] = None
     razorpay_key_secret: Optional[str] = None
     
-    # MSG91 Configuration
-    msg91_auth_key: Optional[str] = None
-    msg91_sender_id: str = "SCHOOL"
+    # Twilio Configuration (for WhatsApp)
+    twilio_account_sid: Optional[str] = None
+    twilio_auth_token: Optional[str] = None
+    twilio_whatsapp_from: str = "whatsapp:+14155238886"  # Sandbox number
+    twilio_sms_from: Optional[str] = None  # Your Twilio phone number
     
     class Config:
         env_file = ".env"

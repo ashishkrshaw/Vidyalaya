@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import auth, developer, students
 from .routers import settings
-from .routers import payments, sms, receipts, razorpay
+from .routers import payments, whatsapp, receipts, razorpay
 
 app = FastAPI(
     title="Vidyalaya API",
@@ -35,7 +35,7 @@ app.include_router(developer.router)
 app.include_router(students.router)
 app.include_router(settings.router)
 app.include_router(payments.router)
-app.include_router(sms.router)
+app.include_router(whatsapp.router)
 app.include_router(receipts.router)
 app.include_router(razorpay.router)
 

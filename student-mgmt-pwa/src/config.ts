@@ -139,17 +139,72 @@ export const API_UTILS = {
 
 // Error handling
 export const ERROR_HANDLER = {
-  // Handle authentication errors
+  // Handle authentication errors (401)
   handleAuthError: (error: any) => {
     if (error.message.includes('401') || error.message.includes('Unauthorized')) {
       TOKEN_MANAGER.removeAccessToken();
       window.location.href = '/login';
     }
   },
+
+  // Handle deactivation/forbidden errors (403)
+  handleForbiddenError: (error: any) => {
+    const errorMessage = error.message || '';
+    
+    // Check for deactivation-related errors
+    if (
+      errorMessage.includes('403') ||
+      errorMessage.includes('ACCOUNT_DEACTIVATED') ||
+      errorMessage.includes('ACCOUNT_PENDING') ||
+      errorMessage.includes('ACCOUNT_REJECTED') ||
+      errorMessage.includes('deactivated') ||
+      errorMessage.includes('Forbidden')
+    ) {
+      // Clear ALL auth data
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('schoolId');
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('loginTime');
+      localStorage.removeItem('schoolName');
+      
+      // Show alert and redirect to landing page
+      alert('Your account has been deactivated or is not active. Please contact support.');
+      window.location.href = '/?view=landing';
+      return true;
+    }
+    return false;
+  },
   
   // Handle network errors
   handleNetworkError: (error: any) => {
     console.error('Network error:', error);
     // You can show a toast notification here
+  },
+
+  // Global error handler for API responses
+  handleApiError: (status: number, errorData: any) => {
+    if (status === 401) {
+      TOKEN_MANAGER.removeAccessToken();
+      window.location.href = '/?view=login';
+      return;
+    }
+    
+    if (status === 403) {
+      const detail = errorData?.detail || '';
+      if (
+        detail.includes('ACCOUNT_DEACTIVATED') ||
+        detail.includes('ACCOUNT_PENDING') ||
+        detail.includes('ACCOUNT_REJECTED')
+      ) {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('schoolId');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('loginTime');
+        localStorage.removeItem('schoolName');
+        
+        alert(detail.split(':')[1]?.trim() || 'Your account is not active.');
+        window.location.href = '/?view=landing';
+      }
+    }
   }
 }; 

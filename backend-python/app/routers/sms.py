@@ -280,3 +280,117 @@ async def send_receipt_sms(
             
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Failed to send SMS: {str(e)}")
+
+
+# ============================================
+# TEST ENDPOINTS (for localhost testing)
+# ============================================
+
+class TestSMSRequest(BaseModel):
+    mobile: str  # Phone number to send test SMS
+    template_id: str  # MSG91 template/flow ID
+    test_message: str = "Test"  # Will be used as VAR1
+
+@router.get("/test")
+async def test_msg91_config():
+    """
+    Test endpoint to check if MSG91 is configured
+    Visit: http://localhost:8000/api/sms/test
+    """
+    return {
+        "configured": MSG91_AUTH_KEY is not None,
+        "auth_key_set": bool(MSG91_AUTH_KEY),
+        "sender_id": MSG91_SENDER_ID,
+        "flow_api_url": MSG91_FLOW_API_URL,
+        "instructions": {
+            "step1": "Get AUTH_KEY from https://control.msg91.com/app/settings/api-settings",
+            "step2": "Create SMS template at https://control.msg91.com/app/sms/templates",
+            "step3": "Get template/flow_id after DLT approval",
+            "step4": "Add to .env: MSG91_AUTH_KEY=your_key and MSG91_SENDER_ID=VIDSMS"
+        } if not MSG91_AUTH_KEY else "MSG91 is configured and ready!"
+    }
+
+@router.post("/test-send")
+async def test_send_sms(request: TestSMSRequest):
+    """
+    Send a test SMS to verify MSG91 integration
+    Does NOT require authentication - for testing only
+    
+    Usage:
+    POST /api/sms/test-send
+    {
+        "mobile": "9876543210",
+        "template_id": "your_template_flow_id",
+        "test_message": "Hello from Vidyalaya!"
+    }
+    """
+    if not MSG91_AUTH_KEY:
+        return {
+            "success": False,
+            "error": "MSG91 not configured",
+            "help": {
+                "step1": "Get AUTH_KEY from https://control.msg91.com/app/settings/api-settings",
+                "step2": "Add to .env: MSG91_AUTH_KEY=your_auth_key_here",
+                "step3": "Restart the backend server"
+            }
+        }
+    
+    # Format mobile number
+    mobile = request.mobile.lstrip('+').lstrip('0')
+    if not mobile.startswith('91'):
+        mobile = f"91{mobile}"
+    
+    # Validate mobile length (10 digits + country code)
+    if len(mobile) != 12:
+        return {
+            "success": False,
+            "error": f"Invalid mobile number format. Got '{mobile}' (length {len(mobile)}). Expected 91XXXXXXXXXX"
+        }
+    
+    payload = {
+        "flow_id": request.template_id,
+        "sender": MSG91_SENDER_ID,
+        "recipients": [{
+            "mobiles": mobile,
+            "VAR1": request.test_message,
+            "VAR2": "Test",
+            "VAR3": "http://localhost:8000",
+            "VAR4": "Test Class",
+            "VAR5": "Vidyalaya School"
+        }]
+    }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                MSG91_FLOW_API_URL,
+                headers={
+                    "authkey": MSG91_AUTH_KEY,
+                    "Content-Type": "application/json"
+                },
+                json=payload,
+                timeout=30.0
+            )
+            
+            msg91_response = response.json()
+            
+            return {
+                "success": response.status_code == 200 and msg91_response.get("type") == "success",
+                "status_code": response.status_code,
+                "msg91_response": msg91_response,
+                "sent_to": mobile,
+                "template_id": request.template_id,
+                "payload_sent": payload
+            }
+            
+    except httpx.RequestError as e:
+        return {
+            "success": False,
+            "error": f"Network error: {str(e)}"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+

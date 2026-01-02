@@ -447,7 +447,7 @@ function App() {
           }}>
             <CheckCircleIcon /> Confirm Admission
           </DialogTitle>
-          <DialogContent sx={{ p: 3 }}>
+          <DialogContent sx={{ p: 3, bgcolor: '#ffffff', color: '#1f2937' }}>
             {previewData && (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Student Photo and Basic Info */}
@@ -493,10 +493,10 @@ function App() {
                     <PersonIcon fontSize="small" /> Personal Details
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Gender</Typography><Typography variant="body2">{previewData.gender}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Date of Birth</Typography><Typography variant="body2">{previewData.dob}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Aadhar No.</Typography><Typography variant="body2">{previewData.aadhar || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">APAAR ID</Typography><Typography variant="body2">{previewData.apaar || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Gender</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.gender}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Date of Birth</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.dob}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Aadhar No.</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.aadhar || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>APAAR ID</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.apaar || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
@@ -506,10 +506,10 @@ function App() {
                     <FamilyRestroomIcon fontSize="small" /> Guardian Details
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Father's Name</Typography><Typography variant="body2">{previewData.fatherName || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Father's Mobile</Typography><Typography variant="body2">{previewData.fatherMobile || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Mother's Name</Typography><Typography variant="body2">{previewData.motherName || '-'}</Typography></Box>
-                    <Box><Typography variant="caption" color="textSecondary">Mother's Mobile</Typography><Typography variant="body2">{previewData.motherMobile || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Father's Name</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.fatherName || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Father's Mobile</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.fatherMobile || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Mother's Name</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.motherName || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Mother's Mobile</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.motherMobile || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
@@ -519,15 +519,15 @@ function App() {
                     <ContactPhoneIcon fontSize="small" /> Contact & Address
                   </Typography>
                   <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    <Box><Typography variant="caption" color="textSecondary">Email</Typography><Typography variant="body2">{previewData.email || '-'}</Typography></Box>
-                    <Box sx={{ gridColumn: '1 / -1' }}><Typography variant="caption" color="textSecondary">Address</Typography><Typography variant="body2">{previewData.address || '-'}</Typography></Box>
+                    <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Email</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.email || '-'}</Typography></Box>
+                    <Box sx={{ gridColumn: '1 / -1' }}><Typography variant="caption" sx={{ color: '#6B7280' }}>Address</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.address || '-'}</Typography></Box>
                   </Box>
                 </Box>
 
                 {previewData.note && (
                   <Box sx={{ background: '#FFF3CD', borderRadius: 2, p: 2, border: '1px solid #FFE69C' }}>
-                    <Typography variant="caption" color="textSecondary">Additional Notes</Typography>
-                    <Typography variant="body2">{previewData.note}</Typography>
+                    <Typography variant="caption" sx={{ color: '#6B7280' }}>Additional Notes</Typography>
+                    <Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.note}</Typography>
                   </Box>
                 )}
 
@@ -538,8 +538,8 @@ function App() {
                       <PaymentIcon fontSize="small" /> Fee Details
                     </Typography>
                     <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                      <Box><Typography variant="caption" color="textSecondary">Admission Fee</Typography><Typography variant="body2">{previewData.admissionFee ? `₹${previewData.admissionFee}` : '-'}</Typography></Box>
-                      <Box><Typography variant="caption" color="textSecondary">Monthly Fee Override</Typography><Typography variant="body2">{previewData.monthlyFee ? `₹${previewData.monthlyFee}` : '-'}</Typography></Box>
+                      <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Admission Fee</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.admissionFee ? `₹${previewData.admissionFee}` : '-'}</Typography></Box>
+                      <Box><Typography variant="caption" sx={{ color: '#6B7280' }}>Monthly Fee Override</Typography><Typography variant="body2" sx={{ color: '#1f2937' }}>{previewData.monthlyFee ? `₹${previewData.monthlyFee}` : '-'}</Typography></Box>
                     </Box>
                   </Box>
                 )}

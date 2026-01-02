@@ -38,9 +38,12 @@ def decode_token(token: str) -> dict:
         )
 
 async def get_current_school(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get full school document from database using JWT token"""
+    """Get full school document from database using JWT token.
+    Also validates school is active - blocks deactivated/pending/rejected schools.
+    """
     # Import inside function to avoid circular import
     from ..database import schools_collection
+    from ..models.school import SchoolStatus
     
     token = credentials.credentials
     payload = decode_token(token)
@@ -58,6 +61,29 @@ async def get_current_school(credentials: HTTPAuthorizationCredentials = Depends
     if not school:
         raise HTTPException(status_code=401, detail="School not found")
     
+    # CHECK SCHOOL STATUS - Block if not active
+    school_status = school.get("status", "pending")
+    
+    if school_status == SchoolStatus.pending.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ACCOUNT_PENDING: Your account is pending verification."
+        )
+    
+    if school_status == SchoolStatus.rejected.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ACCOUNT_REJECTED: Your account has been rejected."
+        )
+    
+    if school_status == SchoolStatus.deactivated.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="ACCOUNT_DEACTIVATED: Your account has been deactivated by administrator."
+        )
+    
+    # Add school_id as string for convenience
+    school["school_id"] = str(school["_id"])
     return school
 
 def verify_developer_secret(secret: str) -> bool:
