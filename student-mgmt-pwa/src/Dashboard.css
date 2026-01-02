@@ -248,11 +248,53 @@
 }
 
 /* Responsiveness */
+
+/* Desktop - Fluid Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+/* Tablet Large (901px - 1024px) */
+@media (max-width: 1024px) {
+    .dashboard-banner {
+        padding: 32px;
+        min-height: 180px;
+    }
+
+    .banner-title {
+        font-size: 36px;
+    }
+}
+
+/* Tablet (601px - 900px) */
+@media (max-width: 900px) {
+    .dashboard-container {
+        gap: 24px;
+    }
+
+    .dashboard-banner {
+        padding: 28px;
+        min-height: 160px;
+    }
+
+    .banner-title {
+        font-size: 32px;
+    }
+
+    .banner-image {
+        height: 150px;
+    }
+}
+
+/* Mobile Large (481px - 600px) */
 @media (max-width: 768px) {
     .dashboard-banner {
         flex-direction: column;
         text-align: center;
-        padding: 30px 20px;
+        padding: 24px 20px;
+        min-height: auto;
     }
 
     .banner-image {
@@ -260,11 +302,79 @@
         height: 140px;
     }
 
-    .stats-grid {
+    .banner-title {
+        font-size: 28px;
+    }
+
+    .banner-subtitle {
+        font-size: 14px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .quick-access-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .dashboard-container {
+        gap: 16px;
+    }
+
+    .dashboard-banner {
+        padding: 20px 16px;
+        border-radius: 16px;
     }
 
     .banner-title {
-        font-size: 32px;
+        font-size: 24px;
+    }
+
+    .banner-date {
+        font-size: 12px;
+    }
+
+    .banner-image {
+        height: 120px;
+    }
+
+    .stat-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .stat-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .quick-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .card-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+    }
+
+    .quick-card h3 {
+        font-size: 16px;
+    }
+
+    .section-title {
+        font-size: 18px;
     }
 }

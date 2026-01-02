@@ -74,7 +74,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
     padding: 0 10px;
 }
 
@@ -109,7 +109,7 @@
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
     flex: 1;
     overflow-y: auto;
 }
@@ -117,8 +117,8 @@
 .app-sidebar .nav-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 14px 16px;
+    gap: 14px;
+    padding: 12px 16px;
     border-radius: 12px;
     color: rgba(255, 255, 255, 0.8);
     font-size: 15px;
@@ -278,18 +278,72 @@
 }
 
 /* Responsive */
+
+/* Mobile Menu Button - visible on tablet and below */
+.mobile-menu-btn {
+    display: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--glass-bg);
+    border: var(--glass-border);
+    color: var(--text-primary);
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 101;
+}
+
+.mobile-menu-btn:hover {
+    background: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
+}
+
+.mobile-menu-btn svg {
+    font-size: 24px;
+}
+
+/* Sidebar Overlay for mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+    display: block;
+    opacity: 1;
+}
+
+/* Tablet Large (901px - 1024px) */
 @media (max-width: 1024px) {
     .app-sidebar {
         transform: translateX(calc(-100% - 20px));
         left: 0;
         top: 0;
         bottom: 0;
-        border-radius: 0;
+        border-radius: 0 20px 20px 0;
         margin: 0;
+        width: 280px;
+        z-index: 1000;
     }
 
     .app-sidebar.open {
         transform: translateX(0);
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+    }
+
+    .sidebar-overlay.visible {
+        display: block;
     }
 
     .app-main {
@@ -297,10 +351,101 @@
         padding: 20px;
     }
 
+    .app-header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
     .header-search {
         width: auto;
         flex: 1;
-        margin-right: 20px;
+        min-width: 200px;
+        order: 2;
+    }
+
+    .header-user {
+        order: 1;
+    }
+}
+
+/* Tablet (601px - 900px) */
+@media (max-width: 900px) {
+    .app-main {
+        padding: 16px;
+    }
+
+    .app-header {
+        min-height: 60px;
+        padding: 8px 0;
+    }
+
+    .header-search {
+        width: 100%;
+        order: 3;
+        margin-right: 0;
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .user-profile {
+        padding: 6px;
+    }
+}
+
+/* Mobile Large (481px - 600px) */
+@media (max-width: 600px) {
+    .app-main {
+        padding: 12px;
+    }
+
+    .app-content {
+        min-height: 400px;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        border-radius: 0;
+    }
+
+    .sidebar-header {
+        margin-bottom: 24px;
+        padding: 0 5px;
+    }
+
+    .sidebar-title {
+        font-size: 18px;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .app-main {
+        padding: 10px;
+    }
+
+    .app-header {
+        min-height: auto;
+        margin-bottom: 12px;
+    }
+
+    .header-search {
+        padding: 6px 16px;
+    }
+
+    .header-search input {
+        font-size: 14px;
+    }
+
+    .mobile-menu-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
     }
 }
 
@@ -460,4 +605,41 @@
         transform: scale(3);
         opacity: 0;
     }
+}
+
+/* ============================================
+   DARK MODE - App Component Overrides
+   ============================================ */
+
+.app-container.dark .app-header {
+    background: transparent;
+}
+
+.app-container.dark .header-search {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(148, 163, 184, 0.2);
+}
+
+.app-container.dark .header-search input {
+    color: #f8fafc;
+}
+
+.app-container.dark .header-search input::placeholder {
+    color: #64748b;
+}
+
+.app-container.dark .user-profile {
+    background: rgba(30, 41, 59, 0.6);
+}
+
+.app-container.dark .user-name {
+    color: #f8fafc;
+}
+
+.app-container.dark .user-role {
+    color: #94a3b8;
+}
+
+.app-container.dark .app-content {
+    background: transparent;
 }

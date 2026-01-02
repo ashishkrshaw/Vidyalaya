@@ -701,3 +701,268 @@
         color: #f9fafb;
     }
 }
+
+/* ============================================
+   ADDITIONAL RESPONSIVE STYLES
+   ============================================ */
+
+/* Mobile Large (481px - 600px) */
+@media (max-width: 600px) {
+    .payment-page-header {
+        padding: 16px 20px;
+        flex-direction: column;
+        text-align: center;
+        gap: 12px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .payment-page-header h1 {
+        font-size: 20px;
+    }
+
+    .payment-main {
+        padding: 20px 16px;
+    }
+
+    .student-info-card,
+    .amount-card,
+    .payment-method-card {
+        padding: 20px;
+        border-radius: 16px;
+        margin-bottom: 16px;
+    }
+
+    .card-title {
+        font-size: 16px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    .amount-card {
+        padding: 24px 20px;
+    }
+
+    .amount-value {
+        font-size: 40px;
+    }
+
+    .pay-now-btn {
+        height: 54px;
+        font-size: 16px;
+        border-radius: 14px;
+    }
+
+    .result-icon-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+
+    .result-icon {
+        font-size: 44px !important;
+    }
+
+    .payment-result h2 {
+        font-size: 24px;
+    }
+
+    .action-btn {
+        height: 46px;
+        padding: 0 22px;
+        font-size: 14px;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .payment-page-header {
+        padding: 14px 16px;
+    }
+
+    .school-icon {
+        font-size: 36px !important;
+        padding: 8px;
+        border-radius: 12px;
+    }
+
+    .payment-page-header h1 {
+        font-size: 18px;
+    }
+
+    .payment-page-header p {
+        font-size: 12px;
+    }
+
+    .secured-badge {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .payment-main {
+        padding: 16px 12px;
+    }
+
+    .student-info-card,
+    .amount-card,
+    .payment-method-card {
+        padding: 16px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+    }
+
+    .card-title {
+        font-size: 15px;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .detail-label {
+        font-size: 11px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+    }
+
+    .amount-card {
+        padding: 20px 16px;
+    }
+
+    .amount-header {
+        font-size: 13px;
+    }
+
+    .amount-value {
+        font-size: 36px;
+    }
+
+    .amount-note {
+        font-size: 12px;
+    }
+
+    .method-btn {
+        padding: 14px 10px;
+        border-radius: 12px;
+    }
+
+    .method-btn svg {
+        font-size: 24px !important;
+    }
+
+    .method-btn span {
+        font-size: 13px;
+    }
+
+    .upi-input {
+        height: 48px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+    .redirect-note {
+        padding: 14px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    .pay-now-btn {
+        height: 50px;
+        font-size: 15px;
+        border-radius: 12px;
+    }
+
+    .security-note {
+        font-size: 12px;
+    }
+
+    .payment-processing {
+        padding: 40px 16px;
+    }
+
+    .processing-animation {
+        width: 80px;
+        height: 80px;
+    }
+
+    .processing-icon {
+        font-size: 30px !important;
+    }
+
+    .payment-processing h2 {
+        font-size: 20px;
+    }
+
+    .processing-step {
+        font-size: 14px;
+    }
+
+    .payment-result {
+        padding: 30px 16px;
+    }
+
+    .result-icon-wrapper {
+        width: 70px;
+        height: 70px;
+    }
+
+    .result-icon {
+        font-size: 38px !important;
+    }
+
+    .payment-result h2 {
+        font-size: 22px;
+    }
+
+    .transaction-id {
+        font-size: 13px;
+        margin-bottom: 24px;
+    }
+
+    .success-details {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .detail-row {
+        padding: 10px 0;
+        font-size: 14px;
+    }
+
+    .detail-row .amount {
+        font-size: 18px;
+    }
+
+    .success-message {
+        padding: 12px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    .success-actions,
+    .failed-actions {
+        flex-direction: column;
+    }
+
+    .action-btn {
+        width: 100%;
+        height: 44px;
+        font-size: 13px;
+        justify-content: center;
+    }
+
+    .failure-reasons {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    .payment-footer {
+        padding: 16px;
+    }
+
+    .payment-footer p {
+        font-size: 12px;
+    }
+}

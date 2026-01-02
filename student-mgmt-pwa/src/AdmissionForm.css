@@ -184,3 +184,123 @@
 .admission-card h6 {
     color: var(--text-primary);
 }
+
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet Large (901px - 1024px) */
+@media (max-width: 1024px) {
+    .admission-header {
+        padding: 28px;
+    }
+
+    .admission-card-content {
+        padding: 28px !important;
+    }
+}
+
+/* Tablet (601px - 900px) */
+@media (max-width: 900px) {
+    .admission-container {
+        padding-bottom: 24px;
+    }
+
+    .admission-header {
+        padding: 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+    }
+
+    .admission-card {
+        border-radius: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .admission-card-content {
+        padding: 24px !important;
+    }
+}
+
+/* Mobile Large (481px - 600px) */
+@media (max-width: 600px) {
+    .admission-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+        gap: 12px;
+    }
+
+    .admission-icon-box {
+        margin: 0 auto;
+    }
+
+    .admission-roll-chip {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .admission-card-content {
+        padding: 20px !important;
+    }
+
+    .photo-upload-box {
+        width: 120px;
+        height: 140px;
+        margin: 0 auto 20px;
+    }
+
+    .photo-avatar {
+        border-radius: 16px !important;
+    }
+
+    .section-icon-box {
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .submit-btn {
+        padding: 14px !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .admission-header {
+        padding: 16px;
+        border-radius: 14px;
+        margin-bottom: 16px;
+    }
+
+    .admission-card {
+        border-radius: 16px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .admission-card-content {
+        padding: 16px !important;
+    }
+
+    .photo-upload-box {
+        width: 100px;
+        height: 120px;
+        margin-bottom: 16px;
+    }
+
+    .upload-icon-btn {
+        bottom: -8px !important;
+        right: -8px !important;
+    }
+
+    .fee-config-box {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .submit-btn {
+        padding: 12px !important;
+        border-radius: 12px !important;
+        font-size: 0.95rem !important;
+    }
+}

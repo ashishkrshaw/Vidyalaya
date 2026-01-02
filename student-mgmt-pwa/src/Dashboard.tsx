@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './Dashboard.css';
-import { getAdmissions } from './db';
+import { getAdmissions, loadSchoolLogo } from './db';
 import AvatarBoy from './assets/avatar_boy.png';
 
 // Icons
@@ -21,6 +21,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onMenuClick, schoolName }) => {
     const [totalPaid, setTotalPaid] = useState(0);
     const [totalPayable, setTotalPayable] = useState(0);
     const [todayDate, setTodayDate] = useState('');
+    const [bannerLogo, setBannerLogo] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -54,6 +55,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onMenuClick, schoolName }) => {
 
         fetchStats();
 
+        // Load school logo for banner
+        const loadBannerLogo = async () => {
+            try {
+                const logo = await loadSchoolLogo();
+                if (logo && typeof logo === 'string' && logo.startsWith('data:')) {
+                    setBannerLogo(logo);
+                }
+            } catch (e) {
+                console.error('Error loading school logo:', e);
+            }
+        };
+        loadBannerLogo();
+
         const options: Intl.DateTimeFormatOptions = {
             weekday: 'long',
             year: 'numeric',
@@ -72,7 +86,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onMenuClick, schoolName }) => {
                     <h1 className="banner-title">{schoolName || 'Student Database'}</h1>
                     <p className="banner-subtitle">Always stay updated in your ScholarBase dashboard.</p>
                 </div>
-                <img src={AvatarBoy} alt="Student" className="banner-image" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                <img
+                    src={bannerLogo || AvatarBoy}
+                    alt={bannerLogo ? 'School Logo' : 'Student'}
+                    className="banner-image"
+                    style={bannerLogo ? {
+                        objectFit: 'contain',
+                        borderRadius: '16px',
+                        padding: '10px',
+                        background: 'rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(10px)'
+                    } : undefined}
+                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                />
             </div>
 
             {/* Quick Access / Enrolled Courses */}

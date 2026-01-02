@@ -46,6 +46,29 @@
 
   /* Animated Backgrounds */
   --bg-gradient-anim: linear-gradient(-45deg, #f3e8ff, #e0f2fe, #f3f4f6, #ffffff);
+
+  /* Responsive Breakpoints (for reference) */
+  /* Mobile Small: 320px - 480px */
+  /* Mobile Large: 481px - 600px */
+  /* Tablet: 601px - 900px */
+  /* Tablet Large: 901px - 1024px */
+  /* Desktop: 1025px+ */
+
+  /* Fluid Spacing */
+  --space-xs: clamp(0.25rem, 1vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 2vw, 1rem);
+  --space-md: clamp(1rem, 3vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 4vw, 2rem);
+  --space-xl: clamp(2rem, 5vw, 3rem);
+
+  /* Fluid Typography */
+  --text-xs: clamp(0.75rem, 1.5vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 2vw, 1rem);
+  --text-base: clamp(1rem, 2.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 3vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 3.5vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 4vw, 2rem);
+  --text-3xl: clamp(1.875rem, 5vw, 2.5rem);
 }
 
 /* Dark Mode Overrides */
@@ -139,4 +162,212 @@ body {
 .MuiChip-root {
   border-radius: 8px !important;
   font-weight: 500 !important;
+}
+
+/* ============================================
+   DARK MODE - Component Overrides
+   ============================================ */
+
+/* Glass Background in Dark Mode */
+[data-theme="dark"] {
+  --glass-bg: rgba(30, 41, 59, 0.8);
+  --glass-border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+/* MUI Dialog/Paper in Dark Mode */
+[data-theme="dark"] .MuiDialog-paper,
+[data-theme="dark"] .MuiPaper-root {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiDialogTitle-root {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiDialogContent-root {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiDialogContentText-root {
+  color: #94a3b8 !important;
+}
+
+/* MUI Input/TextField in Dark Mode */
+[data-theme="dark"] .MuiInputBase-root,
+[data-theme="dark"] .MuiOutlinedInput-root {
+  color: #f8fafc !important;
+  background: rgba(51, 65, 85, 0.5) !important;
+}
+
+[data-theme="dark"] .MuiInputBase-input {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .MuiInputLabel-root.Mui-focused {
+  color: #a78bfa !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(167, 139, 250, 0.5) !important;
+}
+
+[data-theme="dark"] .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #a78bfa !important;
+}
+
+/* MUI Select in Dark Mode */
+[data-theme="dark"] .MuiSelect-icon {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .MuiMenu-paper {
+  background: #1e293b !important;
+}
+
+[data-theme="dark"] .MuiMenuItem-root {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiMenuItem-root:hover {
+  background: rgba(167, 139, 250, 0.1) !important;
+}
+
+/* MUI Typography in Dark Mode */
+[data-theme="dark"] .MuiTypography-root {
+  color: inherit;
+}
+
+[data-theme="dark"] .MuiTypography-colorTextSecondary {
+  color: #94a3b8 !important;
+}
+
+/* MUI Buttons in Dark Mode */
+[data-theme="dark"] .MuiButton-outlined {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .MuiButton-outlined:hover {
+  border-color: #a78bfa !important;
+  background: rgba(167, 139, 250, 0.1) !important;
+}
+
+/* MUI Chip in Dark Mode */
+[data-theme="dark"] .MuiChip-root {
+  background: rgba(167, 139, 250, 0.2) !important;
+  color: #c4b5fd !important;
+}
+
+[data-theme="dark"] .MuiChip-outlined {
+  border-color: rgba(167, 139, 250, 0.3) !important;
+}
+
+/* Form Inputs (Custom CSS) in Dark Mode */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: rgba(51, 65, 85, 0.5);
+  color: #f8fafc;
+  border-color: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #64748b;
+}
+
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: rgba(167, 139, 250, 0.5);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+}
+
+/* Cards/Boxes with Background in Dark Mode */
+[data-theme="dark"] .MuiBox-root[style*="background: #F4F5F7"],
+[data-theme="dark"] [style*="background: #F4F5F7"] {
+  background: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Preview Data Sections */
+[data-theme="dark"] [style*="background: rgb(244, 245, 247)"] {
+  background: rgba(51, 65, 85, 0.5) !important;
+}
+
+/* Notes/Warning Boxes */
+[data-theme="dark"] [style*="background: #FFF3CD"],
+[data-theme="dark"] [style*="background: rgb(255, 243, 205)"] {
+  background: rgba(251, 191, 36, 0.15) !important;
+  border-color: rgba(251, 191, 36, 0.3) !important;
+}
+
+/* Scrollbar in Dark Mode */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+/* Table Headers in Dark Mode */
+[data-theme="dark"] th {
+  background: rgba(51, 65, 85, 0.5) !important;
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] td {
+  color: #f8fafc !important;
+  border-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+/* Alert/Info Boxes */
+[data-theme="dark"] .MuiAlert-root {
+  background: rgba(51, 65, 85, 0.8) !important;
+  color: #f8fafc !important;
+}
+
+/* Tooltip */
+[data-theme="dark"] .MuiTooltip-tooltip {
+  background: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* Backdrop */
+[data-theme="dark"] .MuiBackdrop-root {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Confirmation Dialog Box content colors */
+[data-theme="dark"] .MuiDialogContent-root .MuiBox-root {
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .MuiDialogContent-root .MuiTypography-caption {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .MuiDialogContent-root .MuiTypography-body2 {
+  color: #e2e8f0 !important;
+}
+
+/* Snackbar/Toast */
+[data-theme="dark"] .MuiSnackbarContent-root {
+  background: #334155 !important;
+  color: #f8fafc !important;
 }

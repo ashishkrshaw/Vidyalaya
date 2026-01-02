@@ -579,3 +579,241 @@
     justify-content: flex-end;
     margin-top: 32px;
 }
+
+/* ============================================
+   ADDITIONAL RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet (601px - 900px) */
+@media (max-width: 900px) {
+    .fee-page {
+        padding: 24px;
+    }
+
+    .fee-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .fee-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .fee-card {
+        padding: 24px;
+        border-radius: 20px;
+    }
+
+    .fee-card-title {
+        font-size: 18px;
+    }
+
+    .fee-filters {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .fee-filter-field {
+        min-width: 100%;
+    }
+}
+
+/* Mobile Large (481px - 600px) */
+@media (max-width: 600px) {
+    .fee-page {
+        padding: 16px;
+    }
+
+    .fee-page-header {
+        margin-bottom: 20px;
+    }
+
+    .fee-page-title {
+        font-size: 22px;
+        gap: 12px;
+    }
+
+    .fee-page-title svg {
+        font-size: 28px;
+    }
+
+    .fee-tabs {
+        width: 100%;
+        padding: 4px;
+        border-radius: 12px;
+    }
+
+    .fee-tab {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .fee-card {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .fee-form-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .fee-btn {
+        height: 44px;
+        padding: 0 20px;
+        font-size: 14px;
+    }
+
+    .fee-summary {
+        padding: 20px;
+        border-radius: 14px;
+    }
+
+    .fee-summary-row {
+        padding: 10px 0;
+        font-size: 14px;
+    }
+
+    .fee-summary-total {
+        font-size: 18px;
+    }
+
+    .fee-table th,
+    .fee-table td {
+        padding: 12px 14px;
+        font-size: 13px;
+    }
+
+    .fee-dialog {
+        padding: 24px;
+        border-radius: 20px;
+    }
+
+    .fee-dialog-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .fee-dialog-actions .fee-btn {
+        width: 100%;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .fee-page {
+        padding: 12px;
+    }
+
+    .fee-page-header {
+        margin-bottom: 16px;
+    }
+
+    .fee-page-title {
+        font-size: 20px;
+        gap: 10px;
+    }
+
+    .fee-page-title svg {
+        font-size: 24px;
+    }
+
+    .fee-tabs {
+        gap: 6px;
+    }
+
+    .fee-tab {
+        padding: 8px 12px;
+        font-size: 12px;
+        border-radius: 10px;
+    }
+
+    .fee-card {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+    .fee-card-title {
+        font-size: 16px;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+    }
+
+    .fee-card-title svg {
+        font-size: 22px;
+        padding: 5px;
+    }
+
+    .fee-form-label {
+        font-size: 11px;
+    }
+
+    .fee-form-input,
+    .fee-form-select {
+        height: 44px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+
+    .fee-student-info {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .fee-student-name {
+        font-size: 20px;
+    }
+
+    .fee-student-details {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .fee-table-container {
+        border-radius: 12px;
+    }
+
+    .fee-table th {
+        font-size: 11px;
+        padding: 12px;
+    }
+
+    .fee-table td {
+        padding: 12px;
+        font-size: 12px;
+    }
+
+    .fee-dialog {
+        padding: 20px;
+        border-radius: 16px;
+        width: 95%;
+    }
+
+    .fee-dialog-title {
+        font-size: 20px;
+        margin-bottom: 20px;
+    }
+
+    .fee-alert {
+        padding: 12px 16px;
+        font-size: 13px;
+        border-radius: 12px;
+    }
+
+    .history-controls {
+        gap: 12px;
+    }
+
+    .history-search-wrapper {
+        min-width: 100%;
+    }
+
+    .history-search-input {
+        padding: 12px 16px 12px 44px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+}

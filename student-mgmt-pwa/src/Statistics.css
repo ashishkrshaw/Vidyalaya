@@ -551,3 +551,108 @@
     background: rgba(255, 255, 255, 0.3);
     border-radius: 12px;
 }
+
+/* Mobile Small (320px - 480px) */
+@media (max-width: 480px) {
+    .analytics-page {
+        padding: 16px;
+    }
+
+    .analytics-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .analytics-title {
+        font-size: 22px;
+    }
+
+    .analytics-subtitle {
+        font-size: 13px;
+    }
+
+    .analytics-date {
+        padding: 10px 14px;
+        font-size: 12px;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .metric-card {
+        padding: 18px;
+        border-radius: 16px;
+        gap: 12px;
+    }
+
+    .metric-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+
+    .metric-icon svg {
+        font-size: 20px;
+    }
+
+    .metric-value {
+        font-size: 18px;
+    }
+
+    .metric-label {
+        font-size: 11px;
+    }
+
+    .chart-card {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .chart-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .chart-title {
+        font-size: 16px;
+        gap: 8px;
+    }
+
+    .chart-title svg {
+        font-size: 18px;
+    }
+
+    .donut-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .donut-svg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .donut-legend {
+        width: 100%;
+    }
+
+    .legend-row {
+        gap: 8px;
+    }
+
+    .legend-text {
+        font-size: 12px;
+    }
+
+    .legend-value {
+        font-size: 13px;
+    }
+
+    .no-data {
+        padding: 40px 20px;
+        font-size: 14px;
+    }
+}

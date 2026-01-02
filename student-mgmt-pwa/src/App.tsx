@@ -44,6 +44,7 @@ import Statistics from './Statistics';
 import Dashboard from './Dashboard';
 import ParentPaymentPage from './ParentPaymentPage';
 import LandingPage from './LandingPage';
+import AdminProfile from './AdminProfile';
 import AvatarBoy from './assets/avatar_boy.png';
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
@@ -75,7 +76,7 @@ function App() {
     return <ParentPaymentPage />;
   }
 
-  const [menu, setMenu] = useState<'dashboard' | 'student' | 'show' | 'history' | 'settings' | 'fee' | 'stats'>('dashboard');
+  const [menu, setMenu] = useState<'dashboard' | 'student' | 'show' | 'history' | 'settings' | 'fee' | 'stats' | 'profile'>('dashboard');
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [schoolName, setSchoolName] = useState('');
@@ -87,6 +88,7 @@ function App() {
   const [admissionSuccess, setAdmissionSuccess] = useState(false);
   const [savedStudent, setSavedStudent] = useState<any | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [headerLogo, setHeaderLogo] = useState<string | null>(null);
 
   // Theme State
   const [mode, setMode] = useState<'light' | 'dark'>(() => {
@@ -119,7 +121,7 @@ function App() {
     [mode],
   );
 
-  // Check if already logged in and load School Info
+  // Check if already logged in and load School Info + Logo
   useEffect(() => {
     const initApp = async () => {
       const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
@@ -138,6 +140,16 @@ function App() {
           }
         } catch (e) {
           setSchoolName(localStorage.getItem('schoolName') || import.meta.env.VITE_SCHOOL_NAME || 'School');
+        }
+
+        // Load school logo for header
+        try {
+          const logo = await loadSchoolLogo();
+          if (logo && typeof logo === 'string' && logo.startsWith('data:')) {
+            setHeaderLogo(logo);
+          }
+        } catch (e) {
+          console.error('Error loading school logo:', e);
         }
       }
     };
@@ -159,9 +171,18 @@ function App() {
       }
     };
 
-    const handleSchoolInfoUpdate = (event: CustomEvent) => {
+    const handleSchoolInfoUpdate = async (event: CustomEvent) => {
       setSchoolName(event.detail);
       localStorage.setItem('schoolName', event.detail);
+      // Also reload logo when school info updates
+      try {
+        const logo = await loadSchoolLogo();
+        if (logo && typeof logo === 'string' && logo.startsWith('data:')) {
+          setHeaderLogo(logo);
+        }
+      } catch (e) {
+        console.error('Error loading school logo:', e);
+      }
     };
 
     window.addEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
@@ -336,14 +357,26 @@ function App() {
                   </Badge>
                 </IconButton>
 
-                <div className="user-profile">
+                <div
+                  className="user-profile"
+                  onClick={() => setMenu('profile')}
+                  style={{ cursor: 'pointer' }}
+                  title="View Profile"
+                >
                   <Avatar
-                    src={AvatarBoy}
-                    sx={{ width: 32, height: 32 }}
+                    src={headerLogo || AvatarBoy}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      ...(headerLogo && {
+                        borderRadius: '8px',
+                        border: '2px solid rgba(124, 58, 237, 0.3)',
+                      })
+                    }}
                   />
                   <div className="user-info">
-                    <span className="user-name">John Doe</span>
-                    <span className="user-role">Admin</span>
+                    <span className="user-name">{schoolName || 'Admin'}</span>
+                    <span className="user-role">Admin Portal</span>
                   </div>
                 </div>
               </div>
@@ -368,6 +401,7 @@ function App() {
                 {menu === 'settings' && <AcademicSettings />}
                 {menu === 'fee' && <FeeManagement />}
                 {menu === 'stats' && <Statistics mode={mode} />}
+                {menu === 'profile' && <AdminProfile onNavigateToSettings={() => setMenu('settings')} schoolLogo={headerLogo} />}
               </>
             ) : (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>

@@ -530,20 +530,109 @@
    RESPONSIVE
    ============================================ */
 
+/* Tablet (601px - 900px) */
+@media (max-width: 900px) {
+    .login-card {
+        max-width: 400px;
+        padding: 36px;
+    }
+}
+
+/* Mobile Large (481px - 600px) */
+@media (max-width: 600px) {
+    .login-card {
+        max-width: 380px;
+        margin: 16px;
+        padding: 32px 28px;
+    }
+
+    .login-logo h1 {
+        font-size: 22px;
+    }
+
+    .login-tabs .tab {
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .back-to-home {
+        top: 16px;
+        left: 16px;
+    }
+}
+
+/* Mobile Small (320px - 480px) */
 @media (max-width: 480px) {
     .login-card {
-        margin: 20px;
-        padding: 30px 24px;
+        margin: 12px;
+        padding: 24px 20px;
+        border-radius: 20px;
     }
 
     .login-logo h1 {
         font-size: 20px;
     }
 
+    .logo-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+    }
+
+    .logo-icon svg {
+        font-size: 22px;
+    }
+
+    .login-tabs {
+        margin-bottom: 24px;
+    }
+
+    .login-tabs .tab {
+        padding: 10px 14px;
+        font-size: 12px;
+    }
+
+    .login-form {
+        gap: 14px;
+    }
+
+    .field input {
+        height: 48px;
+        font-size: 14px;
+    }
+
+    .captcha-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .captcha-box {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .captcha-row input {
+        min-width: 100%;
+    }
+
+    .submit-btn {
+        height: 50px;
+        font-size: 15px;
+    }
+
     .back-to-home {
-        top: 16px;
-        left: 16px;
-        padding: 8px 14px;
-        font-size: 13px;
+        top: 12px;
+        left: 12px;
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .back-to-home svg {
+        font-size: 16px;
+    }
+
+    .login-card .footer {
+        font-size: 12px;
+        margin-top: 20px;
     }
 }
