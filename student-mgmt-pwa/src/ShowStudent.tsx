@@ -27,9 +27,10 @@ const sectionOptions = ['A', 'B', 'C'];
 interface ShowStudentProps {
   onSelectStudent?: (student: any) => void;
   idCardMode?: boolean;
+  searchQuery?: string;
 }
 
-const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }) => {
+const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode, searchQuery }) => {
   const [studentId, setStudentId] = useState('');
   const [cls, setCls] = useState('');
   const [section, setSection] = useState('');
@@ -42,6 +43,27 @@ const ShowStudent: React.FC<ShowStudentProps> = ({ onSelectStudent, idCardMode }
   const [editData, setEditData] = useState<any | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [exportAnchorEl, setExportAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Global Search Effect
+  React.useEffect(() => {
+    if (searchQuery) {
+      setLoading(true);
+      // Simulate a "General" search across all fields
+      getAdmissions().then(allStudents => {
+        const q = searchQuery.toLowerCase();
+        const filtered = allStudents.filter((s: any) =>
+          (s.name && s.name.toLowerCase().includes(q)) ||
+          (s.studentId && s.studentId.toLowerCase().includes(q)) ||
+          (s.class && s.class.toLowerCase().includes(q)) ||
+          (s.adhaar && String(s.adhaar).includes(q))
+        );
+        setResults(filtered);
+        setLoading(false);
+        // Optionally update UI to show we are searching
+        setSearchType('all');
+      });
+    }
+  }, [searchQuery]);
 
   // Password protection state
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);

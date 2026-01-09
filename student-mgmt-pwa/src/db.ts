@@ -1,11 +1,12 @@
 import { openDB } from 'idb';
 
 const DB_NAME = 'student-mgmt-db';
-const DB_VERSION = 5; // Incremented version to trigger schema upgrade
+const DB_VERSION = 6; // Incremented version to add notifications store
 
 const STORE_NAME = 'admissions';
 const HISTORY_STORE = 'history';
 const SETTINGS_STORE = 'settings';
+const NOTIFICATIONS_STORE = 'notifications';
 
 export async function getDb() {
   return openDB(DB_NAME, DB_VERSION, {
@@ -26,6 +27,12 @@ export async function getDb() {
         if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
           const settingsStore = db.createObjectStore(SETTINGS_STORE, { keyPath: ['schoolId', 'key'] });
           settingsStore.createIndex('by-school', 'schoolId', { unique: false });
+        }
+      }
+      if (oldVersion < 6) {
+        if (!db.objectStoreNames.contains(NOTIFICATIONS_STORE)) {
+          const notifStore = db.createObjectStore(NOTIFICATIONS_STORE, { keyPath: 'id', autoIncrement: true });
+          notifStore.createIndex('by-school', 'schoolId', { unique: false });
         }
       }
     },
@@ -431,4 +438,56 @@ export async function loadMSG91Config(): Promise<MSG91Config | null> {
   return await loadSetting('msg91Config');
 }
 
+// ============================================
+// REAL NOTIFICATIONS SYSTEM
+// ============================================
 
+export interface AppNotification {
+  id?: number;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
+  timestamp: string;
+}
+
+export async function addNotification(title: string, message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const notif = {
+    schoolId,
+    title,
+    message,
+    type,
+    read: false,
+    timestamp: new Date().toISOString()
+  };
+  await db.add(NOTIFICATIONS_STORE, notif);
+  // Dispatch event for real-time UI update
+  window.dispatchEvent(new Event('notification-added'));
+}
+
+export async function getNotifications() {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  // Return sorted by newest first
+  const all = await db.getAllFromIndex(NOTIFICATIONS_STORE, 'by-school', schoolId);
+  return all.sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
+export async function markNotificationsRead() {
+  const db = await getDb();
+  const schoolId = getSchoolId();
+  const all = await db.getAllFromIndex(NOTIFICATIONS_STORE, 'by-school', schoolId);
+  const tx = db.transaction(NOTIFICATIONS_STORE, 'readwrite');
+  const promises = all.map((n: any) => {
+    if (!n.read) {
+      n.read = true;
+      return tx.store.put(n);
+    }
+    return Promise.resolve();
+  });
+  await Promise.all(promises);
+  await tx.done;
+  window.dispatchEvent(new Event('notification-added'));
+}

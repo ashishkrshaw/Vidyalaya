@@ -275,10 +275,9 @@ body {
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea {
-  background: rgba(51, 65, 85, 0.5);
+  background: rgba(30, 41, 59, 0.8);
   color: #f8fafc;
-  border-color: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  border: 1px solid transparent;
 }
 
 [data-theme="dark"] input::placeholder,
@@ -289,7 +288,7 @@ body {
 [data-theme="dark"] input:focus,
 [data-theme="dark"] select:focus,
 [data-theme="dark"] textarea:focus {
-  border-color: rgba(167, 139, 250, 0.5);
+  border-color: rgba(167, 139, 250, 0.4);
   outline: none;
   box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
 }

@@ -198,6 +198,16 @@ const AdminProfile: React.FC<AdminProfileProps> = ({ onNavigateToSettings, schoo
                             Configure <ArrowForwardIcon style={{ fontSize: 14, marginLeft: 4 }} />
                         </button>
                     </div>
+
+                    <div className="quick-setting-row highlight-pricing">
+                        <div className="quick-setting-info">
+                            <span className="quick-setting-title">Pricing & Subscription</span>
+                            <span className="quick-setting-desc">View and upgrade your plan</span>
+                        </div>
+                        <button className="quick-setting-btn" onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-pricing'))}>
+                            View Plans <ArrowForwardIcon style={{ fontSize: 14, marginLeft: 4 }} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

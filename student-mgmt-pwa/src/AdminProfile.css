@@ -488,3 +488,68 @@
     border-color: rgba(148, 163, 184, 0.2);
     color: #f8fafc;
 }
+/* ============================================
+   PRICING HIGHLIGHT STYLES
+   ============================================ */
+
+.quick-setting-row.highlight-pricing {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(99, 102, 241, 0.08));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 8px 0;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-setting-row.highlight-pricing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, #8b5cf6, #6366f1);
+}
+
+.quick-setting-row.highlight-pricing .quick-setting-title {
+    color: #7c3aed;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quick-setting-row.highlight-pricing .quick-setting-desc {
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.quick-setting-row.highlight-pricing .quick-setting-btn {
+    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    color: white;
+    box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);
+}
+
+.quick-setting-row.highlight-pricing .quick-setting-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(124, 58, 237, 0.3);
+}
+
+/* Dark Mode Support for Highlight */
+.app-container.dark .quick-setting-row.highlight-pricing {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: none;
+}
+
+.app-container.dark .quick-setting-row.highlight-pricing .quick-setting-title {
+    color: #c4b5fd;
+}
+
+.app-container.dark .quick-setting-row.highlight-pricing .quick-setting-desc {
+    color: #94a3b8;
+}

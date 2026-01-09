@@ -1306,6 +1306,39 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
+      {/* Pricing Plans Card */}
+      <div className="settings-card wide">
+        <div className="settings-card-header" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)' }}>
+          <MonetizationOnIcon />
+          <h2>Pricing & Subscription</h2>
+        </div>
+        <div className="settings-card-body">
+          <p className="settings-card-desc">View and manage your subscription plan</p>
+
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 16 }}>
+            <div className="settings-stat-card primary">
+              <h4>Current Plan</h4>
+              <p className="stat-value">Starter</p>
+              <p className="stat-desc">Free forever</p>
+            </div>
+            <div className="settings-stat-card default">
+              <h4>Students</h4>
+              <p className="stat-value">Up to 100</p>
+              <p className="stat-desc">Upgrade for more</p>
+            </div>
+          </div>
+
+          <button
+            className="settings-btn settings-btn-primary"
+            onClick={() => window.dispatchEvent(new CustomEvent('navigate-to-pricing'))}
+            style={{ marginTop: 20, width: '100%' }}
+          >
+            <MonetizationOnIcon style={{ fontSize: 18, marginRight: 8 }} />
+            View Pricing Plans
+          </button>
+        </div>
+      </div>
+
       {/* Footer */}
       <div className="settings-footer">
         <p>© {new Date().getFullYear()} School Management System | Version 2.0</p>

@@ -151,12 +151,12 @@
 }
 
 .history-table th {
-    background: rgba(243, 244, 246, 0.2);
+    background: var(--glass-bg);
     color: var(--text-secondary);
     font-weight: 600;
     text-align: left;
     padding: 16px 24px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid var(--glass-border);
     text-transform: uppercase;
     font-size: 12px;
     letter-spacing: 0.8px;
@@ -213,27 +213,48 @@
 }
 
 .history-action-badge.admission {
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid rgba(22, 101, 52, 0.1);
+    background: rgba(34, 197, 94, 0.15);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.2);
 }
 
 .history-action-badge.update {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid rgba(146, 64, 14, 0.1);
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .history-action-badge.delete {
-    background: #fee2e2;
-    color: #991b1b;
-    border: var(--glass-border);
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 .history-action-badge.fee {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid rgba(30, 64, 175, 0.1);
+    background: rgba(59, 130, 246, 0.15);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+/* Dark mode badge adjustments */
+.app-container.dark .history-action-badge.admission {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+}
+
+.app-container.dark .history-action-badge.update {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+}
+
+.app-container.dark .history-action-badge.delete {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.app-container.dark .history-action-badge.fee {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
 }
 
 /* Detail Row */
@@ -303,11 +324,16 @@
 }
 
 .history-detail-value.changed {
-    color: #059669;
-    background: #ecfdf5;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.15);
     padding: 4px 8px;
     border-radius: 6px;
-    border: 1px solid rgba(5, 150, 105, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.app-container.dark .history-detail-value.changed {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.2);
 }
 
 /* Empty State */

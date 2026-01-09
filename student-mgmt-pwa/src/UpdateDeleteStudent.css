@@ -156,9 +156,15 @@
 
 [data-theme="dark"] .edit-input,
 [data-theme="dark"] .edit-select {
-    background: #0d1117;
-    border-color: #30363d;
+    background: rgba(30, 41, 59, 0.8);
+    border-color: transparent;
     color: #e6edf3;
+}
+
+[data-theme="dark"] .edit-input:focus,
+[data-theme="dark"] .edit-select:focus {
+    border-color: rgba(167, 139, 250, 0.4);
+    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
 }
 
 /* Action Buttons */

@@ -4,7 +4,8 @@ import {
   Dialog, DialogTitle, DialogContent,
   DialogActions, Button, Typography, Chip,
   IconButton, useTheme, useMediaQuery,
-  Avatar, Badge, CircularProgress
+  Avatar, Badge, CircularProgress,
+  Menu, MenuItem, Divider
 } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
@@ -31,8 +32,8 @@ import PaymentIcon from '@mui/icons-material/Payment';
 import FeeManagement from './FeeManagement';
 import DownloadIcon from '@mui/icons-material/Download';
 import BadgeIcon from '@mui/icons-material/Badge';
-import { addAdmission, getAdmissions, addHistoryEntry, getNextRollNoForClass, loadSchoolInfo, loadSchoolLogo, loadPrincipalSignature } from './db';
-import jsPDF from 'jspdf';
+import { addAdmission, getAdmissions, addHistoryEntry, getNextRollNoForClass, loadSchoolInfo, loadSchoolLogo, addNotification, getNotifications, markNotificationsRead } from './db';
+import type { AppNotification } from './db';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -45,6 +46,7 @@ import Dashboard from './Dashboard';
 import ParentPaymentPage from './ParentPaymentPage';
 import LandingPage from './LandingPage';
 import AdminProfile from './AdminProfile';
+import Pricing from './Pricing';
 import AvatarBoy from './assets/avatar_boy.png';
 
 function generateStudentId(schoolName: string, year: number, rollNo: number, seq: number) {
@@ -76,7 +78,7 @@ function App() {
     return <ParentPaymentPage />;
   }
 
-  const [menu, setMenu] = useState<'dashboard' | 'student' | 'show' | 'history' | 'settings' | 'fee' | 'stats' | 'profile'>('dashboard');
+  const [menu, setMenu] = useState<'dashboard' | 'student' | 'show' | 'history' | 'settings' | 'fee' | 'stats' | 'pricing' | 'profile'>('dashboard');
   const [previewData, setPreviewData] = useState<any>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [schoolName, setSchoolName] = useState('');
@@ -89,6 +91,9 @@ function App() {
   const [savedStudent, setSavedStudent] = useState<any | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [headerLogo, setHeaderLogo] = useState<string | null>(null);
+  const [globalSearch, setGlobalSearch] = useState('');
+  const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   // Theme State
   const [mode, setMode] = useState<'light' | 'dark'>(() => {
@@ -225,12 +230,28 @@ function App() {
       }
     };
 
+    const handleNavigateToPricing = () => {
+      setMenu('pricing');
+    };
+
     window.addEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
     window.addEventListener('school-info-updated', handleSchoolInfoUpdate as EventListener);
+    window.addEventListener('navigate-to-pricing', handleNavigateToPricing);
+
+    // Initial load of notifications
+    getNotifications().then(setNotifications);
+
+    // Listen for new notifications
+    const handleNotifUpdate = () => {
+      getNotifications().then(setNotifications);
+    };
+    window.addEventListener('notification-added', handleNotifUpdate);
 
     return () => {
       window.removeEventListener('chatbot-navigate', handleChatbotNavigation as EventListener);
       window.removeEventListener('school-info-updated', handleSchoolInfoUpdate as EventListener);
+      window.removeEventListener('navigate-to-pricing', handleNavigateToPricing);
+      window.removeEventListener('notification-added', handleNotifUpdate);
     };
   }, []);
 
@@ -252,6 +273,12 @@ function App() {
     try {
       await addAdmission(previewData);
       await addHistoryEntry({ ...previewData, action: 'admission_added', timestamp: new Date().toISOString() });
+      // Trigger Real Notification
+      await addNotification(
+        'New Admission',
+        `Added ${previewData.name} (Class ${previewData.class}-${previewData.section})`,
+        'success'
+      );
       setSavedStudent(previewData);
       setConfirmOpen(false);
       setAdmissionSuccess(true);
@@ -399,8 +426,23 @@ function App() {
               </IconButton>
 
               <div className="header-search">
-                <SearchIcon sx={{ color: '#9ca3af' }} />
-                <input type="text" placeholder="Search" />
+                <SearchIcon sx={{ color: '#9ca3af', cursor: 'pointer' }} onClick={() => setMenu('show')} />
+                <input
+                  type="text"
+                  placeholder="Search students..."
+                  value={globalSearch}
+                  onChange={(e) => setGlobalSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setMenu('show');
+                    }
+                  }}
+                  onFocus={() => {
+                    // Optional: auto-switch to search view on focus? 
+                    // User might find it annoying if they just clicked. 
+                    // Let's stick to Enter or Icon click, or just let them type.
+                  }}
+                />
               </div>
             </div>
 
@@ -410,8 +452,11 @@ function App() {
               </IconButton>
 
               <div className="header-user">
-                <IconButton sx={{ color: '#6b7280' }}>
-                  <Badge badgeContent={4} color="error">
+                <IconButton
+                  onClick={(e) => setNotifAnchor(e.currentTarget)}
+                  sx={{ color: '#6b7280' }}
+                >
+                  <Badge badgeContent={notifications.filter(n => !n.read).length} color="error">
                     <NotificationsIcon />
                   </Badge>
                 </IconButton>
@@ -455,11 +500,12 @@ function App() {
                     styles={{}}
                   />
                 )}
-                {menu === 'show' && <ShowStudent />}
+                {menu === 'show' && <ShowStudent searchQuery={globalSearch} />}
                 {menu === 'history' && <HistorySection />}
                 {menu === 'settings' && <AcademicSettings />}
                 {menu === 'fee' && <FeeManagement />}
                 {menu === 'stats' && <Statistics mode={mode} />}
+                {menu === 'pricing' && <Pricing mode={mode} />}
                 {menu === 'profile' && <AdminProfile onNavigateToSettings={() => setMenu('settings')} schoolLogo={headerLogo} />}
               </>
             ) : (
@@ -666,6 +712,70 @@ function App() {
         </Dialog>
 
         <Chatbot />
+
+        {/* Notificatons Menu */}
+        <Menu
+          anchorEl={notifAnchor}
+          open={!!notifAnchor}
+          onClose={() => setNotifAnchor(null)}
+          PaperProps={{
+            elevation: 0,
+            sx: {
+              overflow: 'visible',
+              filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+              mt: 1.5,
+              width: 320,
+              borderRadius: 2,
+              '&:before': {
+                content: '""',
+                display: 'block',
+                position: 'absolute',
+                top: 0,
+                right: 14,
+                width: 10,
+                height: 10,
+                bgcolor: 'background.paper',
+                transform: 'translateY(-50%) rotate(45deg)',
+                zIndex: 0,
+              },
+            }
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <Box sx={{ p: 2, pb: 1 }}>
+            <Typography variant="subtitle1" fontWeight={700}>Notifications</Typography>
+          </Box>
+          <Divider />
+          {notifications.length === 0 ? (
+            <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>
+              <Typography variant="body2">No new notifications</Typography>
+            </Box>
+          ) : (
+            notifications.slice(0, 5).map(n => (
+              <MenuItem key={n.id} onClick={() => {
+                // Mark as read logic could go here if we want individual mark
+                // For now, we rely on "Mark all as read" or just view
+              }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', opacity: n.read ? 0.6 : 1 }}>
+                  <Typography variant="body2" fontWeight={600} color={n.type === 'success' ? 'success.main' : 'text.primary'}>
+                    {n.title}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">{n.message}</Typography>
+                  <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#9ca3af', mt: 0.5 }}>
+                    {new Date(n.timestamp).toLocaleString()}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))
+          )}
+          <Divider />
+          <Box sx={{ p: 1, textAlign: 'center' }}>
+            <Button size="small" onClick={() => {
+              markNotificationsRead().then(() => setNotifAnchor(null));
+            }}>Mark all as read</Button>
+          </Box>
+        </Menu>
       </div >
     </ThemeProvider >
   );

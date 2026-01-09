@@ -226,7 +226,7 @@
 .student-name {
     font-size: 17px;
     font-weight: 700;
-    color: #1F2937;
+    color: var(--text-primary);
     margin: 0 0 6px 0;
     white-space: nowrap;
     overflow: hidden;

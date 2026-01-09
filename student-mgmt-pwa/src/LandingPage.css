@@ -1887,14 +1887,14 @@ html {
 
 .why-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
 }
 
 .why-card {
     background: var(--card-bg);
     border-radius: 20px;
-    padding: 40px;
+    padding: 32px 24px;
     text-align: center;
     border: 1px solid var(--border-color);
     transition: all 0.3s;
@@ -1907,23 +1907,40 @@ html {
 }
 
 .why-icon {
-    font-size: 56px !important;
+    font-size: 48px !important;
     color: var(--primary);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     filter: drop-shadow(0 4px 8px var(--primary-glow));
 }
 
 .why-card h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .why-card p {
-    font-size: 15px;
+    font-size: 14px;
     color: var(--text-secondary);
     line-height: 1.6;
+}
+
+/* Responsive Why Grid */
+@media (max-width: 1024px) {
+    .why-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .why-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .why-card {
+        padding: 28px 20px;
+    }
 }
 
 /* ============================================
@@ -3280,5 +3297,383 @@ button.footer-contact-btn:hover {
 
     .modal-header h2 {
         font-size: 20px;
+    }
+}
+
+/* ============================================
+   ABOUT US & PRIVACY POLICY MODALS
+   ============================================ */
+
+.info-modal {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    position: relative;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 60px rgba(99, 102, 241, 0.1);
+    animation: slideUp 0.4s ease;
+    backdrop-filter: blur(20px);
+    display: flex;
+    flex-direction: column;
+}
+
+.landing-page.dark .info-modal {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(99, 102, 241, 0.2);
+}
+
+.info-modal .modal-header {
+    padding: 36px 36px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.info-modal-content {
+    padding: 24px 36px 36px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* About Us Specific Styles */
+.about-icon {
+    background: linear-gradient(135deg, var(--primary), #7c3aed) !important;
+}
+
+.about-section {
+    margin-bottom: 24px;
+}
+
+.about-section:last-child {
+    margin-bottom: 0;
+}
+
+.about-section h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.about-section p {
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-secondary);
+}
+
+.about-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 12px;
+}
+
+.about-list li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.about-list li:hover {
+    border-color: var(--primary);
+    transform: translateX(4px);
+}
+
+.team-section {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+    border-radius: 16px;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    text-align: center;
+}
+
+.team-section p {
+    margin: 0;
+}
+
+/* Privacy Policy Specific Styles */
+.privacy-icon {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+}
+
+.privacy-section {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.privacy-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.privacy-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.privacy-section p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.privacy-section p:last-child {
+    margin-bottom: 0;
+}
+
+.privacy-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.privacy-list li {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    padding-left: 24px;
+    position: relative;
+}
+
+.privacy-list li::before {
+    content: '•';
+    position: absolute;
+    left: 8px;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* Custom Scrollbar for Info Modals */
+.info-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.info-modal-content::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.info-modal-content::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+.info-modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+/* Responsive Styles */
+@media (max-width: 700px) {
+    .info-modal {
+        max-width: 95%;
+        max-height: 90vh;
+    }
+
+    .info-modal .modal-header {
+        padding: 24px 24px 20px;
+    }
+
+    .info-modal-content {
+        padding: 20px 24px 24px;
+    }
+
+    .about-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .info-modal .modal-header h2 {
+        font-size: 18px;
+    }
+
+    .about-section h3,
+    .privacy-section h3 {
+        font-size: 15px;
+    }
+
+    .about-section p,
+    .privacy-section p,
+    .about-list li {
+        font-size: 13px;
+    }
+}
+
+/* ============================================
+   PORTAL TRANSITION OVERLAY
+   ============================================ */
+
+.portal-transition-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: radial-gradient(circle at center, #0f0a2e 0%, #030712 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: portalFadeIn 0.3s ease-out, portalZoom 1.2s ease-in-out;
+}
+
+@keyframes portalFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes portalZoom {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(20);
+        opacity: 0;
+    }
+}
+
+.portal-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    animation: ringExpand 1.2s ease-out forwards;
+}
+
+.portal-ring.ring-1 {
+    width: 100px;
+    height: 100px;
+    border-color: rgba(99, 102, 241, 0.8);
+    animation-delay: 0s;
+}
+
+.portal-ring.ring-2 {
+    width: 200px;
+    height: 200px;
+    border-color: rgba(139, 92, 246, 0.6);
+    animation-delay: 0.1s;
+}
+
+.portal-ring.ring-3 {
+    width: 300px;
+    height: 300px;
+    border-color: rgba(168, 85, 247, 0.4);
+    animation-delay: 0.2s;
+}
+
+@keyframes ringExpand {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+
+    60% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+.portal-center {
+    position: relative;
+    z-index: 1;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 0 40px rgba(99, 102, 241, 0.6),
+        0 0 80px rgba(139, 92, 246, 0.4),
+        0 0 120px rgba(168, 85, 247, 0.3);
+    animation: portalPulse 0.5s ease-in-out infinite alternate, portalCenterZoom 1.2s ease-in-out forwards;
+}
+
+@keyframes portalPulse {
+    from {
+        box-shadow:
+            0 0 40px rgba(99, 102, 241, 0.6),
+            0 0 80px rgba(139, 92, 246, 0.4),
+            0 0 120px rgba(168, 85, 247, 0.3);
+    }
+
+    to {
+        box-shadow:
+            0 0 60px rgba(99, 102, 241, 0.8),
+            0 0 100px rgba(139, 92, 246, 0.5),
+            0 0 150px rgba(168, 85, 247, 0.4);
+    }
+}
+
+@keyframes portalCenterZoom {
+    0% {
+        transform: scale(1);
+    }
+
+    70% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(50);
+    }
+}
+
+.portal-stars {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(2px 2px at 10% 20%, #fff, transparent),
+        radial-gradient(2px 2px at 30% 40%, #fff, transparent),
+        radial-gradient(1px 1px at 50% 10%, #fff, transparent),
+        radial-gradient(2px 2px at 70% 60%, #fff, transparent),
+        radial-gradient(1px 1px at 90% 30%, #fff, transparent),
+        radial-gradient(2px 2px at 20% 80%, #fff, transparent),
+        radial-gradient(1px 1px at 60% 90%, #fff, transparent),
+        radial-gradient(2px 2px at 80% 10%, #fff, transparent);
+    animation: starsZoom 1.2s ease-in-out forwards;
+}
+
+@keyframes starsZoom {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
     }
 }

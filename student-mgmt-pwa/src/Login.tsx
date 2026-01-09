@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import SchoolIcon from '@mui/icons-material/School';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
 import './Login.css';
 
 interface LoginProps {
@@ -21,6 +23,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [termsAccepted, setTermsAccepted] = useState(false);
+    const [termsModalOpen, setTermsModalOpen] = useState(false);
 
     // Fallback to env-based auth for offline/legacy mode
     const envUsername = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
@@ -131,6 +135,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             return;
         }
 
+        if (!termsAccepted) {
+            setError('Please accept the Terms & Conditions to continue');
+            return;
+        }
+
         setIsLoading(true);
 
         try {
@@ -171,9 +180,15 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     };
 
     const handleBackToHome = () => {
-        const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
-        window.history.pushState({ path: newUrl }, '', newUrl);
-        window.location.reload();
+        // If this tab was opened from landing page, close it to return to landing
+        // Otherwise, navigate to the landing page
+        if (window.opener) {
+            window.close();
+        } else {
+            // Fallback: navigate to landing page (remove ?view=login)
+            const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.location.href = newUrl;
+        }
     };
 
     return (
@@ -334,10 +349,31 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                             />
                         </div>
 
+                        <div className="terms-checkbox">
+                            <label className="checkbox-container">
+                                <input
+                                    type="checkbox"
+                                    checked={termsAccepted}
+                                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                                />
+                                <span className="checkmark"></span>
+                                <span className="checkbox-text">
+                                    I accept the{' '}
+                                    <button
+                                        type="button"
+                                        className="terms-link"
+                                        onClick={() => setTermsModalOpen(true)}
+                                    >
+                                        Terms & Conditions
+                                    </button>
+                                </span>
+                            </label>
+                        </div>
+
                         {error && <div className="error">{error}</div>}
                         {success && <div className="success">{success}</div>}
 
-                        <button type="submit" className="submit-btn signup" disabled={isLoading}>
+                        <button type="submit" className="submit-btn signup" disabled={isLoading || !termsAccepted}>
                             {isLoading ? <span className="loader"></span> : 'Create Account →'}
                         </button>
                     </form>
@@ -345,6 +381,148 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
                 <p className="footer">Powered by <strong>ScholarBase</strong></p>
             </div>
+
+            {/* Terms and Conditions Modal */}
+            {termsModalOpen && (
+                <div className="terms-modal-overlay" onClick={() => setTermsModalOpen(false)}>
+                    <div className="terms-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close-btn" onClick={() => setTermsModalOpen(false)}>
+                            <CloseIcon />
+                        </button>
+
+                        <div className="modal-header">
+                            <div className="modal-icon">
+                                <DescriptionIcon />
+                            </div>
+                            <h2>Terms & Conditions</h2>
+                            <p>Last updated: January 2026</p>
+                        </div>
+
+                        <div className="terms-modal-content">
+                            <div className="terms-section">
+                                <h3>1. Welcome to ScholarBase</h3>
+                                <p>
+                                    Thank you for choosing ScholarBase! By joining our platform, you become part of
+                                    India's growing community of modern educational institutions. These terms ensure
+                                    a seamless and secure experience for everyone.
+                                </p>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>2. What We Offer You</h3>
+                                <p>ScholarBase empowers your institution with:</p>
+                                <ul>
+                                    <li>✨ Intuitive student record management</li>
+                                    <li>💳 Hassle-free fee collection</li>
+                                    <li>📱 Automated SMS and email notifications</li>
+                                    <li>📄 Professional receipt generation</li>
+                                    <li>📊 Powerful analytics and insights</li>
+                                </ul>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>3. Our Partnership Together</h3>
+                                <p>To ensure the best experience, we kindly ask that you:</p>
+                                <ul>
+                                    <li>Share accurate information so we can serve you better</li>
+                                    <li>Keep your login credentials secure for your protection</li>
+                                    <li>Use our platform to enhance your school's operations</li>
+                                    <li>Reach out to our support team whenever you need help</li>
+                                </ul>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>4. Your Data, Your Control</h3>
+                                <p>
+                                    <strong>Your data belongs entirely to you.</strong> All student records and institutional
+                                    data remain 100% under your ownership. We never share or sell your information.
+                                    Your trust is our priority, protected with bank-grade 256-bit encryption.
+                                </p>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>5. Our Commitment to Reliability</h3>
+                                <p>We understand your school depends on us. That's why we:</p>
+                                <ul>
+                                    <li>Maintain 99.9% uptime for seamless operations</li>
+                                    <li>Notify you in advance of any scheduled improvements</li>
+                                    <li>Continuously enhance features based on your feedback</li>
+                                    <li>Provide dedicated support to resolve concerns quickly</li>
+                                </ul>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>6. Flexible & Transparent Pricing</h3>
+                                <p>We believe in complete transparency:</p>
+                                <ul>
+                                    <li>Choose flexible monthly or discounted yearly plans</li>
+                                    <li>Start with our free tier to explore the platform</li>
+                                    <li>Upgrade or downgrade anytime based on your needs</li>
+                                    <li>Receive 30-day advance notice for any pricing updates</li>
+                                </ul>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>7. Innovation & Excellence</h3>
+                                <p>
+                                    ScholarBase is built with cutting-edge technology. We continuously innovate to
+                                    bring you new features, improved performance, and enhanced security designed
+                                    for Indian schools.
+                                </p>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>8. Our Promise to You</h3>
+                                <p>
+                                    We are fully committed to delivering a reliable service. Your satisfaction and
+                                    success remain our top priority. We work tirelessly to ensure you receive the
+                                    value you deserve.
+                                </p>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>9. Freedom & Flexibility</h3>
+                                <p>You have complete control over your subscription:</p>
+                                <ul>
+                                    <li>Cancel anytime with no questions asked</li>
+                                    <li>Export all your data easily within 30 days</li>
+                                    <li>Keep access until your current billing period ends</li>
+                                    <li>Return anytime – we'll welcome you back!</li>
+                                </ul>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>10. Legal Framework</h3>
+                                <p>
+                                    These terms are governed by the laws of India, ensuring your rights are protected
+                                    under established legal frameworks.
+                                </p>
+                            </div>
+
+                            <div className="terms-section">
+                                <h3>11. We're Here for You</h3>
+                                <p>
+                                    Have questions? Our friendly support team is always ready to help!
+                                    Reach out at <strong>aryanshashi31@gmail.com</strong> – we typically respond
+                                    within 24 hours.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="terms-modal-footer">
+                            <button
+                                className="accept-terms-btn"
+                                onClick={() => {
+                                    setTermsAccepted(true);
+                                    setTermsModalOpen(false);
+                                }}
+                            >
+                                I Accept Terms & Conditions
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

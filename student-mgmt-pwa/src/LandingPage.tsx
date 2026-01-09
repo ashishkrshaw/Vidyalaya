@@ -18,6 +18,7 @@ import SmsIcon from '@mui/icons-material/Sms';
 import DescriptionIcon from '@mui/icons-material/Description';
 import GroupsIcon from '@mui/icons-material/Groups';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
+import TouchAppIcon from '@mui/icons-material/TouchApp';
 import StorageIcon from '@mui/icons-material/Storage';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -38,7 +39,7 @@ interface LandingPageProps {
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
-    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [activeSection, setActiveSection] = useState('home');
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -51,6 +52,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
     const [contactModalOpen, setContactModalOpen] = useState(false);
     const [contactForm, setContactForm] = useState({ name: '', email: '', subject: '', message: '' });
     const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+
+    // About Us, Privacy Policy & Terms and Conditions Modal State
+    const [aboutUsModalOpen, setAboutUsModalOpen] = useState(false);
+    const [privacyPolicyModalOpen, setPrivacyPolicyModalOpen] = useState(false);
+    const [termsModalOpen, setTermsModalOpen] = useState(false);
+
+    // Portal Transition State
+    const [portalTransitioning, setPortalTransitioning] = useState(false);
 
     useEffect(() => {
         localStorage.setItem('landingTheme', theme);
@@ -93,6 +102,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 
     const toggleTheme = () => {
         setTheme(t => t === 'light' ? 'dark' : 'light');
+    };
+
+    // Open login page in a new tab with portal transition effect
+    const openLoginInNewTab = () => {
+        setPortalTransitioning(true);
+        const loginUrl = window.location.origin + window.location.pathname + '?view=login';
+
+        // Show portal effect for 1.2s then open new tab
+        setTimeout(() => {
+            window.open(loginUrl, '_blank');
+            setPortalTransitioning(false);
+        }, 1200);
     };
 
     const scrollToSection = (id: string, e: React.MouseEvent) => {
@@ -284,8 +305,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         {
             name: "Professional",
             description: "For growing schools",
-            monthlyPrice: 249,
-            yearlyPrice: 174,
+            monthlyPrice: 350,
+            yearlyPrice: 280,
             students: "Up to 500",
             features: [
                 { name: "Student Management", included: true },
@@ -303,8 +324,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
         {
             name: "Enterprise",
             description: "For large institutions",
-            monthlyPrice: 499,
-            yearlyPrice: 349,
+            monthlyPrice: 600,
+            yearlyPrice: 480,
             students: "Unlimited",
             features: [
                 { name: "Student Management", included: true },
@@ -374,7 +395,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             <button className="nav-theme-btn" onClick={toggleTheme} title="Toggle theme">
                                 {theme === 'light' ? <Brightness4Icon /> : <Brightness7Icon />}
                             </button>
-                            <button className="nav-login-btn" onClick={onStart}>
+                            <button className="nav-login-btn" onClick={openLoginInNewTab}>
                                 <LoginIcon /> Admin Portal
                             </button>
                         </div>
@@ -426,7 +447,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                 </div>
                             </div>
                             <div className="hero-actions">
-                                <button className="cta-btn primary" onClick={onStart}>
+                                <button className="cta-btn primary" onClick={openLoginInNewTab}>
                                     Start Free Trial
                                     <ArrowForwardIcon />
                                 </button>
@@ -722,7 +743,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                 <div className="toggle-thumb"></div>
                             </button>
                             <span className={billingCycle === 'yearly' ? 'active' : ''}>
-                                Yearly <span className="save-badge">Save 30%</span>
+                                Yearly <span className="save-badge">Save 20%</span>
                             </span>
                         </div>
 
@@ -751,7 +772,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                             </li>
                                         ))}
                                     </ul>
-                                    <button className={`plan-cta ${plan.popular ? 'primary' : 'secondary'}`} onClick={onStart}>
+                                    <button className={`plan-cta ${plan.popular ? 'primary' : 'secondary'}`} onClick={openLoginInNewTab}>
                                         {plan.cta}
                                     </button>
                                 </div>
@@ -781,6 +802,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                 <h3>Dedicated Support</h3>
                                 <p>WhatsApp, email, phone. We speak Hindi!</p>
                             </div>
+                            <div className="why-card">
+                                <TouchAppIcon className="why-icon" />
+                                <h3>Easy to Use</h3>
+                                <p>User-friendly UI designed for everyone.</p>
+                            </div>
                         </div>
                     </section>
 
@@ -789,7 +815,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <div className="cta-container">
                             <h2>Ready to Transform Your Fee Collection?</h2>
                             <p>Join 50+ schools that have automated their fee management.</p>
-                            <button className="cta-btn primary large" onClick={onStart}>
+                            <button className="cta-btn primary large" onClick={openLoginInNewTab}>
                                 Get Started Free
                                 <ArrowForwardIcon />
                             </button>
@@ -814,6 +840,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                                     <a href="#features">Features</a>
                                     <a href="#pricing">Pricing</a>
                                     <a href="#how-it-works">How It Works</a>
+                                </div>
+                                <div className="link-group">
+                                    <h4>Company</h4>
+                                    <button onClick={() => setAboutUsModalOpen(true)} className="footer-contact-btn">About Us</button>
+                                    <button onClick={() => setPrivacyPolicyModalOpen(true)} className="footer-contact-btn">Privacy Policy</button>
+                                    <button onClick={() => setTermsModalOpen(true)} className="footer-contact-btn">Terms & Conditions</button>
                                 </div>
                                 <div className="link-group">
                                     <h4>Support</h4>
@@ -927,6 +959,354 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             </>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* About Us Modal */}
+            {aboutUsModalOpen && (
+                <div className="contact-modal-overlay" onClick={() => setAboutUsModalOpen(false)}>
+                    <div className="info-modal about-us-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close-btn" onClick={() => setAboutUsModalOpen(false)}>
+                            <CloseIcon />
+                        </button>
+
+                        <div className="modal-header">
+                            <div className="modal-icon about-icon">
+                                <SchoolIcon />
+                            </div>
+                            <h2>About ScholarBase</h2>
+                        </div>
+
+                        <div className="info-modal-content">
+                            <div className="about-section">
+                                <h3>Our Mission</h3>
+                                <p>
+                                    ScholarBase is India's first secure school management platform designed to revolutionize
+                                    how educational institutions handle fee collection and student record management. We aim
+                                    to simplify administrative tasks so schools can focus on what matters most – education.
+                                </p>
+                            </div>
+
+                            <div className="about-section">
+                                <h3>What We Offer</h3>
+                                <ul className="about-list">
+                                    <li>🎯 Seamless online fee collection with multiple payment options</li>
+                                    <li>📱 Mobile-friendly parent portal for easy payments</li>
+                                    <li>📊 Real-time analytics and comprehensive reporting</li>
+                                    <li>🔐 Bank-grade security with 256-bit encryption</li>
+                                    <li>📧 Automated SMS and email notifications</li>
+                                    <li>📄 Professional PDF receipt generation</li>
+                                </ul>
+                            </div>
+
+                            <div className="about-section">
+                                <h3>Why Choose Us</h3>
+                                <p>
+                                    Built by educators for educators, ScholarBase understands the unique challenges faced by
+                                    Indian schools. Our platform works offline, runs lightning fast even on slow internet,
+                                    and keeps your data completely under your control with local storage options.
+                                </p>
+                            </div>
+
+                            <div className="about-section team-section">
+                                <h3>Our Team</h3>
+                                <p>
+                                    Developed with ❤️ by <strong>Ashish & Shashi</strong>, two passionate developers dedicated
+                                    to making school management easier for institutions across India.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Privacy Policy Modal */}
+            {privacyPolicyModalOpen && (
+                <div className="contact-modal-overlay" onClick={() => setPrivacyPolicyModalOpen(false)}>
+                    <div className="info-modal privacy-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close-btn" onClick={() => setPrivacyPolicyModalOpen(false)}>
+                            <CloseIcon />
+                        </button>
+
+                        <div className="modal-header">
+                            <div className="modal-icon privacy-icon">
+                                <SecurityIcon />
+                            </div>
+                            <h2>Privacy Policy</h2>
+                            <p>Last updated: January 2026</p>
+                        </div>
+
+                        <div className="info-modal-content privacy-content">
+                            <div className="privacy-section">
+                                <h3>1. Information We Collect</h3>
+                                <p>
+                                    ScholarBase collects only minimal school administrative information to provide our services:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>School name and contact details</li>
+                                    <li>School branding information (logo, address)</li>
+                                    <li>Administrator account credentials</li>
+                                    <li>Payment gateway configuration settings</li>
+                                </ul>
+                                <p style={{ marginTop: '12px', fontWeight: 500, color: 'var(--primary)' }}>
+                                    📌 Important: All student and parent data (names, contact info, fee records, academic details)
+                                    are stored locally on your school's devices. We do NOT receive or have access to any
+                                    student or parent information.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>2. Local Data Storage</h3>
+                                <p>
+                                    ScholarBase is designed with a privacy-first approach. All sensitive data including:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>Student records and academic information</li>
+                                    <li>Parent contact details</li>
+                                    <li>Fee payment history</li>
+                                    <li>Transaction records</li>
+                                </ul>
+                                <p style={{ marginTop: '12px' }}>
+                                    This data is stored entirely on your local devices using IndexedDB. Your school retains
+                                    complete ownership and control over this information.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>3. Data Security</h3>
+                                <p>
+                                    We implement industry-standard security measures including 256-bit SSL encryption
+                                    for any data transmission, secure payment gateway integration, and local data encryption.
+                                    Since student and parent data never leaves your devices, you maintain complete control.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>4. Third-Party Services</h3>
+                                <p>
+                                    When processing online payments, transaction data is shared directly between your
+                                    school and the payment processor (like Paytm). ScholarBase does not store or have
+                                    access to payment card details or transaction records on our servers.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>5. Your Rights</h3>
+                                <p>As a school administrator, you have the right to:</p>
+                                <ul className="privacy-list">
+                                    <li>Access and modify your school's account information</li>
+                                    <li>Export all local data in standard formats</li>
+                                    <li>Delete your account and all associated school settings</li>
+                                    <li>Manage all student and parent data locally</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section" style={{ borderTop: '2px solid var(--primary)', paddingTop: '24px', marginTop: '24px' }}>
+                                <h3 style={{ color: 'var(--primary)', fontSize: '18px' }}>Cancellation & Refund Policy</h3>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>6. Subscription Cancellation</h3>
+                                <p>
+                                    You may cancel your ScholarBase subscription at any time. Upon cancellation:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>Your subscription will remain active until the end of the current billing period</li>
+                                    <li>You will retain access to all features until the period ends</li>
+                                    <li>No automatic renewals will occur after cancellation</li>
+                                    <li>Your data will remain accessible for 30 days after cancellation</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>7. Refund Eligibility</h3>
+                                <p>Refunds are available under the following conditions:</p>
+                                <ul className="privacy-list">
+                                    <li><strong>Monthly Subscription:</strong> Current month charges are refundable if requested within 7 days of subscription renewal</li>
+                                    <li><strong>7-Day Money-Back Guarantee:</strong> Full refund within 7 days of first payment</li>
+                                    <li><strong>Service Issues:</strong> Refund for documented service outages exceeding 24 hours</li>
+                                    <li><strong>Billing Errors:</strong> Full refund for any incorrect charges</li>
+                                    <li><strong>Yearly Plans:</strong> Pro-rated refund available within first 30 days</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>8. Non-Refundable Items</h3>
+                                <p>The following are not eligible for refunds:</p>
+                                <ul className="privacy-list">
+                                    <li>Subscriptions after the 7-day trial period (monthly plans)</li>
+                                    <li>Partial month usage</li>
+                                    <li>Add-on services once activated</li>
+                                    <li>Custom development or integration work</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>9. Contact Us</h3>
+                                <p>
+                                    For any privacy concerns, data requests, cancellations or refunds, please contact us at{' '}
+                                    <strong>aryanshashi31@gmail.com</strong>. We respond to all inquiries within 48 hours.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Terms and Conditions Modal */}
+            {termsModalOpen && (
+                <div className="contact-modal-overlay" onClick={() => setTermsModalOpen(false)}>
+                    <div className="info-modal terms-modal" onClick={(e) => e.stopPropagation()}>
+                        <button className="modal-close-btn" onClick={() => setTermsModalOpen(false)}>
+                            <CloseIcon />
+                        </button>
+
+                        <div className="modal-header">
+                            <div className="modal-icon terms-icon">
+                                <DescriptionIcon />
+                            </div>
+                            <h2>Terms & Conditions</h2>
+                            <p>Last updated: January 2026</p>
+                        </div>
+
+                        <div className="info-modal-content terms-content">
+                            <div className="privacy-section">
+                                <h3>1. Welcome to ScholarBase</h3>
+                                <p>
+                                    Thank you for choosing ScholarBase! By joining our platform, you become part of
+                                    India's growing community of modern educational institutions. These terms ensure
+                                    a seamless and secure experience for everyone. We're committed to supporting
+                                    your school's success every step of the way.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>2. What We Offer You</h3>
+                                <p>
+                                    ScholarBase empowers your institution with a comprehensive suite of tools designed
+                                    to simplify school management:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>✨ Intuitive student record management with secure database</li>
+                                    <li>💳 Hassle-free fee collection with multiple payment options</li>
+                                    <li>📱 Automated SMS and email notifications to keep parents informed</li>
+                                    <li>📄 Professional receipt generation with your school branding</li>
+                                    <li>📊 Powerful analytics and real-time dashboard insights</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>3. Our Partnership Together</h3>
+                                <p>To ensure the best experience for your institution, we kindly ask that you:</p>
+                                <ul className="privacy-list">
+                                    <li>Share accurate information so we can serve you better</li>
+                                    <li>Keep your login credentials secure for your protection</li>
+                                    <li>Use our platform to enhance your school's operations</li>
+                                    <li>Reach out to our support team whenever you need assistance</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>4. Your Data, Your Control</h3>
+                                <p>
+                                    <strong>Your data belongs entirely to you.</strong> All student records, fee information,
+                                    and institutional data remain 100% under your ownership. We never share, sell, or claim
+                                    any rights to your information. Your trust is our priority, and we safeguard it with
+                                    bank-grade 256-bit encryption.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>5. Our Commitment to Reliability</h3>
+                                <p>
+                                    We understand that your school depends on uninterrupted access. That's why we:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>Maintain 99.9% uptime for seamless operations</li>
+                                    <li>Notify you in advance of any scheduled improvements</li>
+                                    <li>Continuously enhance features based on your feedback</li>
+                                    <li>Provide dedicated support to resolve any concerns quickly</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>6. Flexible & Transparent Pricing</h3>
+                                <p>
+                                    We believe in complete transparency with no hidden charges:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>Choose from flexible monthly or discounted yearly plans</li>
+                                    <li>Start with our free tier to explore the platform</li>
+                                    <li>Upgrade or downgrade anytime based on your needs</li>
+                                    <li>Receive 30-day advance notice for any pricing updates</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>7. Innovation & Excellence</h3>
+                                <p>
+                                    ScholarBase is built with cutting-edge technology to deliver the best experience.
+                                    We continuously innovate to bring you new features, improved performance, and
+                                    enhanced security. Our platform represents years of dedicated development focused
+                                    on the unique needs of Indian schools.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>8. Our Promise to You</h3>
+                                <p>
+                                    We are fully committed to delivering a reliable service. While we work tirelessly
+                                    to prevent any issues, in the rare event of service disruption, our liability is
+                                    limited to ensuring you receive the value you've paid for. Your satisfaction and
+                                    success remain our top priority.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>9. Freedom & Flexibility</h3>
+                                <p>
+                                    We believe in giving you complete control over your subscription:
+                                </p>
+                                <ul className="privacy-list">
+                                    <li>Cancel anytime with no questions asked</li>
+                                    <li>Export all your data easily within 30 days</li>
+                                    <li>Keep access until your current billing period ends</li>
+                                    <li>Return anytime – we'll welcome you back!</li>
+                                </ul>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>10. Legal Framework</h3>
+                                <p>
+                                    These terms are governed by the laws of India, ensuring your rights are protected
+                                    under established legal frameworks. We operate with full compliance to provide you
+                                    with a trustworthy and legally sound service.
+                                </p>
+                            </div>
+
+                            <div className="privacy-section">
+                                <h3>11. We're Here for You</h3>
+                                <p>
+                                    Have questions or need assistance? Our friendly support team is always ready to help!
+                                    Reach out to us at <strong>aryanshashi31@gmail.com</strong> – we typically respond
+                                    within 24 hours and are committed to resolving any concerns you may have.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Portal Transition Overlay - Entering Universe Effect */}
+            {portalTransitioning && (
+                <div className="portal-transition-overlay">
+                    <div className="portal-ring ring-1"></div>
+                    <div className="portal-ring ring-2"></div>
+                    <div className="portal-ring ring-3"></div>
+                    <div className="portal-center">
+                        <SchoolIcon style={{ fontSize: 48, color: 'white' }} />
+                    </div>
+                    <div className="portal-stars"></div>
                 </div>
             )}
         </div>
