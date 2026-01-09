@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Debug Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        h2 {
+            color: #666;
+            margin-top: 0;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔐 MFA Setup Debug Tool</h1>
+
+    <div class="card">
+        <h2>1. Check Login Status</h2>
+        <div id="loginStatus">Checking...</div>
+        <button onclick="checkLogin()">Refresh Status</button>
+    </div>
+
+    <div class="card">
+        <h2>2. Test API Token</h2>
+        <div id="apiStatus">Click button to test...</div>
+        <button onclick="testAPI()">Test MFA Setup API</button>
+    </div>
+
+    <div class="card">
+        <h2>3. Quick Fixes</h2>
+        <button onclick="window.location.href='http://localhost:5173/?view=login'">Go to Login Page</button>
+        <button onclick="clearAndLogin()">Clear Storage & Login</button>
+    </div>
+
+    <div class="card">
+        <h2>Debug Info</h2>
+        <pre id="debugInfo"></pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        function checkLogin() {
+            const token = localStorage.getItem('accessToken');
+            const schoolInfo = localStorage.getItem('schoolInfo');
+            const loginTime = localStorage.getItem('loginTime');
+
+            let html = '';
+            let debugInfo = {};
+
+            if (!token) {
+                html = '<div class="status error">❌ No access token found - You are NOT logged in</div>';
+                html += '<p>Please <a href="http://localhost:5173/?view=login">login first</a></p>';
+                debugInfo.token = 'MISSING';
+            } else {
+                html = '<div class="status success">✅ Access token found</div>';
+                debugInfo.token = token.substring(0, 30) + '...';
+
+                // Try to decode JWT
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        const exp = payload.exp * 1000; // Convert to milliseconds
+                        const now = Date.now();
+
+                        debugInfo.tokenExpiry = new Date(exp).toLocaleString();
+                        debugInfo.tokenSubject = payload.sub;
+
+                        if (exp < now) {
+                            html += '<div class="status error">❌ Token is EXPIRED</div>';
+                            html += `<p>Expired: ${new Date(exp).toLocaleString()}</p>`;
+                            debugInfo.tokenValid = false;
+                        } else {
+                            html += '<div class="status success">✅ Token is valid</div>';
+                            html += `<p>Expires: ${new Date(exp).toLocaleString()}</p>`;
+                            debugInfo.tokenValid = true;
+                        }
+                    }
+                } catch (e) {
+                    html += '<div class="status error">❌ Token format invalid</div>';
+                    debugInfo.tokenError = e.message;
+                }
+            }
+
+            if (schoolInfo) {
+                const info = JSON.parse(schoolInfo);
+                html += '<div class="status success">✅ School info found</div>';
+                html += `<p>School: <code>${info.name}</code></p>`;
+                html += `<p>Email: <code>${info.email}</code></p>`;
+                debugInfo.schoolInfo = info;
+            } else {
+                html += '<div class="status warning">⚠️ No school info in storage</div>';
+                debugInfo.schoolInfo = 'MISSING';
+            }
+
+            if (loginTime) {
+                html += `<p>Last login: ${new Date(loginTime).toLocaleString()}</p>`;
+                debugInfo.loginTime = loginTime;
+            }
+
+            document.getElementById('loginStatus').innerHTML = html;
+            document.getElementById('debugInfo').textContent = JSON.stringify(debugInfo, null, 2);
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('accessToken');
+
+            if (!token) {
+                document.getElementById('apiStatus').innerHTML =
+                    '<div class="status error">❌ Cannot test - no token found</div>';
+                return;
+            }
+
+            document.getElementById('apiStatus').innerHTML =
+                '<div class="status warning">Testing API...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/mfa/totp/setup`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                let html = '';
+                if (response.ok) {
+                    html = '<div class="status success">✅ API call successful!</div>';
+                    html += '<p>MFA setup is working correctly. You can set up 2FA now.</p>';
+                    const data = await response.json();
+                    document.getElementById('debugInfo').textContent += '\n\nAPI Response:\n' + JSON.stringify(data, null, 2);
+                } else {
+                    const errorText = await response.text();
+                    html = `<div class="status error">❌ API returned ${response.status}: ${response.statusText}</div>`;
+                    html += `<pre>${errorText}</pre>`;
+
+                    if (response.status === 401) {
+                        html += '<p><strong>Solution:</strong> Your session expired. Please:</p>';
+                        html += '<ol><li>Click "Clear Storage & Login" below</li><li>Log in again</li><li>Try MFA setup again</li></ol>';
+                    }
+                }
+                document.getElementById('apiStatus').innerHTML = html;
+            } catch (error) {
+                document.getElementById('apiStatus').innerHTML =
+                    `<div class="status error">❌ Network error: ${error.message}</div>`;
+            }
+        }
+
+        function clearAndLogin() {
+            if (confirm('This will clear your current session. Continue?')) {
+                localStorage.clear();
+                window.location.href = 'http://localhost:5173/?view=login';
+            }
+        }
+
+        // Auto-check on load
+        checkLogin();
+    </script>
+</body>
+
+</html>

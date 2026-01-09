@@ -26,6 +26,12 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [termsModalOpen, setTermsModalOpen] = useState(false);
 
+    // MFA State
+    const [showMfaVerify, setShowMfaVerify] = useState(false);
+    const [mfaType, setMfaType] = useState('totp');
+    const [otp, setOtp] = useState('');
+    const [mfaEmail, setMfaEmail] = useState('');
+
     // Fallback to env-based auth for offline/legacy mode
     const envUsername = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
     const envPassword = import.meta.env.VITE_ADMIN_PASSWORD || 'Admin@123';
@@ -75,9 +81,24 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
             if (!response.ok) {
                 if (response.status === 403) {
-                    setError(data.detail || 'Account not verified');
+                    if (data.mfa_required) {
+                        setMfaEmail(data.email || email);
+                        setMfaType(data.mfa_type || 'totp');
+                        setShowMfaVerify(true);
+                        setIsLoading(false);
+                        return;
+                    }
+                    setError(typeof data.detail === 'string' ? data.detail : 'Account not verified');
                 } else {
-                    setError(data.detail || 'Login failed');
+                    let errorMessage = data.detail || 'Login failed';
+                    if (typeof errorMessage !== 'string') {
+                        if (Array.isArray(errorMessage)) {
+                            errorMessage = errorMessage.map((err: any) => err.msg).join(', ');
+                        } else if (typeof errorMessage === 'object') {
+                            errorMessage = JSON.stringify(errorMessage);
+                        }
+                    }
+                    setError(errorMessage);
                 }
                 setIsLoading(false);
                 generateCaptcha();
@@ -106,6 +127,40 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             }
         }
 
+        setIsLoading(false);
+    };
+
+    const handleVerifyMFA = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+            const response = await fetch(`${API_BASE}/api/mfa/totp/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: mfaEmail, code: otp })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.detail || 'Verification failed');
+                setIsLoading(false);
+                return;
+            }
+
+            // Success
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('accessToken', data.access_token);
+            localStorage.setItem('schoolName', data.school.name);
+            localStorage.setItem('schoolId', data.school.id);
+            onLogin(data.school.name, data.access_token);
+
+        } catch (e) {
+            console.error(e);
+            setError('Connection error');
+        }
         setIsLoading(false);
     };
 
@@ -157,7 +212,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                setError(data.detail || 'Registration failed');
+                let errorMessage = data.detail || 'Registration failed';
+
+                // Handle Pydantic validation errors (array of objects)
+                if (typeof errorMessage !== 'string') {
+                    if (Array.isArray(errorMessage)) {
+                        errorMessage = errorMessage.map((err: any) => err.msg).join(', ');
+                    } else if (typeof errorMessage === 'object') {
+                        errorMessage = JSON.stringify(errorMessage);
+                    }
+                }
+
+                setError(errorMessage);
                 setIsLoading(false);
                 generateCaptcha();
                 return;
@@ -221,160 +287,202 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     <h1>ScholarBase</h1>
                 </div>
 
-                {/* Tab Switcher */}
-                <div className="login-tabs">
-                    <button
-                        className={`tab ${activeTab === 'login' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('login'); setError(''); setSuccess(''); }}
-                    >
-                        Login
-                    </button>
-                    <button
-                        className={`tab ${activeTab === 'signup' ? 'active' : ''}`}
-                        onClick={() => { setActiveTab('signup'); setError(''); setSuccess(''); }}
-                    >
-                        Create Account
-                    </button>
-                    <div className={`tab-indicator ${activeTab}`}></div>
-                </div>
+                {!showMfaVerify ? (
+                    <>
+                        {/* Tab Switcher */}
+                        <div className="login-tabs">
+                            <button
+                                className={`tab ${activeTab === 'login' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('login'); setError(''); setSuccess(''); }}
+                            >
+                                Login
+                            </button>
+                            <button
+                                className={`tab ${activeTab === 'signup' ? 'active' : ''}`}
+                                onClick={() => { setActiveTab('signup'); setError(''); setSuccess(''); }}
+                            >
+                                Create Account
+                            </button>
+                            <div className={`tab-indicator ${activeTab}`}></div>
+                        </div>
 
-                {/* Login Form */}
-                {activeTab === 'login' && (
-                    <form onSubmit={handleLogin} className="login-form">
-                        <div className="field">
-                            <input
-                                type="text"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="Email / Username"
-                                autoComplete="email"
-                            />
+                        {/* Login Form */}
+                        {activeTab === 'login' && (
+                            <form onSubmit={handleLogin} className="login-form">
+                                <div className="field">
+                                    <input
+                                        type="text"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="Email / Username"
+                                        autoComplete="email"
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        placeholder="Password"
+                                        autoComplete="current-password"
+                                    />
+                                </div>
+
+                                <div className="captcha-row">
+                                    <div className="captcha-box">
+                                        <span>{captcha}</span>
+                                        <button type="button" onClick={generateCaptcha}>↻</button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={captchaInput}
+                                        onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
+                                        placeholder="Enter code"
+                                        maxLength={5}
+                                    />
+                                </div>
+
+                                {error && <div className="error">{error}</div>}
+                                {success && <div className="success">{success}</div>}
+
+                                <button type="submit" className="submit-btn" disabled={isLoading}>
+                                    {isLoading ? <span className="loader"></span> : 'Sign In →'}
+                                </button>
+                            </form>
+                        )}
+
+                        {/* Signup Form */}
+                        {activeTab === 'signup' && (
+                            <form onSubmit={handleSignup} className="login-form">
+                                <div className="field">
+                                    <input
+                                        type="text"
+                                        value={schoolName}
+                                        onChange={e => setSchoolName(e.target.value)}
+                                        placeholder="School Name *"
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="Email Address *"
+                                        autoComplete="email"
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <input
+                                        type="tel"
+                                        value={phone}
+                                        onChange={e => setPhone(e.target.value)}
+                                        placeholder="Phone Number *"
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <input
+                                        type="password"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        placeholder="Password (min 6 chars) *"
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <input
+                                        type="password"
+                                        value={confirmPassword}
+                                        onChange={e => setConfirmPassword(e.target.value)}
+                                        placeholder="Confirm Password *"
+                                        autoComplete="new-password"
+                                    />
+                                </div>
+
+                                <div className="captcha-row">
+                                    <div className="captcha-box">
+                                        <span>{captcha}</span>
+                                        <button type="button" onClick={generateCaptcha}>↻</button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={captchaInput}
+                                        onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
+                                        placeholder="Enter code"
+                                        maxLength={5}
+                                    />
+                                </div>
+
+                                <div className="terms-checkbox">
+                                    <label className="checkbox-container">
+                                        <input
+                                            type="checkbox"
+                                            checked={termsAccepted}
+                                            onChange={(e) => setTermsAccepted(e.target.checked)}
+                                        />
+                                        <span className="checkmark"></span>
+                                        <span className="checkbox-text">
+                                            I accept the{' '}
+                                            <button
+                                                type="button"
+                                                className="terms-link"
+                                                onClick={() => setTermsModalOpen(true)}
+                                            >
+                                                Terms & Conditions
+                                            </button>
+                                        </span>
+                                    </label>
+                                </div>
+
+                                {error && <div className="error">{error}</div>}
+                                {success && <div className="success">{success}</div>}
+
+                                <button type="submit" className="submit-btn signup" disabled={isLoading || !termsAccepted}>
+                                    {isLoading ? <span className="loader"></span> : 'Create Account →'}
+                                </button>
+                            </form>
+                        )}
+                    </>
+                ) : (
+                    // MFA Verification View
+                    <form onSubmit={handleVerifyMFA} className="login-form">
+                        <div style={{ textAlign: 'center', marginBottom: 20, color: 'white' }}>
+                            <h3>Two-Step Verification</h3>
+                            <p style={{ opacity: 0.8, fontSize: '0.9rem' }}>Enter the 6-digit code from your authenticator app</p>
                         </div>
 
                         <div className="field">
                             <input
-                                type="password"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="Password"
-                                autoComplete="current-password"
-                            />
-                        </div>
-
-                        <div className="captcha-row">
-                            <div className="captcha-box">
-                                <span>{captcha}</span>
-                                <button type="button" onClick={generateCaptcha}>↻</button>
-                            </div>
-                            <input
                                 type="text"
-                                value={captchaInput}
-                                onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
-                                placeholder="Enter code"
-                                maxLength={5}
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value)}
+                                placeholder="000 000"
+                                style={{
+                                    fontSize: '1.5rem',
+                                    textAlign: 'center',
+                                    letterSpacing: '5px'
+                                }}
+                                maxLength={6}
+                                autoFocus
                             />
                         </div>
 
                         {error && <div className="error">{error}</div>}
-                        {success && <div className="success">{success}</div>}
 
                         <button type="submit" className="submit-btn" disabled={isLoading}>
-                            {isLoading ? <span className="loader"></span> : 'Sign In →'}
+                            {isLoading ? <span className="loader"></span> : 'Verify'}
                         </button>
-                    </form>
-                )}
-
-                {/* Signup Form */}
-                {activeTab === 'signup' && (
-                    <form onSubmit={handleSignup} className="login-form">
-                        <div className="field">
-                            <input
-                                type="text"
-                                value={schoolName}
-                                onChange={e => setSchoolName(e.target.value)}
-                                placeholder="School Name *"
-                            />
-                        </div>
-
-                        <div className="field">
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                placeholder="Email Address *"
-                                autoComplete="email"
-                            />
-                        </div>
-
-                        <div className="field">
-                            <input
-                                type="tel"
-                                value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                placeholder="Phone Number *"
-                            />
-                        </div>
-
-                        <div className="field">
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                placeholder="Password (min 6 chars) *"
-                                autoComplete="new-password"
-                            />
-                        </div>
-
-                        <div className="field">
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={e => setConfirmPassword(e.target.value)}
-                                placeholder="Confirm Password *"
-                                autoComplete="new-password"
-                            />
-                        </div>
-
-                        <div className="captcha-row">
-                            <div className="captcha-box">
-                                <span>{captcha}</span>
-                                <button type="button" onClick={generateCaptcha}>↻</button>
-                            </div>
-                            <input
-                                type="text"
-                                value={captchaInput}
-                                onChange={e => setCaptchaInput(e.target.value.toUpperCase())}
-                                placeholder="Enter code"
-                                maxLength={5}
-                            />
-                        </div>
-
-                        <div className="terms-checkbox">
-                            <label className="checkbox-container">
-                                <input
-                                    type="checkbox"
-                                    checked={termsAccepted}
-                                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                                />
-                                <span className="checkmark"></span>
-                                <span className="checkbox-text">
-                                    I accept the{' '}
-                                    <button
-                                        type="button"
-                                        className="terms-link"
-                                        onClick={() => setTermsModalOpen(true)}
-                                    >
-                                        Terms & Conditions
-                                    </button>
-                                </span>
-                            </label>
-                        </div>
-
-                        {error && <div className="error">{error}</div>}
-                        {success && <div className="success">{success}</div>}
-
-                        <button type="submit" className="submit-btn signup" disabled={isLoading || !termsAccepted}>
-                            {isLoading ? <span className="loader"></span> : 'Create Account →'}
+                        <button
+                            type="button"
+                            className="text-btn"
+                            onClick={() => { setShowMfaVerify(false); setOtp(''); setError(''); }}
+                            style={{ marginTop: 10, color: '#aaa', background: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                            Cancel
                         </button>
                     </form>
                 )}

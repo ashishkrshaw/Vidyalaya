@@ -330,6 +330,8 @@ export interface SchoolInfo {
   phone: string;
   email: string;
   website: string;
+  mfa_enabled?: boolean;
+  mfa_type?: string;
 }
 
 export async function saveSchoolInfo(info: SchoolInfo) {

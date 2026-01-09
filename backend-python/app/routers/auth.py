@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import JSONResponse
 from datetime import datetime
 from bson import ObjectId
 
@@ -78,6 +79,18 @@ async def login(data: SchoolLogin):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Your account has been deactivated. Please contact support."
+        )
+    
+    # Check for MFA
+    if school.get("mfa_enabled"):
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": "MFA_REQUIRED",
+                "mfa_required": True,
+                "mfa_type": school.get("mfa_type", "totp"),
+                "email": school["email"] # Return email for the verify step
+            }
         )
     
     # Create token
