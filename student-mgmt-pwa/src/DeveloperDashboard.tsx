@@ -23,11 +23,41 @@ const DeveloperDashboard: React.FC = () => {
     const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'rejected' | 'deactivated'>('pending');
     const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-    const authenticate = () => {
-        if (secret) {
-            localStorage.setItem('developerSecret', secret);
-            setIsAuthenticated(true);
-            fetchSchools();
+    const authenticate = async () => {
+        if (!secret) return;
+
+        setLoading(true);
+        setError('');
+        localStorage.setItem('developerSecret', secret);
+
+        try {
+            const endpoint = filter === 'all' ? '/api/developer/all' : '/api/developer/pending';
+            const response = await fetch(`${API_BASE}${endpoint}`, {
+                headers: {
+                    'x-developer-secret': secret
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    localStorage.removeItem('developerSecret');
+                    setIsAuthenticated(false);
+                    setError('Invalid developer secret');
+                    setLoading(false);
+                    return;
+                }
+                throw new Error('Failed to fetch schools');
+            }
+
+            const data = await response.json();
+            setSchools(data);
+            setIsAuthenticated(true); // Only authenticate AFTER server validates
+        } catch (err: any) {
+            setError(err.message || 'Network error');
+            localStorage.removeItem('developerSecret');
+            setIsAuthenticated(false);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -46,7 +76,7 @@ const DeveloperDashboard: React.FC = () => {
             });
 
             if (!response.ok) {
-                if (response.status === 401) {
+                if (response.status === 401 || response.status === 403) {
                     setIsAuthenticated(false);
                     localStorage.removeItem('developerSecret');
                     setError('Invalid developer secret');
@@ -58,6 +88,7 @@ const DeveloperDashboard: React.FC = () => {
             const data = await response.json();
             setSchools(data);
         } catch (err: any) {
+
             setError(err.message || 'Failed to load schools');
         } finally {
             setLoading(false);

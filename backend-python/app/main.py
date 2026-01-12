@@ -17,20 +17,28 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
-    "https://edisapp.onrender.com", # Production Frontend
-    "https://nlkh.duckdns.org",     # Production Backend (Self)
-    "*"  # Allow all for development
+    "https://edisapp.onrender.com",
+    "https://nlkh.duckdns.org",
 ]
+
 
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "x-developer-secret",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+    ],
     expose_headers=["*"]
 )
+
 
 # Include routers
 app.include_router(auth.router)
