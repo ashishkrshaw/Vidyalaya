@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  api:
+    image: ashishkrshaw/vidyalaya-backend:latest
+    container_name: vidyalaya_backend
+    ports:
+      - "8000:8000"
+    # Load environment variables from .env file
+    env_file:
+      - .env
+    restart: always
+    # reliable logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

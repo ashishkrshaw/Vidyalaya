@@ -31,11 +31,13 @@ def decode_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         return payload
-    except JWTError:
+    except JWTError as e:
+        print(f"DEBUG: JWT Decode Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
         )
+
 
 async def get_current_school(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get full school document from database using JWT token.
@@ -59,7 +61,11 @@ async def get_current_school(credentials: HTTPAuthorizationCredentials = Depends
     
     school = await schools_collection.find_one({"_id": obj_id})
     if not school:
+        print(f"DEBUG: School not found for ID {school_id}")
         raise HTTPException(status_code=401, detail="School not found")
+        
+    print(f"DEBUG: Auth Success for {school.get('email')} (Status: {school.get('status')})")
+
     
     # CHECK SCHOOL STATUS - Block if not active
     school_status = school.get("status", "pending")

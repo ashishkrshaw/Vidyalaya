@@ -33,6 +33,9 @@ class SchoolResponse(BaseModel):
     status: SchoolStatus
     created_at: datetime
     verified_at: Optional[datetime] = None
+    mfa_enabled: bool = False
+    mfa_type: Optional[str] = None
+
 
 class SchoolUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=100)

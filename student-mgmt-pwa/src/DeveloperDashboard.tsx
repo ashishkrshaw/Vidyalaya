@@ -167,6 +167,33 @@ const DeveloperDashboard: React.FC = () => {
         }
     };
 
+    const handleResetPassword = async (schoolId: string, schoolName: string) => {
+        const newPassword = prompt(`Enter new password for ${schoolName}:`);
+        if (!newPassword) return;
+
+        setActionLoading(schoolId);
+        try {
+            const storedSecret = localStorage.getItem('developerSecret');
+            const response = await fetch(`${API_BASE}/api/developer/reset-password/${schoolId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-developer-secret': storedSecret || ''
+                },
+                body: JSON.stringify({ new_password: newPassword })
+            });
+
+            if (!response.ok) throw new Error('Password reset failed');
+            const data = await response.json();
+            alert(data.message);
+        } catch (err: any) {
+            alert(err.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+
     useEffect(() => {
         const storedSecret = localStorage.getItem('developerSecret');
         if (storedSecret) {
@@ -307,8 +334,11 @@ const DeveloperDashboard: React.FC = () => {
                                 <th>Registered</th>
                                 <th>Status</th>
                                 <th>Actions</th>
+                                <th>Password</th>
                             </tr>
                         </thead>
+
+
                         <tbody>
                             {filteredSchools.map(school => (
                                 <tr key={school.id}>
@@ -357,6 +387,16 @@ const DeveloperDashboard: React.FC = () => {
                                         {school.status === 'rejected' && (
                                             <span className="status-text">Rejected</span>
                                         )}
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="verify-btn"
+                                            onClick={() => handleResetPassword(school.id, school.name)}
+                                            disabled={actionLoading === school.id}
+                                            style={{ backgroundColor: '#F59E0B', marginLeft: '5px' }}
+                                        >
+                                            🔑 Reset Pwd
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

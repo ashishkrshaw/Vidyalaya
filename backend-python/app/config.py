@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     twilio_auth_token: Optional[str] = None
     twilio_whatsapp_from: str = "whatsapp:+14155238886"  # Sandbox number
     twilio_sms_from: Optional[str] = None  # Your Twilio phone number
+
+    # WebAuthn (Passkeys) Configuration
+    rp_id: str = "localhost"
+    rp_name: str = "Vidyalaya"
+    origin: str = "http://localhost:5173"
+
     
     class Config:
         env_file = ".env"
