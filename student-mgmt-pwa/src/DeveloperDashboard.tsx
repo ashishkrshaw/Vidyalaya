@@ -12,7 +12,7 @@ interface School {
     verified_at?: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://nlkh.duckdns.org';
 
 const DeveloperDashboard: React.FC = () => {
     const [schools, setSchools] = useState<School[]>([]);

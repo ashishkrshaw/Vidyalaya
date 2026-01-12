@@ -1,7 +1,7 @@
 // Frontend configuration for API endpoints and token management
 export const API_CONFIG = {
-  // Backend API base URL
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3001/api',
+  // Backend API base URL - consistently append /api
+  BASE_URL: (import.meta.env.VITE_API_URL || 'https://nlkh.duckdns.org') + '/api',
   
   // Authentication endpoints
   AUTH: {

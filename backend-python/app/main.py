@@ -17,8 +17,11 @@ origins = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
+    "https://edisapp.onrender.com", # Production Frontend
+    "https://nlkh.duckdns.org",     # Production Backend (Self)
     "*"  # Allow all for development
 ]
+
 
 app.add_middleware(
     CORSMiddleware,
