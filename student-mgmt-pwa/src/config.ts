@@ -2,6 +2,7 @@
 export const API_CONFIG = {
   // Backend API base URL - consistently append /api
   BASE_URL: (import.meta.env.VITE_API_URL || 'https://nlkh.duckdns.org') + '/api',
+
   
   // Authentication endpoints
   AUTH: {

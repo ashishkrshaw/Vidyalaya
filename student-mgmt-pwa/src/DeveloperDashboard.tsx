@@ -14,6 +14,8 @@ interface School {
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://nlkh.duckdns.org';
 
+
+
 const DeveloperDashboard: React.FC = () => {
     const [schools, setSchools] = useState<School[]>([]);
     const [loading, setLoading] = useState(true);
