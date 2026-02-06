@@ -1314,4 +1314,3 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 };
 
 export default LandingPage;
-shashi
