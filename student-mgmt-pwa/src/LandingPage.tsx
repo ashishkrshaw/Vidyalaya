@@ -857,7 +857,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                         <div className="footer-bottom">
                             <p>&copy; {new Date().getFullYear()} ScholarBase. All Rights Reserved.</p>
                             <div className="footer-credits">
-                                <span>Developed by <strong>Ashish & Shashi</strong></span>
+                                <span>Developed by <strong>Ashish & Shashwat</strong></span>
                                 <span className="dot-separator">•</span>
                                 <button onClick={() => setContactModalOpen(true)} className="contact-dev-link">Contact Developer</button>
                             </div>
@@ -1011,7 +1011,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             <div className="about-section team-section">
                                 <h3>Our Team</h3>
                                 <p>
-                                    Developed with ❤️ by <strong>Ashish & Shashwat</strong>, two passionate developers dedicated
+                                    Developed with ❤️ by <strong>Ashish & Shashi</strong>, two passionate developers dedicated
                                     to making school management easier for institutions across India.
                                 </p>
                             </div>
@@ -1314,3 +1314,4 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
 };
 
 export default LandingPage;
+shashi
