@@ -1011,7 +1011,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onStart }) => {
                             <div className="about-section team-section">
                                 <h3>Our Team</h3>
                                 <p>
-                                    Developed with ❤️ by <strong>Ashish & Shashi</strong>, two passionate developers dedicated
+                                    Developed with ❤️ by <strong>Ashish & Shashwat</strong>, two passionate developers dedicated
                                     to making school management easier for institutions across India.
                                 </p>
                             </div>
