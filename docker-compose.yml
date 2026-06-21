@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  database:
+    image: mongo:latest
+    container_name: vidyalaya_database
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: always
+
+  backend:
+    image: ashishkrshaw/vidyalaya-backend:latest
+    container_name: vidyalaya_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://database:27017/school
+      - JWT_SECRET=vidyalaya-super-secret-jwt-key-2024
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE_MINUTES=1440
+      - DEVELOPER_SECRET=vidyalaya-sankalson
+    depends_on:
+      - database
+    restart: always
+
+  frontend:
+    build:
+      context: ./student-mgmt-pwa
+      dockerfile: Dockerfile
+    container_name: vidyalaya_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  mongo_data:
