@@ -19,6 +19,7 @@ origins = [
     "http://127.0.0.1:3000",
     "https://edisapp.onrender.com",
     "https://nlkh.duckdns.org",
+    "https://scholarbase-phep.onrender.com",
 ]
 
 
